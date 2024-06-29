@@ -16,6 +16,22 @@ jobs:
         uses: actions/checkout@v2
         # 현재 리포지토리를 체크아웃합니다.
 
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./now-waypoint-core/gradlew
+
+      - name: Build with Gradle
+        run: ./now-waypoint-core/gradlew build
+        working-directory: ./now-waypoint-core
+
+      - name: List files in build/libs
+        run: ls -R now-waypoint-core/build/libs
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
         # Docker Buildx를 설정합니다.
