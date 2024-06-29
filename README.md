@@ -11,7 +11,7 @@ API서버는 아래 아키텍처 구조을 따르고 있으며 각 프로젝트�
 
 ![스크린샷 2024-06-28 오후 11 43 28](https://github.com/immyeong/immyeong.github.io/assets/62759873/58dceaf5-bdf1-4e0a-8887-21ed2eeab28e)
 
-- now-waypoint-core : 인증, 사용자 관리, 문제 관리, 채점, 랭킹 등의 핵심 기능을 제공하는 코어 서버
+- now-waypoint-core : 인증, 사용자 관리, 게시글관리, 채팅, 좋아요 관리, 해시태그 관리 등 핵심 기능을 제공하는 코어 서버
 - now-waypoint-mysql : MySQL 데이터베이스 서버
 
 ## 사전 준비
