@@ -19,7 +19,7 @@ services:
     build: ./now-waypoint-core
     image: now-waypoint-core:5.0.0-compose
     ports:
-      - "8080:80"
+      - "8080:8080"
     environment:
       - DB_URL=now-waypoint-mysql
       - DB_PORT=3306
