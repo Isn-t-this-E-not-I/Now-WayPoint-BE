@@ -18,6 +18,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -46,6 +49,9 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         String accessToken = jwtUtil.getAccessToken(userDetail);
         String refreshToken = jwtUtil.getRefreshToken(userDetail);
 
+        //client에게 보내줄 데이터 설정
+        responseToClient(response,accessToken);
+
         //header에 authorization 추가
         response.addHeader("Authorization", "Bearer " + accessToken);
     }
@@ -54,5 +60,16 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    private void responseToClient(HttpServletResponse response,String accessToken) throws IOException {
+        Map<String, String> userInfo = new HashMap<>();
+        userInfo.put("access_token", accessToken);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter writer = response.getWriter();
+        writer.print(objectMapper.writeValueAsString(userInfo));
+        writer.flush();
     }
 }
