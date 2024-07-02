@@ -49,11 +49,11 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         String accessToken = jwtUtil.getAccessToken(userDetail);
         String refreshToken = jwtUtil.getRefreshToken(userDetail);
 
+        //header에 authorization 추가
+        response.addHeader("Authorization", "Bearer " + accessToken);
         //client에게 보내줄 데이터 설정
         responseToClient(response,accessToken);
 
-        //header에 authorization 추가
-        response.addHeader("Authorization", "Bearer " + accessToken);
     }
 
     //인증 실패하면 실행

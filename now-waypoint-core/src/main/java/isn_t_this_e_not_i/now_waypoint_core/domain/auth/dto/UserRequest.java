@@ -53,6 +53,16 @@ public class UserRequest {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class withdrawalRequest{
+        private String loginId;
+
+        private String password;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class updateRequest{
         private String password;
 

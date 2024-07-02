@@ -7,21 +7,26 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepositor
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     //멤버 등록
+    @Transactional
     public UserResponse register(UserRequest.registerRequest registerRequest) {
         User user = User.builder()
                 .loginId(registerRequest.getLoginId())
@@ -48,6 +53,15 @@ public class UserService {
         return fromUser(user);
     }
 
+    @Transactional
+    public void withdrawal(String loginId, String password) {
+        Optional<User> OptionalUser = userRepository.findByLoginId(loginId);
+        if (OptionalUser.isPresent() && bCryptPasswordEncoder.matches(password, OptionalUser.get().getPassword())) {
+            userRepository.deleteByLoginId(loginId);
+        }else{
+            throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
+        }
+    }
 
     public UserResponse fromUser(User user) {
         return UserResponse.builder()
