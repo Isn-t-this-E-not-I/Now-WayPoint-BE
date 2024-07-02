@@ -14,10 +14,12 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -32,6 +34,7 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final ObjectMapper objectMapper;
     private final UserDetailService userDetailService;
+    private final LogoutHandler logoutService;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -57,7 +60,12 @@ public class SecurityConfig {
                         .requestMatchers("/", "/api/user/login", "/api/user/register").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtFilter(jwtUtil,userDetailService), LogoutFilter.class)
-                .addFilterAt(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout(logoutConf -> logoutConf
+                        .logoutUrl("/api/user/logout")
+                        .addLogoutHandler(logoutService)
+                        .logoutSuccessHandler((req,res,auth) ->
+                                SecurityContextHolder.clearContext()));
 
         //securityCors설정
         http
