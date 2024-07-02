@@ -18,6 +18,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     //loginEmail
@@ -35,7 +36,7 @@ public class User {
 
     private String description;
 
-    private String location;
+    private String locate;
 
     //추후 논의 follow -> following
     private String following;

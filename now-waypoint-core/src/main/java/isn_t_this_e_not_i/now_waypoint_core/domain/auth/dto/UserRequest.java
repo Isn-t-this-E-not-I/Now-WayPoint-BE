@@ -12,7 +12,7 @@ public class UserRequest {
 
     private String password;
 
-    private String location;
+    private String locate;
 
     private String name;
 
@@ -30,7 +30,7 @@ public class UserRequest {
 
         private String password;
 
-        private String location;
+        private String locate;
 
         private String name;
 
@@ -53,10 +53,20 @@ public class UserRequest {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class withdrawalRequest{
+        private String loginId;
+
+        private String password;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class updateRequest{
         private String password;
 
-        private String location;
+        private String locate;
 
         private String name;
 

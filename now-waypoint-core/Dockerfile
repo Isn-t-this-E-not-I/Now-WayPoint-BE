@@ -8,7 +8,7 @@ WORKDIR /app
 COPY ./build/libs/*-SNAPSHOT.jar /app/now-waypoint-core.jar
 
 # 8080 포트를 외부에 노출
-EXPOSE 80
+EXPOSE 8080
 
 # 컨테이너 실행 시 자바 애플리케이션 실행
 ENTRYPOINT ["java", "-jar", "now-waypoint-core.jar"]
