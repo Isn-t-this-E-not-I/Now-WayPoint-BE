@@ -6,12 +6,9 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
@@ -24,5 +21,10 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
         return ResponseEntity.ok().body(userService.register(registerRequest));
+    }
+
+    @GetMapping("/test")
+    public String testP() {
+        return "test Page";
     }
 }

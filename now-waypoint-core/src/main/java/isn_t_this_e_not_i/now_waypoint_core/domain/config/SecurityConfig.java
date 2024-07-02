@@ -1,8 +1,10 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtLoginFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtUtil;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -28,6 +31,7 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final ObjectMapper objectMapper;
+    private final UserDetailService userDetailService;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -52,6 +56,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/", "/api/user/login", "/api/user/register").permitAll()
                         .anyRequest().authenticated())
+                .addFilterBefore(new JwtFilter(jwtUtil,userDetailService), LogoutFilter.class)
                 .addFilterAt(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class);
 
         //securityCors설정
