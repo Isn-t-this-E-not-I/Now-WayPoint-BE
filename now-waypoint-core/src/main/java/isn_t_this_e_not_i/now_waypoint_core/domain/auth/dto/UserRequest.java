@@ -12,7 +12,7 @@ public class UserRequest {
 
     private String password;
 
-    private String location;
+    private String locate;
 
     private String name;
 
@@ -30,7 +30,7 @@ public class UserRequest {
 
         private String password;
 
-        private String location;
+        private String locate;
 
         private String name;
 
@@ -66,7 +66,7 @@ public class UserRequest {
     public static class updateRequest{
         private String password;
 
-        private String location;
+        private String locate;
 
         private String name;
 

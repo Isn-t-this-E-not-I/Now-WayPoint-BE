@@ -3,11 +3,13 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicateLoginIdException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.NullFieldException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,13 +27,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    //멤버 등록
+    //회원 등록
     @Transactional
     public UserResponse register(UserRequest.registerRequest registerRequest) {
         User user = User.builder()
                 .loginId(registerRequest.getLoginId())
                 .password(bCryptPasswordEncoder.encode(registerRequest.getPassword()))
-                .location(registerRequest.getLocation())
+                .locate(registerRequest.getLocate())
                 .name(registerRequest.getName())
                 .nickname(registerRequest.getNickname())
                 .profileImageUrl(registerRequest.getProfileImageUrl())
@@ -53,6 +55,7 @@ public class UserService {
         return fromUser(user);
     }
 
+    //회원 탈퇴
     @Transactional
     public void withdrawal(String loginId, String password) {
         Optional<User> OptionalUser = userRepository.findByLoginId(loginId);
@@ -66,7 +69,7 @@ public class UserService {
     public UserResponse fromUser(User user) {
         return UserResponse.builder()
                 .loginId(user.getLoginId())
-                .location(user.getLocation())
+                .location(user.getLocate())
                 .name(user.getName())
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
