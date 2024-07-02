@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtLoginFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtUtil;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final UserDetailService userDetailService;
     private final LogoutHandler logoutService;
+    private final TokenService tokenService;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -48,7 +50,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration),jwtUtil, objectMapper);
+        JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration),jwtUtil, objectMapper,tokenService);
         jwtLoginFilter.setFilterProcessesUrl("/api/user/login");
         //security 경로설정
         http
@@ -59,7 +61,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/", "/api/user/login", "/api/user/register").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(new JwtFilter(jwtUtil,userDetailService), LogoutFilter.class)
+                .addFilterBefore(new JwtFilter(jwtUtil,userDetailService,tokenService,objectMapper), LogoutFilter.class)
                 .addFilterAt(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logoutConf -> logoutConf
                         .logoutUrl("/api/user/logout")
@@ -81,7 +83,6 @@ public class SecurityConfig {
                                 corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
                                 corsConfiguration.setAllowCredentials(true);
                                 corsConfiguration.setMaxAge(3000L);
-
                                 corsConfiguration.setExposedHeaders(Collections.singletonList("Authorization"));
 
                                 return corsConfiguration;

@@ -1,10 +1,9 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserRequest;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +27,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
+    private final TokenService tokenService;
 
     //로그인 시 실행
     @Override
@@ -37,7 +37,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword(),null);
             return authenticationManager.authenticate(authToken);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("아이디 혹은 비밀번호가 일치하지않습니다.");
         }
     }
 
@@ -45,9 +45,12 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         UserDetail userDetail = (UserDetail) authResult.getPrincipal();
-        String username = userDetail.getUsername();
+        String loginId = userDetail.getUsername();
         String accessToken = jwtUtil.getAccessToken(userDetail);
         String refreshToken = jwtUtil.getRefreshToken(userDetail);
+
+        //로그인시 accessToken과 refreshToken발급
+        tokenService.saveToken(refreshToken,accessToken,loginId);
 
         //header에 authorization 추가
         response.addHeader("Authorization", "Bearer " + accessToken);
