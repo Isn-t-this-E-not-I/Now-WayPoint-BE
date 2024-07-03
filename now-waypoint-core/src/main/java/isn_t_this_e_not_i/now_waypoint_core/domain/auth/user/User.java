@@ -1,6 +1,8 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,15 +23,18 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    //loginEmail
+    @Email(message = "로그인 아이디는 이메일 형식이어야 합니다.")
+    @NotNull
     @Column(unique = true)
     private String loginId;
 
+    @NotNull
     private String password;
 
     private String name;
 
     @Column(unique = true)
+    @NotNull
     private String nickname;
 
     private String profileImageUrl;

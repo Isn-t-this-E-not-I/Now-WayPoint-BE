@@ -5,6 +5,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicateLoginIdException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.NullFieldException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.Token;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final TokenService tokenService;
 
     //회원 등록
     @Transactional
@@ -61,6 +63,9 @@ public class UserService {
         Optional<User> OptionalUser = userRepository.findByLoginId(loginId);
         if (OptionalUser.isPresent() && bCryptPasswordEncoder.matches(password, OptionalUser.get().getPassword())) {
             userRepository.deleteByLoginId(loginId);
+            String accessToken = tokenService.findByLoginId(loginId).get().getAccessToken();
+            tokenService.deleteToken(accessToken);
+            log.info("회원탈퇴되었습니다.");
         }else{
             throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
         }
