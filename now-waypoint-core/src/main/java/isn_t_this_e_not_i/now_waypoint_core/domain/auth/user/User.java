@@ -3,10 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -35,8 +32,10 @@ public class User {
 
     @Column(unique = true)
     @NotNull
+    @Setter
     private String nickname;
 
+    @Setter
     private String profileImageUrl;
 
     private String description;
@@ -52,6 +51,8 @@ public class User {
     private UserRole role;
 
     private LocalDateTime createDate;
+
+    private LocalDateTime updateDate;
 
     private LocalDateTime loginDate;
 
