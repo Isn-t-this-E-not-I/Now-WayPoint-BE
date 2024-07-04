@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtLoginFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtUtil;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.handler.OAuth2SuccessHandler;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.service.OAuth2UserService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +22,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
@@ -37,6 +43,8 @@ public class SecurityConfig {
     private final UserDetailService userDetailService;
     private final LogoutHandler logoutService;
     private final TokenService tokenService;
+    private final UserRepository userRepository;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -49,9 +57,20 @@ public class SecurityConfig {
     }
 
     @Bean
+    public UserService userService() {
+        return new UserService(userRepository, bCryptPasswordEncoder(), tokenService);
+    }
+
+    @Bean
+    public OAuth2UserService oAuth2UserService(){
+        return new OAuth2UserService(userService());
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration),jwtUtil, objectMapper,tokenService);
         jwtLoginFilter.setFilterProcessesUrl("/api/user/login");
+        JwtFilter jwtFilter = new JwtFilter(jwtUtil, userDetailService, tokenService, objectMapper);
         //security 경로설정
         http
                 .csrf(auth -> auth.disable())
@@ -59,10 +78,16 @@ public class SecurityConfig {
                 .httpBasic(auth -> auth.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "/api/user/login", "/api/user/register").permitAll()
+                        .requestMatchers("/", "/api/user/login", "/api/user/register","/main").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(new JwtFilter(jwtUtil,userDetailService,tokenService,objectMapper), LogoutFilter.class)
+                .oauth2Login(login -> login
+                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/api/user/login"))
+                        .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+                                .userService(oAuth2UserService()))
+                        .successHandler(oAuth2SuccessHandler))
                 .addFilterAt(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtFilter, OAuth2LoginAuthenticationFilter.class)
+                .addFilterAfter(jwtLoginFilter, JwtFilter.class)
                 .logout(logoutConf -> logoutConf
                         .logoutUrl("/api/user/logout")
                         .addLogoutHandler(logoutService)

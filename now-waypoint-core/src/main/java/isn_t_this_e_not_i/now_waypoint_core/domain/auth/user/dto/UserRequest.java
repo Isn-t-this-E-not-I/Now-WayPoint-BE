@@ -1,4 +1,4 @@
-package isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto;
+package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto;
 
 import lombok.*;
 
@@ -23,6 +23,7 @@ public class UserRequest {
     private String description;
 
     @Getter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class registerRequest{
@@ -73,6 +74,8 @@ public class UserRequest {
         private String nickname;
 
         private String profileImageUrl;
+
+        private String updateDate;
 
         private String description;
     }

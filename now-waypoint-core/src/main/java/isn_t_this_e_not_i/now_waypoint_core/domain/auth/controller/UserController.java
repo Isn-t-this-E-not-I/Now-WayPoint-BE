@@ -1,11 +1,10 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserRequest;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

@@ -1,6 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserDetail;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import org.springframework.security.core.userdetails.UserDetails;

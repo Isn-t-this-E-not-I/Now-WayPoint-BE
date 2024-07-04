@@ -1,16 +1,13 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserRequest;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicateLoginIdException;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.NullFieldException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.Token;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -69,6 +66,25 @@ public class UserService {
         }else{
             throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
         }
+    }
+
+    //회원 조회
+    @Transactional
+    public User findUserByLoginId(String loginId) {
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+
+        if (findUser.isPresent()) {
+            return findUser.get();
+        }
+        return null;
+    }
+
+    //oauthUser update
+    @Transactional
+    public void updateUserOAuthUser(User user, UserRequest.updateRequest updateRequest) {
+        user.setNickname(updateRequest.getNickname());
+        user.setProfileImageUrl(updateRequest.getProfileImageUrl());
+        userRepository.save(user);
     }
 
     public UserResponse fromUser(User user) {

@@ -1,19 +1,22 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserDetail;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2UserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2Users;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuthUserDTO;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.Token;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -31,16 +34,33 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailService userDetailService;
     private final TokenService tokenService;
     private final ObjectMapper objectMapper;
+    private boolean cookieAuth = false;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String authorization = request.getHeader("Authorization");
+        String authorization = null;
+
+        Cookie[] cookies = request.getCookies();
+        if(cookies != null){
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("Authorization")) {
+                    authorization = "Bearer " + cookie.getValue();
+                    cookieAuth = true;
+                }
+            }
+        }
+
+        String token = null;
+        if(!cookieAuth){
+            authorization = request.getHeader("Authorization");
+        }
+
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             filterChain.doFilter(request,response);
             return;
         }
 
-        String token = authorization.split(" ")[1];
+        token = authorization.split(" ")[1];
         String accessToken = null;
 
         //accessToken 만료시 refreshToken이 유효하다면 accessToken재발급
@@ -84,8 +104,17 @@ public class JwtFilter extends OncePerRequestFilter {
         else{
             log.info("accessToken이 유효합니다.");
             String loginId = jwtUtil.getLoginId(token);
-            UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
+            UsernamePasswordAuthenticationToken authToken = null;
+            if(cookieAuth){
+                OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder()
+                        .loginId(loginId).build();
+                OAuth2Users oAuth2Users = new OAuth2Users(oAuthUserDTO);
+                authToken = new UsernamePasswordAuthenticationToken(oAuth2Users, null, oAuth2Users.getAuthorities());
+            }else{
+                UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
+                authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
+            }
+
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authToken);
             accessToken = token;

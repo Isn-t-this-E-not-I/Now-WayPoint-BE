@@ -1,4 +1,4 @@
-package isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto;
+package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
