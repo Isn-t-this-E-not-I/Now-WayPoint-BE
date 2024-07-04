@@ -3,6 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2Users;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuthUserDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
@@ -40,19 +41,18 @@ public class JwtFilter extends OncePerRequestFilter {
         String authorization = null;
 
         Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("Authorization")) {
-                authorization = cookie.getValue();
-                cookieAuth = true;
+        if(cookies != null){
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("Authorization")) {
+                    authorization = "Bearer " + cookie.getValue();
+                    cookieAuth = true;
+                }
             }
         }
 
         String token = null;
-        if(cookieAuth){
-            token = authorization;
-        }else {
+        if(!cookieAuth){
             authorization = request.getHeader("Authorization");
-            token = authorization.split(" ")[1];
         }
 
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -60,6 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        token = authorization.split(" ")[1];
         String accessToken = null;
 
         //accessToken 만료시 refreshToken이 유효하다면 accessToken재발급
@@ -105,8 +106,9 @@ public class JwtFilter extends OncePerRequestFilter {
             String loginId = jwtUtil.getLoginId(token);
             UsernamePasswordAuthenticationToken authToken = null;
             if(cookieAuth){
-                OAuth2UserResponse oAuth2UserResponse = new OAuth2UserResponse(loginId, null);
-                OAuth2Users oAuth2Users = new OAuth2Users(oAuth2UserResponse);
+                OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder()
+                        .loginId(loginId).build();
+                OAuth2Users oAuth2Users = new OAuth2Users(oAuthUserDTO);
                 authToken = new UsernamePasswordAuthenticationToken(oAuth2Users, null, oAuth2Users.getAuthorities());
             }else{
                 UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);

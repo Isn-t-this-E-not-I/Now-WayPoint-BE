@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2Users;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuthUserDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
@@ -57,9 +58,15 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     .build();
 
             userService.register(registerRequest);
+            OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder()
+                    .loginId(loginId)
+                    .nickname(oAuth2UserResponse.getNickname())
+                    .profileImageUrl(oAuth2UserResponse.getProfileImage())
+                    .build();
+
 
             log.info("oauth user resist");
-            return new OAuth2Users(oAuth2UserResponse);
+            return new OAuth2Users(oAuthUserDTO);
         }else{
             //첫번째 로그인이 아니면 가져오는 정보중 닉네임과 프로필 이미지를 가져옴
             UserRequest.updateRequest updateRequest = new UserRequest.updateRequest();
@@ -68,8 +75,14 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
             userService.updateUserOAuthUser(existUser, updateRequest);
 
+            OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder()
+                    .loginId(loginId)
+                    .nickname(oAuth2UserResponse.getNickname())
+                    .profileImageUrl(oAuth2UserResponse.getProfileImage())
+                    .build();
+
             log.info("oauth user login");
-            return new OAuth2Users(oAuth2UserResponse);
+            return new OAuth2Users(oAuthUserDTO);
         }
     }
 }

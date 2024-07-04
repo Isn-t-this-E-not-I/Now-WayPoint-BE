@@ -39,7 +39,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         tokenService.saveToken(refreshToken,accessToken,loginId);
 
         response.addCookie(createCookie("Authorization", accessToken));
-        response.setHeader("Authorization", "Bearer "+accessToken);
         response.sendRedirect("http://localhost:8080/main");
         log.info("onAuthenticationSuccess");
     }
