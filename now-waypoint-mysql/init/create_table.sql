@@ -13,6 +13,6 @@ CREATE TABLE users (
                        following VARCHAR(50),
                        follower VARCHAR(50),
                        login_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
--- updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
