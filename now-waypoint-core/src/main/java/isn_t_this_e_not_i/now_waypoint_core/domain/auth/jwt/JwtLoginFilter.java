@@ -1,8 +1,8 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserDetail;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.dto.UserRequest;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
