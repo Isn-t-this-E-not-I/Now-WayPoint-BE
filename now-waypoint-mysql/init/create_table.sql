@@ -8,11 +8,11 @@ CREATE TABLE users (
                        nickname VARCHAR(30),
                        profile_image_url VARCHAR(255),
                        description VARCHAR(255),
-                       role VARCHAR(255),
                        locate VARCHAR(255),
                        following VARCHAR(50),
                        follower VARCHAR(50),
-                       login_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       role VARCHAR(255),
                        create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                       update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                       login_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

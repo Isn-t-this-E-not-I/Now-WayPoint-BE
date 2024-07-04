@@ -23,8 +23,6 @@ repositories {
 	mavenCentral()
 }
 
-def profile = project.hasProperty('profile') ? project.profile : 'dev'
-
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -44,12 +42,6 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-//	if (profile == 'dev') {
-//		runtimeOnly 'com.h2database:h2'
-//	} else {
-//		runtimeOnly 'com.mysql:mysql-connector-j'
-//	}
 }
 
 
