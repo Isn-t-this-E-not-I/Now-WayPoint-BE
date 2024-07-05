@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RequiredArgsConstructor
+@Slf4j
 public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
@@ -32,6 +34,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     //로그인 시 실행
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+        log.info("attempAuthentication 실행!");
         try{
             UserRequest.loginRequest loginRequest = objectMapper.readValue(request.getInputStream(), UserRequest.loginRequest.class);
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword(),null);
@@ -44,6 +47,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     //인증 성공하면 실행
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
+        log.info("successfulAuthentication 실행!");
         UserDetail userDetail = (UserDetail) authResult.getPrincipal();
         String loginId = userDetail.getUsername();
         String accessToken = jwtUtil.getAccessToken(userDetail);

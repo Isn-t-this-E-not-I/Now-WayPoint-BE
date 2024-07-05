@@ -1,9 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2UserResponse;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2Users;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuthUserDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
@@ -34,97 +31,73 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailService userDetailService;
     private final TokenService tokenService;
     private final ObjectMapper objectMapper;
-    private boolean cookieAuth = false;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorization = null;
+        String token = null;
 
         Cookie[] cookies = request.getCookies();
-        if(cookies != null){
+        if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("Authorization")) {
                     authorization = "Bearer " + cookie.getValue();
-                    cookieAuth = true;
                 }
             }
         }
 
-        String token = null;
-        if(!cookieAuth){
+        if (authorization == null) {
             authorization = request.getHeader("Authorization");
         }
 
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            filterChain.doFilter(request,response);
-            return;
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            token = authorization.substring(7);
         }
 
-        token = authorization.split(" ")[1];
-        String accessToken = null;
+        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (jwtUtil.isExpired(token)) {
+                log.info("AccessToken이 만료되었습니다.");
+                Optional<Token> getToken = tokenService.findByAccessToken(token);
 
-        //accessToken 만료시 refreshToken이 유효하다면 accessToken재발급
-        if (jwtUtil.isExpired(token)) {
-            log.info("AccessToken이 만료되었습니다.");
-            Optional<Token> getToken = tokenService.findByAccessToken(token);
+                if (getToken.isPresent()) {
+                    String refreshToken = getToken.get().getRefreshToken();
 
-            if (getToken.isPresent()) {
-                String refreshToken = getToken.get().getRefreshToken();
+                    if (jwtUtil.isExpired(refreshToken)) {
+                        log.info("refreshToken이 만료되었습니다");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
 
-                //refreshToken이 만료 검증
-                if (jwtUtil.isExpired(refreshToken)) {
-                    log.info("refreshToken이 만료되었습니다");
-                    filterChain.doFilter(request,response);
-                    return;
+                    String loginId = getToken.get().getLoginId();
+                    UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
+                    String newAccessToken = jwtUtil.getAccessToken(userDetail);
+                    log.info("AccessToken이 재발급되었습니다.");
+                    response.setHeader("Authorization", "Bearer " + newAccessToken);
+                    responseToClient(response, newAccessToken);
+
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    tokenService.updateAccessToken(token, newAccessToken);
+                } else {
+                    log.info("일치하는 accessToken이 없습니다.");
                 }
-
-                String loginId = getToken.get().getLoginId();
+            } else {
+                log.info("accessToken이 유효합니다.");
+                String loginId = jwtUtil.getLoginId(token);
                 UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
-                accessToken = jwtUtil.getAccessToken(userDetail);
-                log.info("AccessToken이 재발급되었습니다.");
-                response.setHeader("Authorization", "Bearer " + accessToken);
-                responseToClient(response,accessToken);
-
-                //재발급된 토큰을 SecurityContextHolder에 저장
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
+                response.setHeader("Authorization", "Bearer "+ token);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                //재발급된 토큰으로 accessToken값 변경
-                tokenService.updateAccessToken(token, accessToken);
-                response.setHeader("Authorization", "Bearer " + accessToken);
-                return;
-            }else{
-                log.info("일치하는 accessToken이 없습니다.");
-                filterChain.doFilter(request,response);
-                return;
             }
         }
-        //accessToken이 만료가 안된상태
-        else{
-            log.info("accessToken이 유효합니다.");
-            String loginId = jwtUtil.getLoginId(token);
-            UsernamePasswordAuthenticationToken authToken = null;
-            if(cookieAuth){
-                OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder()
-                        .loginId(loginId).build();
-                OAuth2Users oAuth2Users = new OAuth2Users(oAuthUserDTO);
-                authToken = new UsernamePasswordAuthenticationToken(oAuth2Users, null, oAuth2Users.getAuthorities());
-            }else{
-                UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
-                authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
-            }
 
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            accessToken = token;
-        }
-
-        response.setHeader("Authorization", "Bearer " + accessToken);
-        filterChain.doFilter(request,response);
+        filterChain.doFilter(request, response);
     }
 
-    private void responseToClient(HttpServletResponse response,String accessToken) throws IOException {
+    private void responseToClient(HttpServletResponse response, String accessToken) throws IOException {
         Map<String, String> userInfo = new HashMap<>();
         userInfo.put("access_token", accessToken);
 
