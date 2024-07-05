@@ -1,12 +1,9 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2UserResponse;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2Users;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuthUserDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -27,14 +24,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        log.info("OAuth2UserService 실행!");
         OAuth2User oAuth2User = super.loadUser(userRequest);
-
-        try {
-            log.info("username ={}", new ObjectMapper().writeValueAsString(oAuth2User.getAttributes()));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
 
         String name = oAuth2User.getName();
 
@@ -44,7 +34,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
         User existUser = userService.findUserByLoginId(loginId);
 
-        //처음 로그인하는 사람이라면
         if (existUser == null) {
             UserRequest.registerRequest registerRequest = UserRequest.registerRequest.builder()
                     .loginId(loginId)
@@ -54,31 +43,22 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     .build();
 
             userService.register(registerRequest);
-            OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder()
-                    .loginId(loginId)
-                    .nickname(oAuth2UserResponse.getNickname())
-                    .profileImageUrl(oAuth2UserResponse.getProfileImage())
-                    .build();
 
+            User findUser = userService.findUserByLoginId(loginId);
 
-            log.info("oauth user resist");
-            return new OAuth2Users(oAuthUserDTO);
+            log.info("카카오 첫 로그인");
+            return new UserDetail(findUser);
         }else{
-            //첫번째 로그인이 아니면 가져오는 정보중 닉네임과 프로필 이미지를 가져옴
             UserRequest.updateRequest updateRequest = new UserRequest.updateRequest();
             updateRequest.setNickname(oAuth2UserResponse.getNickname());
             updateRequest.setProfileImageUrl(oAuth2UserResponse.getProfileImage());
 
             userService.updateUserOAuthUser(existUser, updateRequest);
 
-            OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder()
-                    .loginId(loginId)
-                    .nickname(oAuth2UserResponse.getNickname())
-                    .profileImageUrl(oAuth2UserResponse.getProfileImage())
-                    .build();
+            User findUser = userService.findUserByLoginId(loginId);
 
-            log.info("oauth user login");
-            return new OAuth2Users(oAuthUserDTO);
+            log.info("카카오 로그인");
+            return new UserDetail(findUser);
         }
     }
 }

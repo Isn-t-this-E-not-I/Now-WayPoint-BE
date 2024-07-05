@@ -1,8 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2Users;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuthUserDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
@@ -33,7 +31,6 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailService userDetailService;
     private final TokenService tokenService;
     private final ObjectMapper objectMapper;
-    private boolean cookieAuth = false;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -45,12 +42,11 @@ public class JwtFilter extends OncePerRequestFilter {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("Authorization")) {
                     authorization = "Bearer " + cookie.getValue();
-                    cookieAuth = true;
                 }
             }
         }
 
-        if (!cookieAuth) {
+        if (authorization == null) {
             authorization = request.getHeader("Authorization");
         }
 
@@ -90,16 +86,9 @@ public class JwtFilter extends OncePerRequestFilter {
             } else {
                 log.info("accessToken이 유효합니다.");
                 String loginId = jwtUtil.getLoginId(token);
-                UsernamePasswordAuthenticationToken authToken;
-                if (cookieAuth) {
-                    OAuthUserDTO oAuthUserDTO = OAuthUserDTO.builder().loginId(loginId).build();
-                    OAuth2Users oAuth2Users = new OAuth2Users(oAuthUserDTO);
-                    authToken = new UsernamePasswordAuthenticationToken(oAuth2Users, null, oAuth2Users.getAuthorities());
-                } else {
-                    UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
-                    authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
-                }
-                log.info("authToken ={}", authToken);
+                UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
+                response.setHeader("Authorization", "Bearer "+ token);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }

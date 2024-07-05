@@ -1,5 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.LogoutFailException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicateLoginIdException;
@@ -9,7 +10,6 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +44,6 @@ public class UserService {
                 .loginDate(LocalDateTime.now())
                 .build();
 
-        //nickname(웹 페이지에서의 사용자이름) 설정 논의
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
@@ -64,7 +63,7 @@ public class UserService {
             tokenService.deleteToken(accessToken);
             log.info("회원탈퇴되었습니다.");
         }else{
-            throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
+            throw new LogoutFailException("존재하지 않는 아이디입니다.");
         }
     }
 
@@ -79,7 +78,7 @@ public class UserService {
         return null;
     }
 
-    //oauthUser update
+    //소셜로그인 업데이트
     @Transactional
     public void updateUserOAuthUser(User user, UserRequest.updateRequest updateRequest) {
         user.setNickname(updateRequest.getNickname());

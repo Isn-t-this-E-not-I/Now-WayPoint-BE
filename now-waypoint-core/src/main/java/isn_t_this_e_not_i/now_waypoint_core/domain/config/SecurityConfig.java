@@ -74,14 +74,15 @@ public class SecurityConfig {
                 .httpBasic(auth -> auth.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/user/login", "/api/user/register","/favicon.ico", "/api/user/login/kakao", "/login/oauth2/code/kakao","/error").permitAll()
+                        .requestMatchers("/", "/api/user/login", "/api/user/register","/favicon.ico",
+                                "/api/user/login/kakao", "/login/oauth2/code/kakao","/error").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(login -> login
                         .authorizationEndpoint(endpoint -> endpoint.baseUri("/api/user/login"))
                         .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig.userService(oAuth2UserService()))
                         .successHandler(oAuth2SuccessHandler))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logoutConf -> logoutConf
                         .logoutUrl("/api/user/logout")
                         .addLogoutHandler(logoutService)

@@ -22,7 +22,6 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
@@ -32,11 +31,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        log.info("OAuthSuccessHandler 실행!");
-        OAuth2Users customOAuth2User =(OAuth2Users) authentication.getPrincipal();
+        UserDetail userDetail =(UserDetail) authentication.getPrincipal();
 
-        String loginId = customOAuth2User.getName();
-        UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
+        String loginId = userDetail.getName();
 
         String accessToken = jwtUtil.getAccessToken(userDetail);
         String refreshToken = jwtUtil.getRefreshToken(userDetail);
@@ -46,12 +43,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authToken);
         response.addCookie(createCookie("Authorization", accessToken));
-        response.sendRedirect("http://localhost:8080/main");
-        log.info("onAuthenticationSuccess");
+        //Redirect url 설정해야함 (ex: http:localhost:3000/ __ / __ )
+        response.sendRedirect("http://localhost:8080/api/user/test");
     }
 
     private Cookie createCookie(String key, String value) {
-        log.info("createCookie");
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(60 * 60 * 60);
         cookie.setPath("/");
