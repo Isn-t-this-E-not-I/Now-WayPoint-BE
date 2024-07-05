@@ -11,8 +11,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -29,15 +32,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        log.info("OAuthSuccessHandler 실행!");
         OAuth2Users customOAuth2User =(OAuth2Users) authentication.getPrincipal();
 
         String loginId = customOAuth2User.getName();
-        UserDetail UserDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
+        UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
 
-        String accessToken = jwtUtil.getAccessToken(UserDetail);
-        String refreshToken = jwtUtil.getRefreshToken(UserDetail);
+        String accessToken = jwtUtil.getAccessToken(userDetail);
+        String refreshToken = jwtUtil.getRefreshToken(userDetail);
         tokenService.saveToken(refreshToken,accessToken,loginId);
 
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authToken);
         response.addCookie(createCookie("Authorization", accessToken));
         response.sendRedirect("http://localhost:8080/main");
         log.info("onAuthenticationSuccess");
