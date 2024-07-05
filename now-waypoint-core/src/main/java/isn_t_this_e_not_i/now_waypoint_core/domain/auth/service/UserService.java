@@ -10,6 +10,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +85,41 @@ public class UserService {
         user.setNickname(updateRequest.getNickname());
         user.setProfileImageUrl(updateRequest.getProfileImageUrl());
         userRepository.save(user);
+    }
+
+    //회원정보 변경
+    @Transactional
+    public UserResponse updateUserInfo(String loginId, UserRequest userRequest) {
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+
+        if (findUser.isPresent()) {
+            User user = findUser.get();
+            user.setNickname(userRequest.getNickname());
+            user.setName(userRequest.getName());
+            user.setDescription(userRequest.getDescription());
+            user.setProfileImageUrl(userRequest.getProfileImageUrl());
+            user.setUpdateDate(LocalDateTime.now());
+
+            userRepository.save(user);
+            return fromUser(user);
+        }
+
+        throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
+    }
+
+    //비밀번호 변경
+    @Transactional
+    public void updatePassword(String loginId, String password) {
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+
+        if (findUser.isPresent()) {
+            User user = findUser.get();
+            user.setPassword(bCryptPasswordEncoder.encode(password));
+            user.setUpdateDate(LocalDateTime.now());
+            userRepository.save(user);
+        }else{
+            throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
+        }
     }
 
     public UserResponse fromUser(User user) {

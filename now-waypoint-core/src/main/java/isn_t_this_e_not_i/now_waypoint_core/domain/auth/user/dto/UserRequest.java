@@ -65,18 +65,20 @@ public class UserRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class updateRequest{
-        private String password;
-
-        private String locate;
-
         private String name;
 
         private String nickname;
 
         private String profileImageUrl;
 
-        private String updateDate;
-
         private String description;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class updatePasswordRequest{
+        private String password;
     }
 }

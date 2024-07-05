@@ -20,5 +20,6 @@ public class UserResponse {
     private String profileImageUrl;
     private String description;
     private LocalDateTime createDate;
+    private LocalDateTime updateDate;
     private LocalDateTime loginDate;
 }

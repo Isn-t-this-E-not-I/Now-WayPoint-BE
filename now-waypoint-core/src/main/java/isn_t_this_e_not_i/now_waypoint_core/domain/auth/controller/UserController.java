@@ -18,27 +18,32 @@ public class UserController {
 
     private final UserService userService;
 
-    /**
-     * 멤버 등록
-     */
     @PostMapping("/register")
     public ResponseEntity<UserResponse> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
         return ResponseEntity.ok().body(userService.register(registerRequest));
     }
 
     @PostMapping("/withdrawal")
-    public void withdraw(Authentication auth,@RequestBody @Valid UserRequest.withdrawalRequest withdrawalRequest){
+    public ResponseEntity<String> withdraw(Authentication auth,@RequestBody @Valid UserRequest.withdrawalRequest withdrawalRequest){
         userService.withdrawal(auth.getName(),withdrawalRequest.getPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/changePassword")
+    public ResponseEntity<String> changePassword(Authentication auth, @RequestBody @Valid UserRequest.updatePasswordRequest updatePasswordRequest) {
+        userService.updatePassword(auth.getName(), updatePasswordRequest.getPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping
+    public ResponseEntity<UserResponse> updateInfo(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
+        UserResponse userResponse = userService.updateUserInfo(auth.getName(), userRequest);
+        return ResponseEntity.ok().body(userResponse);
     }
 
     @GetMapping("/test")
     public String testP() {
         return "test Page";
-    }
-
-    @GetMapping("/test2")
-    public String testP2() {
-        return "test2 Page";
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)

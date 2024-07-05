@@ -26,8 +26,10 @@ public class User {
     private String loginId;
 
     @NotNull
+    @Setter
     private String password;
 
+    @Setter
     private String name;
 
     @Column(unique = true)
@@ -38,13 +40,16 @@ public class User {
     @Setter
     private String profileImageUrl;
 
+    @Setter
     private String description;
 
+    @Setter
     private String locate;
 
-    //추후 논의 follow -> following
+    @Setter
     private String following;
 
+    @Setter
     private String follower;
 
     @Enumerated(value = EnumType.STRING)
@@ -52,8 +57,8 @@ public class User {
 
     private LocalDateTime createDate;
 
+    @Setter
     private LocalDateTime updateDate;
 
     private LocalDateTime loginDate;
-
 }
