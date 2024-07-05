@@ -36,6 +36,11 @@ public class UserController {
         return "test Page";
     }
 
+    @GetMapping("/test2")
+    public String testP2() {
+        return "test2 Page";
+    }
+
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

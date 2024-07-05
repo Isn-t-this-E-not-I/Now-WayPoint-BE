@@ -34,7 +34,6 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     //로그인 시 실행
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        log.info("attempAuthentication 실행!");
         try{
             UserRequest.loginRequest loginRequest = objectMapper.readValue(request.getInputStream(), UserRequest.loginRequest.class);
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword(),null);
@@ -47,7 +46,6 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     //인증 성공하면 실행
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
-        log.info("successfulAuthentication 실행!");
         UserDetail userDetail = (UserDetail) authResult.getPrincipal();
         String loginId = userDetail.getUsername();
         String accessToken = jwtUtil.getAccessToken(userDetail);
@@ -59,8 +57,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         //header에 authorization 추가
         response.addHeader("Authorization", "Bearer " + accessToken);
         //client에게 보내줄 데이터 설정
-        responseToClient(response,accessToken);
-
+        if (!response.isCommitted()) {
+            responseToClient(response,accessToken);
+        }
+        log.info("로그인되었습니다.");
     }
 
     //인증 실패하면 실행
