@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Kakao 지도 시작하기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+<div id="wrapper" class="relative">
+    <div id="map" class="w-screen h-screen">
+    </div>
+
+</div>
+
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=fe1f357652d7579821f3fd70bf590ea4"></script>
+<script>
+    var mapContainer = document.getElementById('map'),
+        mapOption = {
+            center: new kakao.maps.LatLng(33.450701, 126.570667),
+            level: 3
+        };
+
+    var map = new kakao.maps.Map(mapContainer, mapOption);
+</script>
+</body>
+</html>
