@@ -1,16 +1,13 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.handler;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtUtil;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.dto.OAuth2Users;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +22,6 @@ import java.io.IOException;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailService userDetailService;
     private final TokenService tokenService;
 
 
