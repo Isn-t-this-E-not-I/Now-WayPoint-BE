@@ -55,7 +55,7 @@ public class MapService {
             jsonString = docJson.toString();
             rd.close();
 
-            // 응답을 콘솔에 출력
+            // 응답 로그
             log.info("mapInfo ={}", jsonString);
 
         } catch (UnsupportedEncodingException e) {
