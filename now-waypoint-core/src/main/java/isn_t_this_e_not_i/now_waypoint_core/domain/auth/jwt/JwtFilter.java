@@ -73,7 +73,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     String newAccessToken = jwtUtil.getAccessToken(userDetail);
                     log.info("AccessToken이 재발급되었습니다.");
                     response.setHeader("Authorization", "Bearer " + newAccessToken);
-                    responseToClient(response, newAccessToken);
+//                    responseToClient(response, newAccessToken);
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
