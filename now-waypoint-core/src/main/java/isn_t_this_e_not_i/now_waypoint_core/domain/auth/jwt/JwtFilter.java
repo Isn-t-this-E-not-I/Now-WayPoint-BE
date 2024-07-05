@@ -18,9 +18,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -30,7 +27,6 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailService userDetailService;
     private final TokenService tokenService;
-    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -73,7 +69,6 @@ public class JwtFilter extends OncePerRequestFilter {
                     String newAccessToken = jwtUtil.getAccessToken(userDetail);
                     log.info("AccessToken이 재발급되었습니다.");
                     response.setHeader("Authorization", "Bearer " + newAccessToken);
-//                    responseToClient(response, newAccessToken);
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -95,16 +90,5 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private void responseToClient(HttpServletResponse response, String accessToken) throws IOException {
-        Map<String, String> userInfo = new HashMap<>();
-        userInfo.put("access_token", accessToken);
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter writer = response.getWriter();
-        writer.print(objectMapper.writeValueAsString(userInfo));
-        writer.flush();
     }
 }
