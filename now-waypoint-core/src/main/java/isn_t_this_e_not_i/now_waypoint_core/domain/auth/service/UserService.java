@@ -1,6 +1,8 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicatePasswordException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.LogoutFailException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.NicknameNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicateLoginIdException;
@@ -79,12 +81,36 @@ public class UserService {
         return null;
     }
 
+    //마이페이지 회원 조회
+    @Transactional
+    public UserResponse.userInfo getUserInfo(String loginId) {
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+
+        if (findUser.isPresent()) {
+            User user = findUser.get();
+            return toUserInfo(user);
+        }
+
+        throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
+    }
+
     //소셜로그인 업데이트
     @Transactional
     public void updateUserOAuthUser(User user, UserRequest.updateRequest updateRequest) {
         user.setNickname(updateRequest.getNickname());
         user.setProfileImageUrl(updateRequest.getProfileImageUrl());
         userRepository.save(user);
+    }
+
+    //아이디 찾기
+    @Transactional
+    public String getUserId(String nickname) {
+        Optional<User> findUser = userRepository.findByNickname(nickname);
+        if (findUser.isPresent()) {
+            User user = findUser.get();
+            return user.getLoginId();
+        }
+        throw new NicknameNotFoundException("일치하는 닉네임이 없습니다.");
     }
 
     //회원정보 변경
@@ -109,11 +135,14 @@ public class UserService {
 
     //비밀번호 변경
     @Transactional
-    public void updatePassword(String loginId, String password) {
+    public void updateUserPassword(String loginId, String password) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
         if (findUser.isPresent()) {
             User user = findUser.get();
+            if (bCryptPasswordEncoder.matches(password, user.getPassword())) {
+                throw new DuplicatePasswordException("기존 비밀번호와 동일합니다.");
+            }
             user.setPassword(bCryptPasswordEncoder.encode(password));
             user.setUpdateDate(LocalDateTime.now());
             userRepository.save(user);
@@ -132,6 +161,15 @@ public class UserService {
                 .description(user.getDescription())
                 .createDate(user.getCreateDate())
                 .loginDate(user.getLoginDate())
+                .build();
+    }
+
+    public UserResponse.userInfo toUserInfo(User user) {
+        return UserResponse.userInfo.builder()
+                .name(user.getName())
+                .nickname(user.getNickname())
+                .profileImageUrl(user.getProfileImageUrl())
+                .description(user.getDescription())
                 .build();
     }
 }

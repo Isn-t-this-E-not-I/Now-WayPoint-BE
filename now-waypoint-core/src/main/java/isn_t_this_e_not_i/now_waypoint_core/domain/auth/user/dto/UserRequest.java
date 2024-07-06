@@ -79,6 +79,16 @@ public class UserRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class updatePasswordRequest{
+        private String loginId;
         private String password;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class findUserInfo {
+        private String loginId;
+        private String password;
+        private String nickname;
     }
 }

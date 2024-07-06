@@ -1,5 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
@@ -29,16 +30,31 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/changePassword")
+    @PostMapping("/userId")
+    public ResponseEntity<String> userId(@RequestBody @Valid UserRequest.findUserInfo findUserInfo) {
+        return ResponseEntity.ok().body(userService.getUserId(findUserInfo.getNickname()));
+    }
+
+    @PutMapping("/find/password")
+    public ResponseEntity<String> findPassword(@RequestBody @Valid UserRequest.findUserInfo findUserInfo){
+        userService.updateUserPassword(findUserInfo.getLoginId(), findUserInfo.getPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/password")
     public ResponseEntity<String> changePassword(Authentication auth, @RequestBody @Valid UserRequest.updatePasswordRequest updatePasswordRequest) {
-        userService.updatePassword(auth.getName(), updatePasswordRequest.getPassword());
+        userService.updateUserPassword(auth.getName(), updatePasswordRequest.getPassword());
         return ResponseEntity.ok().build();
     }
 
     @PutMapping
     public ResponseEntity<UserResponse> updateInfo(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
-        UserResponse userResponse = userService.updateUserInfo(auth.getName(), userRequest);
-        return ResponseEntity.ok().body(userResponse);
+        return ResponseEntity.ok().body(userService.updateUserInfo(auth.getName(), userRequest));
+    }
+
+    @GetMapping
+    public ResponseEntity<UserResponse.userInfo> userInfo(Authentication auth){
+        return ResponseEntity.ok().body(userService.getUserInfo(auth.getName()));
     }
 
     @GetMapping("/test")

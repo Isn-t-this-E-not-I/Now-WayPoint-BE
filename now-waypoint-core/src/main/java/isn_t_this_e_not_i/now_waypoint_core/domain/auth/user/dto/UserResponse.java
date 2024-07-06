@@ -22,4 +22,15 @@ public class UserResponse {
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
     private LocalDateTime loginDate;
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class userInfo {
+        private String name;
+        private String nickname;
+        private String profileImageUrl;
+        private String description;
+    }
 }
