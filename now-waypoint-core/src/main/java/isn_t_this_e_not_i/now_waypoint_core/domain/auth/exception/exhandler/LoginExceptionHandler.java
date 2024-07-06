@@ -1,7 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.exhandler;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicateLoginIdException;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.NullFieldException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.DuplicateLoginIdException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.NullFieldException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
