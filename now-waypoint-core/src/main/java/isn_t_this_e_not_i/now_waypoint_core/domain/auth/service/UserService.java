@@ -13,6 +13,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -29,6 +30,9 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
 
+    @Value("${default.profile.image.url}")
+    private String defaultImageUrl;
+
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final TokenService tokenService;
@@ -39,10 +43,17 @@ public class UserService {
         List<UserFollower> followers = new ArrayList<>();
         List<UserFollowing> followings = new ArrayList<>();
 
+        if (registerRequest.getName() == null) {
+            registerRequest.setName(registerRequest.getNickname());
+        }
+
+        if (registerRequest.getProfileImageUrl() == null) {
+            registerRequest.setProfileImageUrl(defaultImageUrl);
+        }
+
         User user = User.builder()
                 .loginId(registerRequest.getLoginId())
                 .password(bCryptPasswordEncoder.encode(registerRequest.getPassword()))
-                .locate(registerRequest.getLocate())
                 .name(registerRequest.getName())
                 .nickname(registerRequest.getNickname())
                 .profileImageUrl(registerRequest.getProfileImageUrl())
@@ -97,6 +108,15 @@ public class UserService {
     public UserResponse.userInfo getUserInfo(String loginId) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
+        User user = findUser.get();
+        return toUserInfo(user);
+    }
+
+    //다른 회원 페이지 조회
+    @Transactional
+    public UserResponse.userInfo getOtherUserInfo(String nickname) {
+        Optional<User> findUser = userRepository.findByNickname(nickname);
+
         if (findUser.isPresent()) {
             User user = findUser.get();
             return toUserInfo(user);
@@ -121,7 +141,6 @@ public class UserService {
     public UserResponse updateUserInfo(String loginId, UserRequest userRequest) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-        if (findUser.isPresent()) {
             User user = findUser.get();
             user.setNickname(userRequest.getNickname());
             user.setName(userRequest.getName());
@@ -131,9 +150,6 @@ public class UserService {
 
             userRepository.save(user);
             return fromUser(user);
-        }
-
-        throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
     }
 
     //비밀번호 변경
@@ -141,7 +157,6 @@ public class UserService {
     public void updateUserPassword(String loginId, String password) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-        if (findUser.isPresent()) {
             User user = findUser.get();
             if (bCryptPasswordEncoder.matches(password, user.getPassword())) {
                 throw new DuplicatePasswordException("기존 비밀번호와 동일합니다.");
@@ -149,9 +164,17 @@ public class UserService {
             user.setPassword(bCryptPasswordEncoder.encode(password));
             user.setUpdateDate(LocalDateTime.now());
             userRepository.save(user);
-        }else{
-            throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
-        }
+
+    }
+
+    //회원 위치 정보 업데이트
+    @Transactional
+    public void getUserLocate(String loginId, String locateX, String locateY) {
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+
+        String locate = locateX + "," + locateY;
+        findUser.get().setLocate(locate);
+        userRepository.save(findUser.get());
     }
 
     public UserResponse fromUser(User user) {

@@ -31,12 +31,12 @@ public class UserRequest {
 
         private String password;
 
-        private String locate;
-
+        @Setter
         private String name;
 
         private String nickname;
 
+        @Setter
         private String profileImageUrl;
 
         private String description;
@@ -63,6 +63,10 @@ public class UserRequest {
         private String profileImageUrl;
 
         private String description;
+
+        private String locateX;
+
+        private String locateY;
     }
 
     @Getter

@@ -39,13 +39,19 @@ public class UserController {
     @PutMapping("/find/password")
     public ResponseEntity<String> findPassword(@RequestBody @Valid UserRequest.findUserInfo findUserInfo){
         userService.updateUserPassword(findUserInfo.getLoginId(), findUserInfo.getPassword());
-        return ResponseEntity.ok("비밀번호를 변경되었습니다.");
+        return ResponseEntity.ok("비밀번호를 변경했습니다.");
     }
 
     @PutMapping("/password")
     public ResponseEntity<String> changePassword(Authentication auth, @RequestBody @Valid UserRequest.updatePasswordRequest updatePasswordRequest) {
         userService.updateUserPassword(auth.getName(), updatePasswordRequest.getPassword());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
+    }
+
+    @PutMapping("/locate")
+    public ResponseEntity<String> getLocate(Authentication auth, @RequestBody @Valid UserRequest.updateRequest updateRequest) {
+        userService.getUserLocate(auth.getName(), updateRequest.getLocateX(), updateRequest.getLocateY());
+        return ResponseEntity.ok("위치 정보를 업데이트하였습니다.");
     }
 
     @PutMapping
@@ -54,8 +60,12 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<UserResponse.userInfo> userInfo(Authentication auth){
-        return ResponseEntity.ok().body(userService.getUserInfo(auth.getName()));
+    public ResponseEntity<UserResponse.userInfo> userPage(Authentication auth,@RequestParam(value ="nickname", required = false)String nickname){
+        if (nickname == null) {
+            return ResponseEntity.ok().body(userService.getUserInfo(auth.getName()));
+        }else{
+            return ResponseEntity.ok().body(userService.getOtherUserInfo(nickname));
+        }
     }
 
     @GetMapping("/test")
