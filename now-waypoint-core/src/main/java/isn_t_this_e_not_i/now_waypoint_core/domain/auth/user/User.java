@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -46,11 +48,11 @@ public class User {
     @Setter
     private String locate;
 
-    @Setter
-    private String following;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFollower> followers = new ArrayList<>();
 
-    @Setter
-    private String follower;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFollowing> followings = new ArrayList<>();
 
     @Enumerated(value = EnumType.STRING)
     private UserRole role;

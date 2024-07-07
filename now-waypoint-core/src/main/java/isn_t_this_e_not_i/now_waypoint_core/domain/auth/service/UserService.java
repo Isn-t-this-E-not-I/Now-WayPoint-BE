@@ -1,11 +1,13 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicatePasswordException;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.LogoutFailException;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.NicknameNotFoundException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.DuplicatePasswordException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.LogoutFailException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.NicknameNotFoundException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollowing;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.DuplicateLoginIdException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.DuplicateLoginIdException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +36,9 @@ public class UserService {
     //회원 등록
     @Transactional
     public UserResponse register(UserRequest.registerRequest registerRequest) {
+        List<UserFollower> followers = new ArrayList<>();
+        List<UserFollowing> followings = new ArrayList<>();
+
         User user = User.builder()
                 .loginId(registerRequest.getLoginId())
                 .password(bCryptPasswordEncoder.encode(registerRequest.getPassword()))
@@ -41,12 +48,11 @@ public class UserService {
                 .profileImageUrl(registerRequest.getProfileImageUrl())
                 .description(registerRequest.getDescription())
                 .role(UserRole.USER)
-                .follower("0")
-                .following("0")
+                .followers(followers)
+                .followings(followings)
                 .createDate(LocalDateTime.now())
                 .loginDate(LocalDateTime.now())
                 .build();
-
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
@@ -54,6 +60,14 @@ public class UserService {
         }
 
         return fromUser(user);
+    }
+
+    //소셜로그인 업데이트
+    @Transactional
+    public void updateUserOAuthUser(User user, UserRequest.updateRequest updateRequest) {
+        user.setNickname(updateRequest.getNickname());
+        user.setProfileImageUrl(updateRequest.getProfileImageUrl());
+        userRepository.save(user);
     }
 
     //회원 탈퇴
@@ -75,10 +89,7 @@ public class UserService {
     public User findUserByLoginId(String loginId) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-        if (findUser.isPresent()) {
-            return findUser.get();
-        }
-        return null;
+        return findUser.orElse(null);
     }
 
     //마이페이지 회원 조회
@@ -92,14 +103,6 @@ public class UserService {
         }
 
         throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
-    }
-
-    //소셜로그인 업데이트
-    @Transactional
-    public void updateUserOAuthUser(User user, UserRequest.updateRequest updateRequest) {
-        user.setNickname(updateRequest.getNickname());
-        user.setProfileImageUrl(updateRequest.getProfileImageUrl());
-        userRepository.save(user);
     }
 
     //아이디 찾기
@@ -170,6 +173,8 @@ public class UserService {
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
                 .description(user.getDescription())
+                .follower(String.valueOf(user.getFollowers().size()))
+                .following(String.valueOf(user.getFollowings().size()))
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
@@ -25,9 +26,9 @@ public class UserController {
     }
 
     @PostMapping("/withdrawal")
-    public ResponseEntity<String> withdraw(Authentication auth,@RequestBody @Valid UserRequest.withdrawalRequest withdrawalRequest){
-        userService.withdrawal(auth.getName(),withdrawalRequest.getPassword());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<String> withdraw(Authentication auth,@RequestBody @Valid UserRequest.loginRequest loginRequest){
+        userService.withdrawal(auth.getName(),loginRequest.getPassword());
+        return ResponseEntity.ok("회원탈퇴되었습니다.");
     }
 
     @PostMapping("/userId")
@@ -38,7 +39,7 @@ public class UserController {
     @PutMapping("/find/password")
     public ResponseEntity<String> findPassword(@RequestBody @Valid UserRequest.findUserInfo findUserInfo){
         userService.updateUserPassword(findUserInfo.getLoginId(), findUserInfo.getPassword());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("비밀번호를 변경되었습니다.");
     }
 
     @PutMapping("/password")

@@ -1,13 +1,12 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.TokenNotFoundException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.TokenNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.TokenRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.Token;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 @Service
