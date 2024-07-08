@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,8 +28,10 @@ public class User {
     private String loginId;
 
     @NotNull
+    @Setter
     private String password;
 
+    @Setter
     private String name;
 
     @Column(unique = true)
@@ -38,22 +42,25 @@ public class User {
     @Setter
     private String profileImageUrl;
 
+    @Setter
     private String description;
 
+    @Setter
     private String locate;
 
-    //추후 논의 follow -> following
-    private String following;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFollower> followers = new ArrayList<>();
 
-    private String follower;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFollowing> followings = new ArrayList<>();
 
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
 
     private LocalDateTime createDate;
 
+    @Setter
     private LocalDateTime updateDate;
 
     private LocalDateTime loginDate;
-
 }

@@ -10,7 +10,7 @@ public class MapController {
 
     private final MapService mapService;
 
-    @GetMapping(value = "/map", produces = "application/json;charset=UTF-8")
+    @GetMapping(value = "api/map", produces = "application/json;charset=UTF-8")
     public String getKakaoApiFromAddress(@RequestParam("address") String roadFullAddr) {
         return mapService.getMapInfo(roadFullAddr);
     }

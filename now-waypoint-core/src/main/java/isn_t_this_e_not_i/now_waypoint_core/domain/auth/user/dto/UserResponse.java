@@ -20,5 +20,29 @@ public class UserResponse {
     private String profileImageUrl;
     private String description;
     private LocalDateTime createDate;
+    private LocalDateTime updateDate;
     private LocalDateTime loginDate;
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class userInfo {
+        private String name;
+        private String nickname;
+        private String profileImageUrl;
+        private String description;
+        private String follower;
+        private String following;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class followInfo{
+        private String name;
+        private String nickname;
+        private String profileImageUrl;
+    }
 }
