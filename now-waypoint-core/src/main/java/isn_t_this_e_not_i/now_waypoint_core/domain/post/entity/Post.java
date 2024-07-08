@@ -6,7 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -23,15 +24,20 @@ public class Post {
     @NotNull
     private String content;
 
-    @ElementCollection
-    private List<String> hashtags;
+    @ManyToMany
+    @JoinTable(
+            name = "post_hashtags",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "hashtag_id")
+    )
+    private Set<Hashtag> hashtags = new HashSet<>();
 
     private String locationTag;
 
     @Enumerated(EnumType.STRING)
     private PostCategory category;
 
-    private String mediaUrl; // 사진이나 동영상 링크
+    private String mediaUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

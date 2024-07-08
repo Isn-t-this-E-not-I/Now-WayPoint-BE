@@ -29,7 +29,7 @@ public class PostResponse {
     public PostResponse(Post post) {
         this.id = post.getId();
         this.content = post.getContent();
-        this.hashtags = post.getHashtags();
+        this.hashtags = post.getHashtags().stream().map(hashtag -> hashtag.getName()).toList();
         this.locationTag = post.getLocationTag();
         this.category = post.getCategory();
         this.mediaUrl = post.getMediaUrl();
