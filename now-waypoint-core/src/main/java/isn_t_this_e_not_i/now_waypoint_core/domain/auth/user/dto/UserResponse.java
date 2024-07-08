@@ -45,4 +45,12 @@ public class UserResponse {
         private String nickname;
         private String profileImageUrl;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class token {
+        private String token;
+    }
 }

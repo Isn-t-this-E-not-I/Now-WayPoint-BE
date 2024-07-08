@@ -57,9 +57,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         //header에 authorization 추가
         response.addHeader("Authorization", "Bearer " + accessToken);
         //client에게 보내줄 데이터 설정
-        if (!response.isCommitted()) {
-            responseToClient(response,accessToken);
-        }
+        responseToClient(response,accessToken);
         log.info("로그인되었습니다.");
     }
 
@@ -71,7 +69,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private void responseToClient(HttpServletResponse response,String accessToken) throws IOException {
         Map<String, String> userInfo = new HashMap<>();
-        userInfo.put("access_token", accessToken);
+        userInfo.put("token", accessToken);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

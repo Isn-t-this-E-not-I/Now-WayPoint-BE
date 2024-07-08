@@ -43,6 +43,7 @@ public class UserRequest {
     }
 
     @Getter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class loginRequest{
