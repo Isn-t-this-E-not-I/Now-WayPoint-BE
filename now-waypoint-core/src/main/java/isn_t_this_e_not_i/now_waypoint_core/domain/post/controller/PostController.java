@@ -5,6 +5,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.HashtagService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class PostController {
 
     private final PostService postService;
+    private final HashtagService hashtagService;
 
     @PostMapping
     public ResponseEntity<PostResponse> createPost(@RequestBody @Valid PostRequest postRequest, @AuthenticationPrincipal UserDetails userDetails) {
@@ -58,6 +60,13 @@ public class PostController {
     public ResponseEntity<List<PostResponse>> getPostsByUser(@AuthenticationPrincipal UserDetails userDetails) {
         Long userId = ((UserDetail) userDetails).getUser().getId();
         List<Post> posts = postService.getPostsByUser(userId);
+        List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/hashtags/{name}")
+    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable("name") String name) {
+        List<Post> posts = hashtagService.getPostsByHashtag(name);
         List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
