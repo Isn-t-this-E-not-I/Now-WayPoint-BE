@@ -1,11 +1,13 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -34,6 +36,7 @@ public class UserResponse {
         private String description;
         private String follower;
         private String following;
+        private List<Post> posts;
     }
 
     @Getter

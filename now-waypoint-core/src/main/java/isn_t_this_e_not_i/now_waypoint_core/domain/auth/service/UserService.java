@@ -11,11 +11,11 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.Duplicate
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,22 +107,22 @@ public class UserService {
     @Transactional
     public UserResponse.userInfo getUserInfo(String loginId) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
+        //포스트 리스트 조회
+        List<Post> posts = null;
 
         User user = findUser.get();
-        return toUserInfo(user);
+        return toUserInfo(user, posts);
     }
 
     //다른 회원 페이지 조회
     @Transactional
     public UserResponse.userInfo getOtherUserInfo(String nickname) {
         Optional<User> findUser = userRepository.findByNickname(nickname);
+        //포스트 리스트 조회
+        List<Post> posts = null;
 
-        if (findUser.isPresent()) {
-            User user = findUser.get();
-            return toUserInfo(user);
-        }
-
-        throw new UsernameNotFoundException("존재하지 않는 아이디입니다.");
+        User user = findUser.get();
+        return toUserInfo(user, posts);
     }
 
     //아이디 찾기
@@ -190,7 +190,7 @@ public class UserService {
                 .build();
     }
 
-    public UserResponse.userInfo toUserInfo(User user) {
+    public UserResponse.userInfo toUserInfo(User user, List<Post> posts) {
         return UserResponse.userInfo.builder()
                 .name(user.getName())
                 .nickname(user.getNickname())
@@ -198,6 +198,7 @@ public class UserService {
                 .description(user.getDescription())
                 .follower(String.valueOf(user.getFollowers().size()))
                 .following(String.valueOf(user.getFollowings().size()))
+                .posts(posts)
                 .build();
     }
 }
