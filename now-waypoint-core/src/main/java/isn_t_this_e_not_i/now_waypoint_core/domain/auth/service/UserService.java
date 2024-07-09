@@ -169,10 +169,8 @@ public class UserService {
 
     //회원 위치 정보 업데이트
     @Transactional
-    public void getUserLocate(String loginId, String locateX, String locateY) {
+    public void getUserLocate(String loginId, String locate) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
-
-        String locate = locateX + "," + locateY;
         findUser.get().setLocate(locate);
         userRepository.save(findUser.get());
     }

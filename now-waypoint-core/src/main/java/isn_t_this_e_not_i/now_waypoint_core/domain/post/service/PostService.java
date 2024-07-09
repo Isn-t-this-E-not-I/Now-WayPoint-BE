@@ -5,9 +5,11 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Hashtag;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Like;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostCategory;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.UnauthorizedException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.HashtagRepository;
@@ -135,6 +137,27 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public void selectCategory(String loginId, String category) {
+        User user = userRepository.findByLoginId(loginId).get();
+        String nickname = user.getNickname();
+        String locate = user.getLocate();
+        List<PostResponseDTO> responsePost = null;
+
+        if (category.equals("PHOTO")) {
+            List<Post> postsByPhoto = postRepository.findPostsByCategoryAndLocationTag(PostCategory.PHOTO, locate);
+            responsePost = toResponsePost(postsByPhoto);
+        } else if (category.equals("VIDEO")) {
+            List<Post> postsByVideo = postRepository.findPostsByCategoryAndLocationTag(PostCategory.VIDEO, locate);
+            responsePost = toResponsePost(postsByVideo);
+        } else {
+            List<Post> postsByLocation = postRepository.findPostsByLocationTag(locate);
+            responsePost = toResponsePost(postsByLocation);
+        }
+
+        messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePost);
+    }
+
     private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
         if (hashtagNames == null) {
             return new HashSet<>();
@@ -143,5 +166,9 @@ public class PostService {
             Hashtag hashtag = hashtagRepository.findByName(name).orElse(new Hashtag(name));
             return hashtagRepository.save(hashtag);
         }).collect(Collectors.toSet());
+    }
+
+    private List<PostResponseDTO> toResponsePost(List<Post> posts) {
+        return posts.stream().map(PostResponseDTO::new).collect(Collectors.toList());
     }
 }
