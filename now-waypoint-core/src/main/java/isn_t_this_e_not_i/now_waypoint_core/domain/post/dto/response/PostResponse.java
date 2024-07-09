@@ -25,6 +25,7 @@ public class PostResponse {
     private String username;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private int likeCount;
 
     public PostResponse(Post post) {
         this.id = post.getId();
@@ -36,5 +37,6 @@ public class PostResponse {
         this.username = post.getUser().getLoginId();
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
+        this.likeCount = post.getLikeCount();
     }
 }

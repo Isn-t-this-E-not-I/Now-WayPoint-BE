@@ -17,7 +17,7 @@ public class HashtagService {
 
     public List<Post> getPostsByHashtag(String name) {
         Hashtag hashtag = hashtagRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Hashtag not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("해시태그를 찾을 수 없습니다."));
         return new ArrayList<>(hashtag.getPosts());
     }
 }
