@@ -3,6 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.post.service;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Hashtag;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Like;
@@ -13,6 +14,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.HashtagReposi
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.LikeRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final HashtagRepository hashtagRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     private final LikeRepository likeRepository;
 
     @Transactional
@@ -44,6 +47,10 @@ public class PostService {
                 .mediaUrl(postRequest.getMediaUrl())
                 .user(user)
                 .build();
+
+        PostResponse postResponse = new PostResponse(post);
+
+        messagingTemplate.convertAndSend("/topic/follower/" + user.getNickname(), postResponse);
         return postRepository.save(post);
     }
 
