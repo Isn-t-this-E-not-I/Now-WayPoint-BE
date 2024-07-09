@@ -26,8 +26,8 @@ public class PostService {
     private final UserRepository userRepository;
     private final HashtagRepository hashtagRepository;
 
-    public Post createPost(Long userId, PostRequest postRequest) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public Post createPost(String loginId, PostRequest postRequest) {
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         Post post = Post.builder()
                 .content(postRequest.getContent())
@@ -40,9 +40,9 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public Post updatePost(Long postId, PostRequest postRequest, Long userId) {
+    public Post updatePost(Long postId, PostRequest postRequest, String loginId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
-        if (!post.getUser().getId().equals(userId)) {
+        if (!post.getUser().getLoginId().equals(loginId)) {
             throw new UnauthorizedException("사용자에게 이 게시물을 수정할 권한이 없습니다");
         }
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
@@ -54,16 +54,16 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public void deletePost(Long postId, Long userId) {
+    public void deletePost(Long postId, String loginId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
-        if (!post.getUser().getId().equals(userId)) {
+        if (!post.getUser().getLoginId().equals(loginId)) {
             throw new UnauthorizedException("사용자에게 이 게시물을 삭제할 권한이 없습니다.");
         }
         postRepository.delete(post);
     }
 
-    public List<Post> getPostsByUser(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+    public List<Post> getPostsByUser(String loginId) {
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         return postRepository.findByUser(user);
     }
 

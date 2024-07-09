@@ -10,8 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,23 +27,23 @@ public class PostController {
     private final HashtagService hashtagService;
 
     @PostMapping
-    public ResponseEntity<PostResponse> createPost(@RequestBody @Valid PostRequest postRequest, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = ((UserDetail) userDetails).getUser().getId();
-        Post post = postService.createPost(userId, postRequest);
+    public ResponseEntity<PostResponse> createPost(@RequestBody @Valid PostRequest postRequest, Authentication authentication) {
+        String loginId = ((UserDetail) authentication.getPrincipal()).getUsername();
+        Post post = postService.createPost(loginId, postRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post));
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId, @RequestBody @Valid PostRequest postRequest, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = ((UserDetail) userDetails).getUser().getId();
-        Post post = postService.updatePost(postId, postRequest, userId);
+    public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId, @RequestBody @Valid PostRequest postRequest, Authentication authentication) {
+        String loginId = ((UserDetail) authentication.getPrincipal()).getUsername();
+        Post post = postService.updatePost(postId, postRequest, loginId);
         return ResponseEntity.ok(new PostResponse(post));
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Map<String, String>> deletePost(@PathVariable("postId") Long postId, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = ((UserDetail) userDetails).getUser().getId();
-        postService.deletePost(postId, userId);
+    public ResponseEntity<Map<String, String>> deletePost(@PathVariable("postId") Long postId, Authentication authentication) {
+        String loginId = ((UserDetail) authentication.getPrincipal()).getUsername();
+        postService.deletePost(postId, loginId);
         Map<String, String> response = new HashMap<>();
         response.put("message", "게시글이 삭제되었습니다.");
         return ResponseEntity.ok(response);
@@ -57,15 +56,15 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getPostsByUser(@AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = ((UserDetail) userDetails).getUser().getId();
-        List<Post> posts = postService.getPostsByUser(userId);
+    public ResponseEntity<List<PostResponse>> getPostsByUser(Authentication authentication) {
+        String loginId = ((UserDetail) authentication.getPrincipal()).getUsername();
+        List<Post> posts = postService.getPostsByUser(loginId);
         List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/hashtags/{name}")
-    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable("name") String name) {
+    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable String name) {
         List<Post> posts = hashtagService.getPostsByHashtag(name);
         List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
         return ResponseEntity.ok(response);
