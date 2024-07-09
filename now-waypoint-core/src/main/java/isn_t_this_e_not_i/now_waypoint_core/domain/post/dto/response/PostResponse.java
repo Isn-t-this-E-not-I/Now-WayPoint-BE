@@ -24,7 +24,6 @@ public class PostResponse {
     private String mediaUrl;
     private String username;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private int likeCount;
 
     public PostResponse(Post post) {
@@ -36,7 +35,6 @@ public class PostResponse {
         this.mediaUrl = post.getMediaUrl();
         this.username = post.getUser().getLoginId();
         this.createdAt = post.getCreatedAt();
-        this.updatedAt = post.getUpdatedAt();
         this.likeCount = post.getLikeCount();
     }
 }
