@@ -1,6 +1,8 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
@@ -30,6 +32,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
     private final TokenService tokenService;
+    private final UserRepository userRepository;
 
     //로그인 시 실행
     @Override
@@ -48,6 +51,8 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         UserDetail userDetail = (UserDetail) authResult.getPrincipal();
         String loginId = userDetail.getUsername();
+        User user = userRepository.findByLoginId(loginId).get();
+
         String accessToken = jwtUtil.getAccessToken(userDetail);
         String refreshToken = jwtUtil.getRefreshToken(userDetail);
 
@@ -57,7 +62,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         //header에 authorization 추가
         response.addHeader("Authorization", "Bearer " + accessToken);
         //client에게 보내줄 데이터 설정
-        responseToClient(response,accessToken);
+        responseToClient(response,accessToken, user.getNickname(), user.getLocate());
         log.info("로그인되었습니다.");
     }
 
@@ -67,9 +72,11 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
     }
 
-    private void responseToClient(HttpServletResponse response,String accessToken) throws IOException {
+    private void responseToClient(HttpServletResponse response,String accessToken,String nickname, String locate) throws IOException {
         Map<String, String> userInfo = new HashMap<>();
         userInfo.put("token", accessToken);
+        userInfo.put("nickname", nickname);
+        userInfo.put("locate", locate);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

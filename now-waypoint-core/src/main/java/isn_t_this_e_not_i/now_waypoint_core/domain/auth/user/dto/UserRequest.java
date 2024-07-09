@@ -65,9 +65,7 @@ public class UserRequest {
 
         private String description;
 
-        private String locateX;
-
-        private String locateY;
+        private String locate;
     }
 
     @Getter

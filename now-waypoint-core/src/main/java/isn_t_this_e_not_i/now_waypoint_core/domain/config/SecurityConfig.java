@@ -65,7 +65,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, objectMapper, tokenService);
+        JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration)
+                , jwtUtil, objectMapper, tokenService,userRepository);
         jwtLoginFilter.setFilterProcessesUrl("/api/user/login");
         JwtFilter jwtFilter = new JwtFilter(jwtUtil, userDetailService, tokenService);
 

@@ -48,12 +48,6 @@ public class UserController {
         return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }
 
-    @PutMapping("/locate")
-    public ResponseEntity<String> getLocate(Authentication auth, @RequestBody @Valid UserRequest.updateRequest updateRequest) {
-        userService.getUserLocate(auth.getName(), updateRequest.getLocateX(), updateRequest.getLocateY());
-        return ResponseEntity.ok("위치 정보를 업데이트하였습니다.");
-    }
-
     @PutMapping
     public ResponseEntity<UserResponse> updateInfo(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
         return ResponseEntity.ok().body(userService.updateUserInfo(auth.getName(), userRequest));

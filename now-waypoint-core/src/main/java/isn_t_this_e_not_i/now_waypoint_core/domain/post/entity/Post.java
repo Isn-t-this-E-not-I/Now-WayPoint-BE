@@ -25,7 +25,7 @@ public class Post {
     @NotNull
     private String content;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "post_hashtags",
             joinColumns = @JoinColumn(name = "post_id"),
