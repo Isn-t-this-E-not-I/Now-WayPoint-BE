@@ -78,7 +78,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/api/user/login","/api/user/register","/api/user/userId","/api/user/find/password").permitAll()
                         .requestMatchers("/favicon.ico","/api/user/login/kakao", "/login/oauth2/code/kakao","/error").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/ws/**","/main/**","/testStomp").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(handler -> handler.authenticationEntryPoint(oAuth2FailureHandler))
                 .oauth2Login(login -> login

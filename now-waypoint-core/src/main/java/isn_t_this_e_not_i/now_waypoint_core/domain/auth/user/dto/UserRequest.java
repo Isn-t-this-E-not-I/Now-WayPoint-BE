@@ -87,4 +87,12 @@ public class UserRequest {
         private String password;
         private String nickname;
     }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class followUserInfo {
+        private String nickname;
+        private String profileImageUrl;
+    }
 }
