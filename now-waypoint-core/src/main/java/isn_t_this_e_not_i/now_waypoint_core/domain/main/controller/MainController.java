@@ -1,8 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.main.controller;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
-import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.AlertDTO;
-import isn_t_this_e_not_i.now_waypoint_core.domain.main.service.AlertService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
