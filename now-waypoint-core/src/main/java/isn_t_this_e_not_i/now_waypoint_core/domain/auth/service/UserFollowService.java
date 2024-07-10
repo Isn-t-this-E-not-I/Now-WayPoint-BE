@@ -8,8 +8,12 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollowing;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.repository.NotifyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +30,8 @@ public class UserFollowService {
     private final UserFollowerRepository userFollowerRepository;
     private final UserFollowingRepository userFollowingRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final NotifyRepository notifyRepository;
 
     //회원 팔로우
     @Transactional
@@ -52,6 +58,8 @@ public class UserFollowService {
 
         userFollowerRepository.save(userFollower);
         userFollowingRepository.save(userFollowing);
+
+        messagingTemplate.convertAndSend("/queue/notify/" + followUserNickname, getnotifyDTO(findUser));
     }
 
     @Transactional
@@ -121,6 +129,19 @@ public class UserFollowService {
         }
 
         return fromFollows;
+    }
+
+    private NotifyDTO getnotifyDTO(Optional<User> findUser) {
+        Notify notify = Notify.builder().senderNickname(findUser.get().getNickname())
+                .message(findUser.get().getName() + "님이 팔로우하였습니다.")
+                .profileImageUrl(findUser.get().getProfileImageUrl()).build();
+
+        notifyRepository.save(notify);
+        NotifyDTO notifyDTO = NotifyDTO.builder().
+                nickname(notify.getSenderNickname()).
+                message(notify.getMessage()).
+                profileImageUrl(notify.getProfileImageUrl()).build();
+        return notifyDTO;
     }
 
 }

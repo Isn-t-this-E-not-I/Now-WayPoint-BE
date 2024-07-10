@@ -2,14 +2,13 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.post.service;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
-import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
-import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Hashtag;
-import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Like;
-import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
-import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostCategory;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.*;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.UnauthorizedException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.HashtagRepository;
@@ -17,11 +16,13 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.LikeRepositor
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +37,7 @@ public class PostService {
     private final HashtagRepository hashtagRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final LikeRepository likeRepository;
+    private final PostRedisService postRedisService;
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest) {
@@ -50,10 +52,24 @@ public class PostService {
                 .user(user)
                 .build();
 
-        PostResponse postResponse = new PostResponse(post);
+        Post savePost = postRepository.save(post);
 
-        messagingTemplate.convertAndSend("/topic/follower/" + user.getNickname(), postResponse);
-        return postRepository.save(post);
+        PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
+        PostRedis postRedis = postRedisService.register(postResponseDTO);
+        notifyFollowers(postRedis, user);
+
+        return savePost;
+    }
+
+    @Async
+    public void notifyFollowers(PostRedis postRedis, User user) {
+        List<UserFollower> followers = user.getFollowers();
+        messagingTemplate.convertAndSend("/topic/follower/" + user.getNickname(), postRedis.getPost());
+        for (UserFollower follower : followers) {
+            if (!follower.getNickname().equals(user.getNickname())) {
+                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(user, postRedis.getPost()));
+            }
+        }
     }
 
     @Transactional
@@ -142,20 +158,17 @@ public class PostService {
         User user = userRepository.findByLoginId(loginId).get();
         String nickname = user.getNickname();
         String locate = user.getLocate();
-        List<PostResponseDTO> responsePost = null;
+        List<PostResponseDTO> responsePostRedis = null;
 
-        if (category.equals("PHOTO")) {
-            List<Post> postsByPhoto = postRepository.findPostsByCategoryAndLocationTag(PostCategory.PHOTO, locate);
-            responsePost = toResponsePost(postsByPhoto);
-        } else if (category.equals("VIDEO")) {
-            List<Post> postsByVideo = postRepository.findPostsByCategoryAndLocationTag(PostCategory.VIDEO, locate);
-            responsePost = toResponsePost(postsByVideo);
+        if (category.equalsIgnoreCase("PHOTO")) {
+            responsePostRedis = postRedisService.findByCategoryAndLocate(PostCategory.PHOTO, locate);
+        } else if (category.equalsIgnoreCase("VIDEO")) {
+            responsePostRedis = postRedisService.findByCategoryAndLocate(PostCategory.VIDEO, locate);
         } else {
-            List<Post> postsByLocation = postRepository.findPostsByLocationTag(locate);
-            responsePost = toResponsePost(postsByLocation);
+            responsePostRedis = postRedisService.findByLocate(locate);
         }
 
-        messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePost);
+        messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
     }
 
     private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
@@ -168,7 +181,13 @@ public class PostService {
         }).collect(Collectors.toSet());
     }
 
-    private List<PostResponseDTO> toResponsePost(List<Post> posts) {
-        return posts.stream().map(PostResponseDTO::new).collect(Collectors.toList());
+    private static NotifyDTO getNotifyDTO(User user,PostResponseDTO postResponseDTO) {
+        Notify notify = Notify.builder().senderNickname(user.getNickname()).
+                message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).build();
+        return NotifyDTO.builder()
+                .nickname(notify.getSenderNickname())
+                .message(notify.getMessage())
+                .profileImageUrl(notify.getProfileImageUrl())
+                .build();
     }
 }

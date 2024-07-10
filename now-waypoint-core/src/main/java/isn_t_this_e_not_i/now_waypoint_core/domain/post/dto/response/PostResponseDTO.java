@@ -4,6 +4,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Hashtag;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostCategory;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostResponseDTO {
