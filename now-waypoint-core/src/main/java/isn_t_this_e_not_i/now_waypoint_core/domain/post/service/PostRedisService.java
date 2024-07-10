@@ -46,4 +46,14 @@ public class PostRedisService {
         }
         return postResponseDTOS;
     }
+
+    public List<PostResponseDTO> findByNickname(String nickname) {
+        List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
+        List<PostRedis> postRedisList = postRedisRepository.findPostRedisByNickname(nickname);
+        for (PostRedis postRedis : postRedisList) {
+            postResponseDTOS.add(postRedis.getPost());
+        }
+
+        return postResponseDTOS;
+    }
 }

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface PostRedisRepository extends CrudRepository<PostRedis, Long> {
-    Optional<PostRedis> findByNickname(String nickname);
+    List<PostRedis> findPostRedisByNickname(String nickname);
 
     List<PostRedis> findPostRedisByCategoryAndLocate(PostCategory category, String locate);
 

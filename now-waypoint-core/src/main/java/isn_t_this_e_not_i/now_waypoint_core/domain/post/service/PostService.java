@@ -3,6 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.post.service;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollowing;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
@@ -23,9 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -169,6 +168,19 @@ public class PostService {
         }
 
         messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
+    }
+
+    @Transactional
+    public void getFollowerPost(String loginId) {
+        User user = userRepository.findByLoginId(loginId).get();
+        List<UserFollowing> followings = user.getFollowings();
+        List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
+        for (UserFollowing following : followings) {
+            List<PostResponseDTO> postRedisList = postRedisService.findByNickname(following.getNickname());
+            postResponseDTOS.addAll(postRedisList);
+        }
+        postResponseDTOS.sort(Comparator.comparing(PostResponseDTO::getCreatedAt).reversed());
+        messagingTemplate.convertAndSend("/queue/" + user.getLocate() + "/" + user.getNickname(), postResponseDTOS);
     }
 
     private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
