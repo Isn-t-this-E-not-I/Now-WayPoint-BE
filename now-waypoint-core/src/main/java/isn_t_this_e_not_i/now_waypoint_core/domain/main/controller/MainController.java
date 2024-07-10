@@ -22,12 +22,17 @@ public class MainController {
     private final UserService userService;
 
     @MessageMapping("/category")
-    public void selectCategory(Principal principal, Map<String, String> category){
+    public void selectCategory(Principal principal, @Payload Map<String, String> category) {
         postService.selectCategory(principal.getName(), category.get("category"));
     }
 
     @MessageMapping("/locate")
     public void getLocate(Principal principal, @Payload Map<String, String> locate) {
         userService.getUserLocate(principal.getName(), locate.get("locate"));
+    }
+
+    @MessageMapping("/follower")
+    public void followerPost(Principal principal) {
+        postService.getFollowerPost(principal.getName());
     }
 }
