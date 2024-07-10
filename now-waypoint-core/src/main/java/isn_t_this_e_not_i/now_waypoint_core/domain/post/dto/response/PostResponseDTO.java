@@ -24,15 +24,16 @@ public class PostResponseDTO {
     private PostCategory category;
     private String mediaUrl;
     private String username;
+    private int likeCount;
     private LocalDateTime createdAt;
 
     public PostResponseDTO(Post post) {
         this.content = post.getContent();
         this.hashtags = post.getHashtags().stream().map(Hashtag::getName).collect(Collectors.toList());
         this.locationTag = post.getLocationTag();
-        this.category = post.getCategory();
         this.mediaUrl = post.getMediaUrl();
         this.username = post.getUser().getNickname();
+        this.likeCount = post.getLikeCount();
         this.createdAt = post.getCreatedAt();
     }
 }

@@ -6,6 +6,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollowing;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.repository.NotifyRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
@@ -23,7 +24,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,6 +37,7 @@ public class PostService {
     private final SimpMessagingTemplate messagingTemplate;
     private final LikeRepository likeRepository;
     private final PostRedisService postRedisService;
+    private final NotifyRepository notifyRepository;
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest) {
@@ -55,18 +56,21 @@ public class PostService {
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
         PostRedis postRedis = postRedisService.register(postResponseDTO);
-        notifyFollowers(postRedis, user);
+        notifyFollowers(postRedis, user, postResponseDTO);
 
         return savePost;
     }
 
     @Async
-    public void notifyFollowers(PostRedis postRedis, User user) {
+    public void notifyFollowers(PostRedis postRedis, User user, PostResponseDTO postResponseDTO) {
         List<UserFollower> followers = user.getFollowers();
         messagingTemplate.convertAndSend("/topic/follower/" + user.getNickname(), postRedis.getPost());
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
-                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(user, postRedis.getPost()));
+                Notify notify = Notify.builder().senderNickname(user.getNickname()).
+                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).build();
+                notifyRepository.save(notify);
+                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(notify));
             }
         }
     }
@@ -193,9 +197,7 @@ public class PostService {
         }).collect(Collectors.toSet());
     }
 
-    private static NotifyDTO getNotifyDTO(User user,PostResponseDTO postResponseDTO) {
-        Notify notify = Notify.builder().senderNickname(user.getNickname()).
-                message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).build();
+    private static NotifyDTO getNotifyDTO(Notify notify) {
         return NotifyDTO.builder()
                 .nickname(notify.getSenderNickname())
                 .message(notify.getMessage())
