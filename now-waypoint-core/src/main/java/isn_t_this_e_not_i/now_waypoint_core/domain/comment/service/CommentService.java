@@ -45,6 +45,7 @@ public class CommentService {
         return new CommentResponse(comment);
     }
 
+    @Transactional(readOnly = true)
     public List<CommentResponse> getCommentsByPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
