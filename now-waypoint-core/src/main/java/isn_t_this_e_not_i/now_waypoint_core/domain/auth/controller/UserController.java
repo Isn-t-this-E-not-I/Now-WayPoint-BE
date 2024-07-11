@@ -2,6 +2,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.ApiResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
@@ -21,8 +22,15 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
-        return ResponseEntity.ok().body(userService.register(registerRequest));
+    public ResponseEntity<ApiResponse<String>> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
+
+        String message = userService.register(registerRequest);
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .status(HttpStatus.OK.value())
+                .data(message)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
     }
 
     @PostMapping("/withdrawal")
