@@ -9,7 +9,7 @@ Now-WayPoint(나와)의 프로젝트 개요를 설명합니다.
 벡엔드 프로젝트 하위는 각 API서버 프로젝트(컨테이너 기반으로 구성됨)로 나눠져있습니다.
 API서버는 아래 아키텍처 구조을 따르고 있으며 각 프로젝트는 다음과 같습니다.
 
-![스크린샷 2024-06-28 오후 11 43 28](https://github.com/immyeong/immyeong.github.io/assets/62759873/58dceaf5-bdf1-4e0a-8887-21ed2eeab28e)
+![스크린샷 2024-07-09 오전 10 34 49](https://github.com/Isn-t-this-E-not-I/Now-WayPoint-BE/assets/62759873/2214efb2-a816-4980-9cd3-98372096256b)
 
 - now-waypoint-core : 인증, 사용자 관리, 게시글관리, 채팅, 좋아요 관리, 해시태그 관리 등 핵심 기능을 제공하는 코어 서버
 - now-waypoint-mysql : MySQL 데이터베이스 서버
