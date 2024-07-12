@@ -55,14 +55,19 @@ public class UserService {
         String nickname = registerRequest.getNickname();
         Optional<User> findUser = userRepository.findByLoginId(loginId);
         Optional<User> findUserNickname = userRepository.findByNickname(nickname);
+        Optional<User> findUserLoginAndNickname = userRepository.findByLoginIdAndNickname(loginId, nickname);
 
-        //중복 로그인 아이디
-        if (findUser.isPresent()) {
-            message = "아이디가 중복되었습니다.";
+        //중복 아이디만
+        if (findUser.isPresent() && findUserNickname.isEmpty()) {
+            message = "idNo";
         }
-        //중복 닉네임
-        else if(findUserNickname.isPresent()) {
-            message = "닉네임이 중복되었습니다.";
+        //중복 닉네임만
+        else if(findUserNickname.isPresent() && findUser.isEmpty()) {
+            message = "nicknameNo";
+        }
+        //닉네임과 로그인 아이디 모두 중복
+        else if (findUserLoginAndNickname.isPresent()) {
+            message = "idNicknameNo";
         } else {
             User user = User.builder()
                     .loginId(registerRequest.getLoginId())
@@ -79,7 +84,7 @@ public class UserService {
                     .build();
 
             userRepository.save(user);
-            message = "회원가입에 성공하였습니다.";
+            message = "ok";
         }
 
         return message;
