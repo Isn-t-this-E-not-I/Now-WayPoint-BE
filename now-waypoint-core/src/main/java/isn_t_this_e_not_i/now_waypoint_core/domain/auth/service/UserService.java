@@ -39,9 +39,10 @@ public class UserService {
 
     //회원 등록
     @Transactional
-    public UserResponse register(UserRequest.registerRequest registerRequest) {
+    public String register(UserRequest.registerRequest registerRequest) {
         List<UserFollower> followers = new ArrayList<>();
         List<UserFollowing> followings = new ArrayList<>();
+        String message = "";
 
         if (registerRequest.getName() == null) {
             registerRequest.setName(registerRequest.getNickname());
@@ -50,27 +51,43 @@ public class UserService {
         if (registerRequest.getProfileImageUrl() == null) {
             registerRequest.setProfileImageUrl(defaultImageUrl);
         }
+        String loginId = registerRequest.getLoginId();
+        String nickname = registerRequest.getNickname();
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+        Optional<User> findUserNickname = userRepository.findByNickname(nickname);
+        Optional<User> findUserLoginAndNickname = userRepository.findByLoginIdAndNickname(loginId, nickname);
 
-        User user = User.builder()
-                .loginId(registerRequest.getLoginId())
-                .password(bCryptPasswordEncoder.encode(registerRequest.getPassword()))
-                .name(registerRequest.getName())
-                .nickname(registerRequest.getNickname())
-                .profileImageUrl(registerRequest.getProfileImageUrl())
-                .description(registerRequest.getDescription())
-                .role(UserRole.USER)
-                .followers(followers)
-                .followings(followings)
-                .createDate(LocalDateTime.now())
-                .loginDate(LocalDateTime.now())
-                .build();
-        try {
+        //중복 아이디만
+        if (findUser.isPresent() && findUserNickname.isEmpty()) {
+            message = "idNo";
+        }
+        //중복 닉네임만
+        else if(findUserNickname.isPresent() && findUser.isEmpty()) {
+            message = "nicknameNo";
+        }
+        //닉네임과 로그인 아이디 모두 중복
+        else if (findUserLoginAndNickname.isPresent()) {
+            message = "idNicknameNo";
+        } else {
+            User user = User.builder()
+                    .loginId(registerRequest.getLoginId())
+                    .password(bCryptPasswordEncoder.encode(registerRequest.getPassword()))
+                    .name(registerRequest.getName())
+                    .nickname(registerRequest.getNickname())
+                    .profileImageUrl(registerRequest.getProfileImageUrl())
+                    .description(registerRequest.getDescription())
+                    .role(UserRole.USER)
+                    .followers(followers)
+                    .followings(followings)
+                    .createDate(LocalDateTime.now())
+                    .loginDate(LocalDateTime.now())
+                    .build();
+
             userRepository.save(user);
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateLoginIdException("이미 존재하는 아이디입니다.");
+            message = "ok";
         }
 
-        return fromUser(user);
+        return message;
     }
 
     //소셜로그인 업데이트

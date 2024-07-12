@@ -12,4 +12,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     void deleteByLoginId(String loginId);
 
     Optional<User> findByNickname(String nickname);
+
+    Optional<User> findByLoginIdAndNickname(String loginId, String nickname);
 }

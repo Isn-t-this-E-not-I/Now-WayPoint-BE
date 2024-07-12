@@ -11,6 +11,9 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedHeaders("Set-Cookie")
-                .allowedOrigins("http://localhost:3000");
+                .allowedHeaders("*")
+                .allowedMethods("*")
+                .allowedOrigins("http://localhost:3000")
+                .allowCredentials(true);
     }
 }

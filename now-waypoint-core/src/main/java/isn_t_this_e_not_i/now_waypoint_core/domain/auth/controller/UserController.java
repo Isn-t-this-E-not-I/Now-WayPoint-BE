@@ -1,17 +1,19 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.ApiResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/user")
@@ -20,9 +22,33 @@ public class UserController {
 
     private final UserService userService;
 
+    @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
+    private String REDIRECT_URI;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
+    private String CLIENT_ID;
+
+
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
-        return ResponseEntity.ok().body(userService.register(registerRequest));
+    public ResponseEntity<ApiResponse<String>> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
+
+        String message = userService.register(registerRequest);
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .status(HttpStatus.OK.value())
+                .data(message)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/login/kakao")
+    public String loginWithKakao() {
+        String state = UUID.randomUUID().toString();
+        String kakaoLoginUrl = String.format(
+                "https://accounts.kakao.com/login?continue=https://kauth.kakao.com/oauth/authorize?scope=profile_nickname%%20profile_image&response_type=code&state=%s&redirect_uri=%s&through_account=true&client_id=%s",
+                state, REDIRECT_URI, CLIENT_ID
+        );
+        return "redirect:" + kakaoLoginUrl;
     }
 
     @PostMapping("/withdrawal")
