@@ -40,7 +40,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         SecurityContextHolder.getContext().setAuthentication(authToken);
         response.addCookie(createCookie("Authorization", accessToken));
         //Redirect url 설정해야함 (ex: http:localhost:3000/ __ / __ )
-        response.sendRedirect("http://localhost:8080/api/user/test");
+        response.sendRedirect("http://localhost:3000/main");
     }
 
     private Cookie createCookie(String key, String value) {

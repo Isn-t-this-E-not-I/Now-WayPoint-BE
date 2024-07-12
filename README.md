@@ -9,7 +9,7 @@ Now-WayPoint(나와)의 프로젝트 개요를 설명합니다.
 벡엔드 프로젝트 하위는 각 API서버 프로젝트(컨테이너 기반으로 구성됨)로 나눠져있습니다.
 API서버는 아래 아키텍처 구조을 따르고 있으며 각 프로젝트는 다음과 같습니다.
 
-![스크린샷 2024-06-28 오후 11 43 28](https://github.com/immyeong/immyeong.github.io/assets/62759873/58dceaf5-bdf1-4e0a-8887-21ed2eeab28e)
+![스크린샷 2024-07-09 오전 10 34 49](https://github.com/Isn-t-this-E-not-I/Now-WayPoint-BE/assets/62759873/2214efb2-a816-4980-9cd3-98372096256b)
 
 - now-waypoint-core : 인증, 사용자 관리, 게시글관리, 채팅, 좋아요 관리, 해시태그 관리 등 핵심 기능을 제공하는 코어 서버
 - now-waypoint-mysql : MySQL 데이터베이스 서버
@@ -40,7 +40,7 @@ API서버는 아래 아키텍처 구조을 따르고 있으며 각 프로젝트�
    ```
 3. 빌드된 이미지를 Docker 컨테이너로 실행합니다.
    ```bash
-   docker run -d -p 8080:80 now-waypoint-core
+   docker run -d -p 8080:8080 now-waypoint-core
    docker run -d -p 3306:3306 now-waypoint-mysql
    ```
 4. 각 컨테이너의 포트번호를 확인하고, API 서버에 접속합니다.(localhost:포트번호)
@@ -58,13 +58,12 @@ API서버는 아래 아키텍처 구조을 따르고 있으며 각 프로젝트�
 - 서버에 대한 샘플 dockerfile(core서버 기준) 작성완료(각 프로젝트의 Dockerfile)
 - 각 컨테이너 포트번호 설정 및 통신여부 확인
 - docker-compose를 통한 여러 컨테이너 동시 실행 확인
+- github actions를 활용하기 위한 CI 설정값 구성(.github/workflows/ 하위 yml 파일들)
 
 ## CI/CD 관점에서 해야할 사항
-- github actions를 활용하기 위한 CI 설정값 구성(.github/workflows/ 하위 yml 파일들)
 - aws deploy, ec2 or s3 bucket을 사용하여 CD 설정값 구성
 
 ## 백엔드팀에서 앞으로 해야할 일
-
 - 요구사항에 따른 기능 구현
 - 서버에 대한 테스트 코드 작성
-- CD 파이프라인 구성(최종적으로 크램폴린 or aws)
+- CD 파이프라인 구성(aws)

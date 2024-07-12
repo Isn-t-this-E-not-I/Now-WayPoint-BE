@@ -1,6 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.TokenNotFoundException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.TokenNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.Token;
 import jakarta.servlet.http.HttpServletRequest;

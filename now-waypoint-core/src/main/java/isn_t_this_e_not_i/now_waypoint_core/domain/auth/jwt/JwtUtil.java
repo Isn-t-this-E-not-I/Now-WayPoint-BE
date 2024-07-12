@@ -4,8 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -16,6 +19,7 @@ public class JwtUtil {
     //jwt 토큰 생성
 
     private final SecretKey secretKey;
+    private final UserDetailService userDetailService;
 
     @Value("${spring.jwt.accessToken.Time}")
     private long ACCESS_TOKEN_EXPIRE_TIME;
@@ -23,8 +27,9 @@ public class JwtUtil {
     @Value("${spring.jwt.refreshToken.Time}")
     private long REFRESH_TOKEN_EXPIRE_TIME;
 
-    public JwtUtil(@Value("${spring.jwt.secretKey}") String secretKey) {
+    public JwtUtil(@Value("${spring.jwt.secretKey}") String secretKey, UserDetailService userDetailService) {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey));
+        this.userDetailService = userDetailService;
     }
 
     //accessToken 생성
@@ -58,6 +63,19 @@ public class JwtUtil {
                 .getPayload();
 
         return claims.getSubject();
+    }
+
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        UserDetail userDetails = (UserDetail) userDetailService.loadUserByUsername(claims.getSubject());
+        return new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities()
+        );
     }
 
     //token 유효성 검사

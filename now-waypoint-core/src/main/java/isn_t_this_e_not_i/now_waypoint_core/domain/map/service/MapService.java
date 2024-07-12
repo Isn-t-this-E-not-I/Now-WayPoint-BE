@@ -1,9 +1,8 @@
-package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
+package isn_t_this_e_not_i.now_waypoint_core.domain.map.service;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,12 +13,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-@RestController
-public class AddressController {
-    @RequestMapping(value = "/map", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
-    public String getKakaoApiFromAddress(@RequestParam("address") String roadFullAddr) {
-        String apiKey = "fe1f357652d7579821f3fd70bf590ea4";
-        String apiUrl = "https://dapi.kakao.com/v2/local/search/address.json";
+@Service
+@Slf4j
+public class MapService {
+
+    @Value("${kakao.api.key}")
+    private String apiKey;
+
+    @Value("${kakao.api.url}")
+    private String apiUrl;
+
+    public String getMapInfo(String roadFullAddr){
         String jsonString = null;
 
         try {
@@ -51,8 +55,8 @@ public class AddressController {
             jsonString = docJson.toString();
             rd.close();
 
-            // 응답을 콘솔에 출력
-            System.out.println(jsonString);
+            // 응답 로그
+            log.info("mapInfo ={}", jsonString);
 
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();

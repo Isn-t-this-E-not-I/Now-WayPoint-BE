@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtLoginFilter;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtUtil;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.handler.OAuth2FailureHandler;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.handler.OAuth2SuccessHandler;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.service.OAuth2UserService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
@@ -40,6 +41,7 @@ public class SecurityConfig {
     private final TokenService tokenService;
     private final UserRepository userRepository;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -63,7 +65,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, objectMapper, tokenService);
+        JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration)
+                , jwtUtil, objectMapper, tokenService,userRepository);
         jwtLoginFilter.setFilterProcessesUrl("/api/user/login");
         JwtFilter jwtFilter = new JwtFilter(jwtUtil, userDetailService, tokenService);
 
@@ -74,9 +77,11 @@ public class SecurityConfig {
                 .httpBasic(auth -> auth.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/user/login", "/api/user/register","/favicon.ico",
-                                "/api/user/login/kakao", "/login/oauth2/code/kakao","/error").permitAll()
+                        .requestMatchers("/", "/api/user/login","/api/user/register","/api/user/userId","/api/user/find/password").permitAll()
+                        .requestMatchers("/favicon.ico","/api/user/login/kakao", "/login/oauth2/code/kakao","/error").permitAll()
+                        .requestMatchers("/ws/**","/main/**","/testStomp").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(handler -> handler.authenticationEntryPoint(oAuth2FailureHandler))
                 .oauth2Login(login -> login
                         .authorizationEndpoint(endpoint -> endpoint.baseUri("/api/user/login"))
                         .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig.userService(oAuth2UserService()))

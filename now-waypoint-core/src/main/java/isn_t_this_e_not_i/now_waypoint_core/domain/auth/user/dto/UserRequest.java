@@ -31,30 +31,22 @@ public class UserRequest {
 
         private String password;
 
-        private String locate;
-
+        @Setter
         private String name;
 
         private String nickname;
 
+        @Setter
         private String profileImageUrl;
 
         private String description;
     }
 
     @Getter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class loginRequest{
-        private String loginId;
-
-        private String password;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class withdrawalRequest{
         private String loginId;
 
         private String password;
@@ -65,18 +57,40 @@ public class UserRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class updateRequest{
-        private String password;
-
-        private String locate;
-
         private String name;
 
         private String nickname;
 
         private String profileImageUrl;
 
-        private String updateDate;
-
         private String description;
+
+        private String locate;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class updatePasswordRequest{
+        private String loginId;
+        private String password;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class findUserInfo {
+        private String loginId;
+        private String password;
+        private String nickname;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class followUserInfo {
+        private String nickname;
+        private String profileImageUrl;
     }
 }
