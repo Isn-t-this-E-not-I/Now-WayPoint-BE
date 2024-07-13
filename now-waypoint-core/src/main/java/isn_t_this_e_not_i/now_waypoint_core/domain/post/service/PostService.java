@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,17 +39,20 @@ public class PostService {
     private final LikeRepository likeRepository;
     private final PostRedisService postRedisService;
     private final NotifyRepository notifyRepository;
+    private final FileUploadService fileUploadService;
 
     @Transactional
-    public Post createPost(Authentication auth, PostRequest postRequest) {
+    public Post createPost(Authentication auth, PostRequest postRequest, MultipartFile file) {
         User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
+        String fileUrl = fileUploadService.fileUpload(file);
+
         Post post = Post.builder()
                 .content(postRequest.getContent())
                 .hashtags(hashtags)
                 .locationTag(postRequest.getLocationTag())
                 .category(postRequest.getCategory())
-                .mediaUrl(postRequest.getMediaUrl())
+                .mediaUrl(fileUrl)
                 .user(user)
                 .build();
 

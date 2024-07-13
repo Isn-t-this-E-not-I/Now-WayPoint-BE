@@ -38,6 +38,7 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostCategory category;
 
+    @Column(name = "media_url", columnDefinition = "TEXT")
     private String mediaUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
