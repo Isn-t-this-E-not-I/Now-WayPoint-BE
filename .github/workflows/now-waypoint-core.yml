@@ -28,6 +28,7 @@ jobs:
         run: |
           echo "CLOUD_AWS_CREDENTIALS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
           echo "CLOUD_AWS_CREDENTIALS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "FILE_STORAGE_PATH=/app/static/files" >> $GITHUB_ENV
 
       - name: Build with Gradle
         run: ./gradlew build
