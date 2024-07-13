@@ -10,6 +10,7 @@ ARG CLOUD_AWS_CREDENTIALS_SECRET_KEY
 # 환경 변수를 Docker 컨테이너 내부에서 사용할 수 있도록 설정
 ENV CLOUD_AWS_CREDENTIALS_ACCESS_KEY=${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
 ENV CLOUD_AWS_CREDENTIALS_SECRET_KEY=${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
+ENV FILE_STORAGE_PATH=/app/static/files
 
 # 빌드된 JAR 파일을 로컬에서 직접 가져오도록 설정
 COPY ./build/libs/*-SNAPSHOT.jar /app/now-waypoint-core.jar
