@@ -71,7 +71,7 @@ CREATE TABLE post_hashtags (
                                FOREIGN KEY (hashtag_id) REFERENCES hashtag(hashtag_id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
--- notify 테이블 생성
+-- notify 테이블 생성#
 CREATE TABLE notify (
                         notify_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         sender_nickname VARCHAR(30) NOT NULL,
