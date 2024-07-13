@@ -1,13 +1,27 @@
 package isn_t_this_e_not_i.now_waypoint_core;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class NowWaypointCoreApplicationTests {
 
-	@Test
-	void contextLoads() {
+	@BeforeAll
+	static void setup() {
+		String accessKeyId = System.getenv("CLOUD_AWS_CREDENTIALS_ACCESS_KEY");
+		String secretAccessKey = System.getenv("CLOUD_AWS_CREDENTIALS_SECRET_KEY");
+
+		if (accessKeyId == null || secretAccessKey == null) {
+			throw new IllegalArgumentException("Required environment variables are not set");
+		}
+
+		System.setProperty("cloud.aws.credentials.access-key", accessKeyId);
+		System.setProperty("cloud.aws.credentials.secret-key", secretAccessKey);
 	}
 
+	@Test
+	void contextLoads() {
+		// Your test code here
+	}
 }
