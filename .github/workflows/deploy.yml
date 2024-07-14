@@ -13,10 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup environment variables
-        run: |
-          echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
-          echo "DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
@@ -24,12 +25,11 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: GITHUB_SHA
           script: |
             cd /home/ubuntu
-            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN
-            docker pull $DOCKERHUB_USERNAME/now-waypoint-core:latest
-            docker pull $DOCKERHUB_USERNAME/now-waypoint-mysql:latest
+            docker pull immyeong/now-waypoint-mysql:latest
+            docker pull immyeong/now-waypoint-core:latest
+            docker pull redis:latest
             sudo docker-compose down
             sudo docker-compose up -d
             sudo docker image prune -f
