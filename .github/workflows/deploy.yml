@@ -28,9 +28,9 @@ jobs:
           script: |
             cd /home/ubuntu
             export GITHUB_SHA=${{ github.sha }}
-            sed -i 's/immyeong\/now-waypoint-mysql:.*$/immyeong\/now-waypoint-mysql:${GITHUB_SHA}/' docker-compose.yml
-            sed -i 's/immyeong\/now-waypoint-core:.*$/immyeong\/now-waypoint-core:${GITHUB_SHA}/' docker-compose.yml
-            docker-compose down --rmi all --volumes --remove-orphans
-            docker-compose pull
-            docker-compose up -d
-            docker image prune -f
+            sudo sed -i 's/immyeong\/now-waypoint-mysql:.*$/immyeong\/now-waypoint-mysql:${GITHUB_SHA}/' docker-compose.yml
+            sudo sed -i 's/immyeong\/now-waypoint-core:.*$/immyeong\/now-waypoint-core:${GITHUB_SHA}/' docker-compose.yml
+            sudo docker-compose down --remove-orphans
+            sudo docker-compose pull
+            sudo docker-compose up -d
+            sudo docker image prune -f
