@@ -38,7 +38,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        response.addHeader("Authorization", "Bearer " + authToken);
         response.addCookie(createCookie("Authorization", accessToken));
         //Redirect url 설정해야함 (ex: http:localhost:3000/ __ / __ )
         response.sendRedirect("http://localhost:3000/main");

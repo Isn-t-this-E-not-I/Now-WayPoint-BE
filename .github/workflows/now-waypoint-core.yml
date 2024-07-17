@@ -24,6 +24,12 @@ jobs:
         run: chmod +x gradlew
         working-directory: ./now-waypoint-core
 
+      - name: Setup environment variables
+        run: |
+          echo "CLOUD_AWS_CREDENTIALS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "CLOUD_AWS_CREDENTIALS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "FILE_STORAGE_PATH=/app/static/files" >> $GITHUB_ENV
+
       - name: Build with Gradle
         run: ./gradlew build
         working-directory: ./now-waypoint-core
@@ -49,3 +55,15 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/now-waypoint-core:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            CLOUD_AWS_CREDENTIALS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}
+            CLOUD_AWS_CREDENTIALS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Save Core GITHUB_SHA
+        run: echo ${{ github.sha }} > core_sha.txt
+
+      - name: Upload Core SHA file
+        uses: actions/upload-artifact@v2
+        with:
+          name: core_sha
+          path: core_sha.txt

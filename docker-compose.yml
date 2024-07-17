@@ -39,6 +39,8 @@ services:
       - DB_PASSWORD=mypassword
       - REDIS_HOST=now-waypoint-redis
       - REDIS_PORT=6379
+    volumes:
+      - files:/app/static/files
     depends_on:
       - now-waypoint-mysql
       - now-waypoint-redis
@@ -51,3 +53,4 @@ services:
 
 volumes:
   mydata:
+  files:

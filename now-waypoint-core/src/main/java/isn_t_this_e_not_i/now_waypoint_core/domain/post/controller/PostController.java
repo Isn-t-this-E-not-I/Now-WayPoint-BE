@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +29,9 @@ public class PostController {
     private final HashtagService hashtagService;
 
     @PostMapping
-    public ResponseEntity<PostResponse> createPost(@RequestBody @Valid PostRequest postRequest, Authentication auth) {
-        Post post = postService.createPost(auth, postRequest);
+    public ResponseEntity<PostResponse> createPost(@RequestPart("data") @Valid PostRequest postRequest,
+                                                   @RequestPart("file") MultipartFile file, Authentication auth) {
+        Post post = postService.createPost(auth, postRequest,file);
         return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post));
     }
 

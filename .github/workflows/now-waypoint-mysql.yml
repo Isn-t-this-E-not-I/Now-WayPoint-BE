@@ -40,3 +40,12 @@ jobs:
           # 이미지를 레지스트리에 푸시합니다.
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/now-waypoint-mysql:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
+
+      - name: Save MySQL GITHUB_SHA
+        run: echo ${{ github.sha }} > mysql_sha.txt
+
+      - name: Upload MySQL SHA file
+        uses: actions/upload-artifact@v2
+        with:
+          name: mysql_sha
+          path: mysql_sha.txt
