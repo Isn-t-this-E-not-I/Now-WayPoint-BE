@@ -78,3 +78,22 @@ CREATE TABLE notify (
                         profile_image_url VARCHAR(255),
                         message TEXT NOT NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- chat_room 테이블 생성
+CREATE TABLE chat_room (
+                           chat_room_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                           name VARCHAR(255) NOT NULL,
+                           created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- user_chat_room 테이블 생성
+CREATE TABLE user_chat_room (
+                                user_chat_room_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                user_id INT(11) NOT NULL,
+                                chat_room_id BIGINT NOT NULL,
+                                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                                FOREIGN KEY (chat_room_id) REFERENCES chat_room(chat_room_id) ON DELETE CASCADE,
+                                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
