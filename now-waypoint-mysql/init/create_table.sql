@@ -9,6 +9,7 @@ CREATE TABLE users (
                        profile_image_url VARCHAR(255),
                        description VARCHAR(255),
                        locate VARCHAR(255),
+                       authEmail VARCHAR(50),
                        following VARCHAR(50),
                        follower VARCHAR(50),
                        role VARCHAR(255),

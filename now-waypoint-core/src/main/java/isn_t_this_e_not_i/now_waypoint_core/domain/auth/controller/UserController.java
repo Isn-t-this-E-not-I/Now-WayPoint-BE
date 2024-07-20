@@ -1,5 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.mail.service.EmailAuthService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.ApiResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final EmailAuthService emailAuthService;
 
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
@@ -31,6 +33,7 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
+        emailAuthService.confirmAuthNumber(registerRequest.getAuthNumber(), registerRequest.getEmail());
 
         String message = userService.register(registerRequest);
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
@@ -58,17 +61,20 @@ public class UserController {
     }
 
     @PostMapping("/userId")
-    public ResponseEntity<String> userId(@RequestBody @Valid UserRequest.findUserInfo findUserInfo) {
-        return ResponseEntity.ok().body(userService.getUserId(findUserInfo.getNickname()));
+    public ResponseEntity<UserResponse.findUserInfo> userId(@RequestBody @Valid UserRequest.findUserInfo findUserInfo) {
+        emailAuthService.confirmAuthNumber(findUserInfo.getAuthNumber(),findUserInfo.getEmail());
+        UserResponse.findUserInfo userId = UserResponse.findUserInfo.builder().id(userService.getUserId(findUserInfo.getEmail())).build();
+        return ResponseEntity.ok().body(userId);
     }
 
-    @PutMapping("/find/password")
-    public ResponseEntity<String> findPassword(@RequestBody @Valid UserRequest.findUserInfo findUserInfo){
-        userService.updateUserPassword(findUserInfo.getLoginId(), findUserInfo.getPassword());
-        return ResponseEntity.ok("비밀번호를 변경했습니다.");
+    @PutMapping("/password/find")
+    public ResponseEntity<UserResponse.findUserInfo> findPassword(@RequestBody @Valid UserRequest.findUserInfo findUserInfo){
+        emailAuthService.confirmAuthNumber(findUserInfo.getAuthNumber(), findUserInfo.getEmail());
+        UserResponse.findUserInfo userPassword = UserResponse.findUserInfo.builder().password(userService.randomPassword(findUserInfo.getLoginId())).build();
+        return ResponseEntity.ok().body(userPassword);
     }
 
-    @PutMapping("/password")
+    @PutMapping("/password/change")
     public ResponseEntity<String> changePassword(Authentication auth, @RequestBody @Valid UserRequest.updatePasswordRequest updatePasswordRequest) {
         userService.updateUserPassword(auth.getName(), updatePasswordRequest.getPassword());
         return ResponseEntity.ok("비밀번호가 변경되었습니다.");
