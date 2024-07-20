@@ -51,6 +51,7 @@ public class User {
     private String locate;
 
     @NotEmpty
+    @Email
     private String email;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
