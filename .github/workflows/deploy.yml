@@ -70,9 +70,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Create SSH key file
+        run: echo "${{ secrets.EC2_SSH_KEY }}" > ssh_key.pem
+
+      - name: Set permissions for SSH key
+        run: chmod 600 ssh_key.pem
+
       - name: Copy files to EC2 using scp
-        run: |
-          scp -i ${{ secrets.EC2_SSH_KEY }} core_sha.txt mysql_sha.txt ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu
+        run: scp -i ssh_key.pem core_sha.txt mysql_sha.txt ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu
           
       - name: Deploy to server
         uses: appleboy/ssh-action@master
