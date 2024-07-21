@@ -76,6 +76,9 @@ jobs:
       - name: Set permissions for SSH key
         run: chmod 600 ssh_key.pem
 
+      - name: Create .ssh directory
+        run: mkdir -p ~/.ssh
+
       - name: Disable strict host key checking
         run: echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
 
