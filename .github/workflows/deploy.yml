@@ -76,6 +76,9 @@ jobs:
       - name: Set permissions for SSH key
         run: chmod 600 ssh_key.pem
 
+      - name: Disable strict host key checking
+        run: echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
       - name: Copy files to EC2 using scp
         run: scp -i ssh_key.pem core_sha.txt mysql_sha.txt ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu
           
