@@ -70,6 +70,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          source: "core_sha.txt mysql_sha.txt"
+          target: "/home/ubuntu"
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
