@@ -13,17 +13,42 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Download Core SHA file
-        uses: actions/download-artifact@v2
-        with:
-          name: core_sha
-          path: .
+      - name: Install dependencies
+        run: sudo apt-get install -y jq unzip
 
-      - name: Download MySQL SHA file
-        uses: actions/download-artifact@v2
-        with:
-          name: mysql_sha
-          path: .
+      - name: Get the latest successful core workflow run ID
+        id: get_core_run_id
+        run: |
+          core_run_id=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/immyeong/Now-wayPoint-BE/actions/workflows/now-waypoint-core.yml/runs?branch=develop&status=success" \
+            | jq '.workflow_runs[0].id')
+          echo "Core Run ID: $core_run_id"
+          echo "::set-output name=core_run_id::$core_run_id"
+
+      - name: Get the latest successful mysql workflow run ID
+        id: get_mysql_run_id
+        run: |
+          mysql_run_id=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/immyeong/Now-wayPoint-BE/actions/workflows/now-waypoint-mysql.yml/runs?branch=develop&status=success" \
+            | jq '.workflow_runs[0].id')
+          echo "MySQL Run ID: $mysql_run_id"
+          echo "::set-output name=mysql_run_id::$mysql_run_id"
+
+      - name: Download Core SHA artifact
+        run: |
+          core_sha_url=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/:owner/:repo/actions/runs/${{ steps.get_core_run_id.outputs.core_run_id }}/artifacts" \
+            | jq -r '.artifacts | map(select(.name == "core_sha")) | .[0].archive_download_url')
+          curl -s -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o core_sha.zip $core_sha_url
+          unzip core_sha.zip
+
+      - name: Download MySQL SHA artifact
+        run: |
+          mysql_sha_url=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/:owner/:repo/actions/runs/${{ steps.get_mysql_run_id.outputs.mysql_run_id }}/artifacts" \
+            | jq -r '.artifacts | map(select(.name == "mysql_sha")) | .[0].archive_download_url')
+          curl -s -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o mysql_sha.zip $mysql_sha_url
+          unzip mysql_sha.zip
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
