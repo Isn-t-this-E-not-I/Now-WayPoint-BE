@@ -19,12 +19,16 @@ public class CommentResponse {
     private String nickname;
     private String profileImageUrl;
     private LocalDateTime createdAt;
+    private Long parentId;
+    private long likeCount;
 
-    public CommentResponse(Comment comment) {
+    public CommentResponse(Comment comment, long likeCount) {
         this.id = comment.getId();
         this.content = comment.getContent();
         this.nickname = comment.getUser().getNickname();
         this.profileImageUrl = comment.getUser().getProfileImageUrl();
         this.createdAt = comment.getCreatedAt();
+        this.parentId = comment.getParent() != null ? comment.getParent().getId() : null;
+        this.likeCount = likeCount;
     }
 }
