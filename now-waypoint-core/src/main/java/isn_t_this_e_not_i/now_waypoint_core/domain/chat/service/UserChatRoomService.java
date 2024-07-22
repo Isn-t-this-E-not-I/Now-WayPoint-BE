@@ -281,7 +281,7 @@ public class UserChatRoomService {
     @Transactional
     public List<Long> getChatRoomIdsByLoginUserId(String logInUserId) {
         return userChatRoomRepository.findByUserLoginId(logInUserId).stream()
-                .map(chatRoom -> chatRoom.getChatRoom().getId())
+                .map(userChatRoom -> userChatRoom.getChatRoom().getId())
                 .collect(Collectors.toList());
     }
 
