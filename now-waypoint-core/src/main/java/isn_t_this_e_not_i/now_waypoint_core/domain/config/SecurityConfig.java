@@ -24,6 +24,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.Collections;
@@ -61,6 +63,16 @@ public class SecurityConfig {
     @Bean
     public OAuth2UserService oAuth2UserService() {
         return new OAuth2UserService(userService());
+    }
+
+    @Bean
+    public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        firewall.setAllowUrlEncodedSlash(true);  // Allow URL encoded slash
+        firewall.setAllowSemicolon(true);  // Allow semicolon in URL
+        firewall.setAllowBackSlash(true);  // Allow backslash in URL
+        firewall.setAllowUrlEncodedDoubleSlash(true); // Allow double slash in URL
+        return firewall;
     }
 
     @Bean
