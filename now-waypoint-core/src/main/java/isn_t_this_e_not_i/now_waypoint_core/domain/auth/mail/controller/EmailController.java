@@ -23,10 +23,4 @@ public class EmailController {
         emailAuthService.sendEmail(requestDto.getEmail(),requestDto.getState(),requestDto.getLoginId());
         return ResponseEntity.ok().body(new EmailResponseDto("메일 전송 성공"));
     }
-
-    @PostMapping("/confirm")
-    public ResponseEntity<EmailResponseDto> mailConfirm(@RequestBody @Valid EmailRequestDto.EmailNumber emailNumber) {
-        emailAuthService.confirmAuthNumber(emailNumber.getAuthNumber(), emailNumber.getEmail());
-        return ResponseEntity.ok().body(new EmailResponseDto("코드 인증 성공"));
-    }
 }
