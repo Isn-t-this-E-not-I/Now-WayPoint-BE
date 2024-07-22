@@ -5,12 +5,17 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.dto.request.CommentRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.dto.response.CommentResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.entity.Comment;
+import isn_t_this_e_not_i.now_waypoint_core.domain.comment.entity.CommentLike;
+import isn_t_this_e_not_i.now_waypoint_core.domain.comment.repository.CommentLikeRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.repository.CommentRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.UnauthorizedException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -26,6 +31,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     @Transactional
     public CommentResponse createComment(Long postId, CommentRequest commentRequest, Authentication auth) {
@@ -34,26 +40,57 @@ public class CommentService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
+        Comment parentComment = null;
+        if (commentRequest.getParentId() != null) {
+            parentComment = commentRepository.findById(commentRequest.getParentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent comment not found"));
+        }
+
         Comment comment = Comment.builder()
                 .content(commentRequest.getContent())
                 .post(post)
                 .user(user)
+                .parent(parentComment)
                 .build();
 
         commentRepository.save(comment);
 
-        return new CommentResponse(comment);
+        long likeCount = commentLikeRepository.countByComment(comment);
+        return new CommentResponse(comment, likeCount);
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponse> getCommentsByPost(Long postId) {
+    public Page<CommentResponse> getCommentsByPost(Long postId, Pageable pageable) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
-        return commentRepository.findByPostOrderByCreatedAtAsc(post)
-                .stream()
-                .map(CommentResponse::new)
+        // 모든 댓글을 페이징 처리하여 가져옴
+        Page<Comment> commentsPage = commentRepository.findByPost(post, pageable);
+
+        // 모든 댓글을 리스트로 변환
+        List<Comment> comments = commentsPage.getContent();
+
+        // 좋아요 많은 상위 3개 댓글 추출
+        List<CommentResponse> topLikedComments = comments.stream()
+                .sorted((c1, c2) -> Long.compare(
+                        commentLikeRepository.countByComment(c2),
+                        commentLikeRepository.countByComment(c1)))
+                .limit(3)
+                .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment)))
                 .collect(Collectors.toList());
+
+        // 나머지 댓글
+        List<CommentResponse> otherComments = comments.stream()
+                .filter(comment -> topLikedComments.stream()
+                        .noneMatch(topComment -> topComment.getId().equals(comment.getId())))
+                .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment)))
+                .collect(Collectors.toList());
+
+        // 상위 3개 좋아요 많은 댓글을 맨 앞에 추가
+        topLikedComments.addAll(otherComments);
+
+        // 최종 결과를 페이지 형태로 반환
+        return new PageImpl<>(topLikedComments, pageable, commentsPage.getTotalElements());
     }
 
     @Transactional
@@ -68,5 +105,23 @@ public class CommentService {
         }
 
         commentRepository.delete(comment);
+    }
+
+    @Transactional
+    public void likeComment(Long commentId, Authentication auth) {
+        User user = userRepository.findByLoginId(auth.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+
+        if (commentLikeRepository.existsByCommentAndUser(comment, user)) {
+            commentLikeRepository.deleteByCommentAndUser(comment, user);
+        } else {
+            CommentLike commentLike = CommentLike.builder()
+                    .comment(comment)
+                    .user(user)
+                    .build();
+            commentLikeRepository.save(commentLike);
+        }
     }
 }

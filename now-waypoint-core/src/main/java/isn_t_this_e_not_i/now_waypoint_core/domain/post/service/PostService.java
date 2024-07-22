@@ -80,7 +80,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post updatePost(Long postId, PostRequest postRequest, Authentication auth) {
+    public Post updatePost(Long postId, PostRequest postRequest, MultipartFile file, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
         if (!post.getUser().getId().equals(user.getId())) {
@@ -91,8 +91,19 @@ public class PostService {
         post.setHashtags(hashtags);
         post.setLocationTag(postRequest.getLocationTag());
         post.setCategory(postRequest.getCategory());
-        post.setMediaUrl(postRequest.getMediaUrl());
-        return postRepository.save(post);
+
+        if (file != null && !file.isEmpty()) {
+            String fileUrl = fileUploadService.fileUpload(file);
+            post.setMediaUrl(fileUrl);
+        }
+
+        Post savePost = postRepository.save(post);
+
+        PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
+        PostRedis postRedis = postRedisService.register(postResponseDTO);
+        notifyFollowers(postRedis, user, postResponseDTO);
+
+        return savePost;
     }
 
     @Transactional
@@ -105,8 +116,15 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    public List<Post> getPostsByUser(Authentication auth) {
-        User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+    @Transactional
+    public List<Post> getPostsByUser(String loginId) {
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return postRepository.findByUser(user);
+    }
+
+    @Transactional
+    public List<Post> getPostsByOtherUser(String nickname) {
+        User user = userRepository.findByNickname(nickname).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return postRepository.findByUser(user);
     }
 

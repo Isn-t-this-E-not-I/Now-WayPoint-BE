@@ -11,7 +11,9 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.Duplicate
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class UserService {
     @Value("${default.profile.image.url}")
     private String defaultImageUrl;
 
+    private final PostService postService;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final TokenService tokenService;
@@ -125,10 +129,10 @@ public class UserService {
     public UserResponse.userInfo getUserInfo(String loginId) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
         //포스트 리스트 조회
-        List<Post> posts = null;
-
+        List<Post> posts = postService.getPostsByUser(loginId);
+        List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
         User user = findUser.get();
-        return toUserInfo(user, posts);
+        return toUserInfo(user, response);
     }
 
     //다른 회원 페이지 조회
@@ -136,10 +140,12 @@ public class UserService {
     public UserResponse.userInfo getOtherUserInfo(String nickname) {
         Optional<User> findUser = userRepository.findByNickname(nickname);
         //포스트 리스트 조회
-        List<Post> posts = null;
+
+        List<Post> posts = postService.getPostsByOtherUser(nickname);
+        List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
 
         User user = findUser.get();
-        return toUserInfo(user, posts);
+        return toUserInfo(user, response);
     }
 
     //아이디 찾기
@@ -205,7 +211,7 @@ public class UserService {
                 .build();
     }
 
-    public UserResponse.userInfo toUserInfo(User user, List<Post> posts) {
+    public UserResponse.userInfo toUserInfo(User user, List<PostResponse> response) {
         return UserResponse.userInfo.builder()
                 .name(user.getName())
                 .nickname(user.getNickname())
@@ -213,7 +219,7 @@ public class UserService {
                 .description(user.getDescription())
                 .follower(String.valueOf(user.getFollowers().size()))
                 .following(String.valueOf(user.getFollowings().size()))
-                .posts(posts)
+                .posts(response)
                 .build();
     }
 }

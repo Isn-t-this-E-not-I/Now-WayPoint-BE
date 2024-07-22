@@ -11,6 +11,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepositor
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +43,7 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
+    private final PostService postService;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -55,7 +57,7 @@ public class SecurityConfig {
 
     @Bean
     public UserService userService() {
-        return new UserService(userRepository, bCryptPasswordEncoder(), tokenService);
+        return new UserService(postService,userRepository, bCryptPasswordEncoder(), tokenService);
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +37,7 @@ public class UserResponse {
         private String description;
         private String follower;
         private String following;
-        private List<Post> posts;
+        private List<PostResponse> posts;
     }
 
     @Getter

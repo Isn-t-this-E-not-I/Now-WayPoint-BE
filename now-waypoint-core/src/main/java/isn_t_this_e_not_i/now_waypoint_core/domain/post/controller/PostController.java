@@ -1,6 +1,5 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.post.controller;
 
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
@@ -31,13 +30,16 @@ public class PostController {
     @PostMapping
     public ResponseEntity<PostResponse> createPost(@RequestPart("data") @Valid PostRequest postRequest,
                                                    @RequestPart("file") MultipartFile file, Authentication auth) {
-        Post post = postService.createPost(auth, postRequest,file);
+        Post post = postService.createPost(auth, postRequest, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post));
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId, @RequestBody @Valid PostRequest postRequest, Authentication auth) {
-        Post post = postService.updatePost(postId, postRequest, auth);
+    public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId,
+                                                   @RequestPart("data") @Valid PostRequest postRequest,
+                                                   @RequestPart(value = "file", required = false) MultipartFile file,
+                                                   Authentication auth) {
+        Post post = postService.updatePost(postId, postRequest, file, auth);
         return ResponseEntity.ok(new PostResponse(post));
     }
 
@@ -53,13 +55,6 @@ public class PostController {
     public ResponseEntity<PostResponse> getPost(@PathVariable("postId") Long postId) {
         Post post = postService.getPost(postId);
         return ResponseEntity.ok(new PostResponse(post));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<PostResponse>> getPostsByUser(Authentication auth) {
-        List<Post> posts = postService.getPostsByUser(auth);
-        List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{postId}/like")
@@ -85,7 +80,7 @@ public class PostController {
     }
 
     @GetMapping("/hashtags/{name}")
-    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable String name) {
+    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable("name") String name) {
         List<Post> posts = hashtagService.getPostsByHashtag(name);
         List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
         return ResponseEntity.ok(response);
