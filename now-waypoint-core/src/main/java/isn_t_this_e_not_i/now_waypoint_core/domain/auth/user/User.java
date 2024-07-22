@@ -1,7 +1,9 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.entity.UserChatRoom;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -48,11 +50,19 @@ public class User {
     @Setter
     private String locate;
 
+    @NotEmpty
+    @Email
+    private String email;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFollower> followers = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFollowing> followings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<UserChatRoom> chatRooms = new ArrayList<>();
 
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
