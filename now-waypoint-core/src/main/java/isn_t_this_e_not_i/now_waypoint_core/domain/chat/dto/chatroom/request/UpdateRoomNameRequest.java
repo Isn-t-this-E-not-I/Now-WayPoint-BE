@@ -7,6 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateChatRoomNameRequest {
+public class UpdateRoomNameRequest {
+    private Long chatRoomId;
     private String newChatRoomName;
 }
