@@ -8,10 +8,8 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatMessageResponse {
+public class StompMessageResponse {
     private MessageType messageType;
     private Long chatRoomId;
-    private String sender;
     private String content;
-    private String timestamp;
 }

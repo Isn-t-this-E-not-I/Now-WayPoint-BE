@@ -8,5 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InviteUserRequest {
+    private Long chatRoomId;
     private String[] nicknames;
 }
