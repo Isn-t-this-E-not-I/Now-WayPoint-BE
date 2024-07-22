@@ -2,10 +2,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,5 +53,12 @@ public class UserResponse {
     @AllArgsConstructor
     public static class token {
         private String token;
+    }
+
+    @Getter
+    @Builder
+    public static class findUserInfo{
+        private String id;
+        private String password;
     }
 }

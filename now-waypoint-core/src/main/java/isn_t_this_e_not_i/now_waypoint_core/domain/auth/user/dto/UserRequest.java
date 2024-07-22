@@ -34,6 +34,10 @@ public class UserRequest {
         @Setter
         private String name;
 
+        private String email;
+
+        private int authNumber;
+
         private String nickname;
 
         @Setter
@@ -50,6 +54,8 @@ public class UserRequest {
         private String loginId;
 
         private String password;
+
+        private String email;
     }
 
     @Getter
@@ -83,7 +89,8 @@ public class UserRequest {
     public static class findUserInfo {
         private String loginId;
         private String password;
-        private String nickname;
+        private String email;
+        private int authNumber;
     }
 
     @Getter

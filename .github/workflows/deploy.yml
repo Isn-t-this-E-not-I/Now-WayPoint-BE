@@ -1,7 +1,7 @@
 name: Deploy to EC2
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
@@ -13,17 +13,56 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Download Core SHA file
-        uses: actions/download-artifact@v2
-        with:
-          name: core_sha
-          path: .
+      - name: Install dependencies
+        run: sudo apt-get install -y jq unzip
 
-      - name: Download MySQL SHA file
-        uses: actions/download-artifact@v2
-        with:
-          name: mysql_sha
-          path: .
+      - name: Get the latest successful core workflow run ID
+        id: get_core_run_id
+        run: |
+          core_run_id=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/Isn-t-this-E-not-I/Now-wayPoint-BE/actions/workflows/now-waypoint-core.yml/runs?status=success" \
+            | jq '.workflow_runs[0].id')
+          echo "Core Run ID: $core_run_id"
+          echo "::set-output name=core_run_id::$core_run_id"
+
+      - name: Get the latest successful mysql workflow run ID
+        id: get_mysql_run_id
+        run: |
+          mysql_run_id=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/Isn-t-this-E-not-I/Now-wayPoint-BE/actions/workflows/now-waypoint-mysql.yml/runs?status=success" \
+            | jq '.workflow_runs[0].id')
+          echo "MySQL Run ID: $mysql_run_id"
+          echo "::set-output name=mysql_run_id::$mysql_run_id"
+
+      - name: Download Core SHA artifact
+        run: |
+          core_sha_url=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/Isn-t-this-E-not-I/Now-wayPoint-BE/actions/runs/${{ steps.get_core_run_id.outputs.core_run_id }}/artifacts" \
+            | jq -r '.artifacts | map(select(.name == "core_sha")) | .[0].archive_download_url')
+          curl -s -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o core_sha.zip $core_sha_url
+          unzip core_sha.zip
+          echo "Current directory: $(pwd)"  # 현재 디렉토리 출력
+          ls -l  # 현재 디렉토리의 파일 목록 출력
+          if [ ! -f core_sha.txt ]; then
+            echo "Error: core_sha.txt not found."
+            exit 1
+          fi
+          cat core_sha.txt
+
+      - name: Download MySQL SHA artifact
+        run: |
+          mysql_sha_url=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/Isn-t-this-E-not-I/Now-wayPoint-BE/actions/runs/${{ steps.get_mysql_run_id.outputs.mysql_run_id }}/artifacts" \
+            | jq -r '.artifacts | map(select(.name == "mysql_sha")) | .[0].archive_download_url')
+          curl -s -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o mysql_sha.zip $mysql_sha_url
+          unzip mysql_sha.zip
+          echo "Current directory: $(pwd)"  # 현재 디렉토리 출력
+          ls -l  # 현재 디렉토리의 파일 목록 출력
+          if [ ! -f mysql_sha.txt ]; then
+            echo "Error: mysql_sha.txt not found."
+            exit 1
+          fi
+          cat mysql_sha.txt
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -31,6 +70,21 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Create SSH key file
+        run: echo "${{ secrets.EC2_SSH_KEY }}" > ssh_key.pem
+
+      - name: Set permissions for SSH key
+        run: chmod 600 ssh_key.pem
+
+      - name: Create .ssh directory
+        run: mkdir -p ~/.ssh
+
+      - name: Disable strict host key checking
+        run: echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+      - name: Copy files to EC2 using scp
+        run: scp -i ssh_key.pem core_sha.txt mysql_sha.txt ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu
+          
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
@@ -39,10 +93,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu
+            echo "Current directory on server: $(pwd)"
             export CORE_SHA=$(cat core_sha.txt)
             export MYSQL_SHA=$(cat mysql_sha.txt)
-            sudo sed -i "s/immyeong\/now-waypoint-mysql:.*/immyeong\/now-waypoint-mysql:${MYSQL_SHA}/" docker-compose.yml
-            sudo sed -i "s/immyeong\/now-waypoint-core:.*/immyeong\/now-waypoint-core:${CORE_SHA}/" docker-compose.yml
+            sudo sed -i "s|immyeong/now-waypoint-mysql:.*|immyeong/now-waypoint-mysql:${MYSQL_SHA}|" docker-compose.yml
+            sudo sed -i "s|immyeong/now-waypoint-core:.*|immyeong/now-waypoint-core:${CORE_SHA}|" docker-compose.yml
             sudo docker-compose down --remove-orphans
             sudo docker-compose pull
             sudo docker-compose up -d

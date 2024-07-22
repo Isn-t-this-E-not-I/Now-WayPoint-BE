@@ -3,6 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.DuplicatePasswordException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.LogoutFailException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.NicknameNotFoundException;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.mail.MessagingConnectException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollowing;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -78,6 +82,7 @@ public class UserService {
                     .password(bCryptPasswordEncoder.encode(registerRequest.getPassword()))
                     .name(registerRequest.getName())
                     .nickname(registerRequest.getNickname())
+                    .email(registerRequest.getEmail())
                     .profileImageUrl(registerRequest.getProfileImageUrl())
                     .description(registerRequest.getDescription())
                     .role(UserRole.USER)
@@ -150,8 +155,8 @@ public class UserService {
 
     //아이디 찾기
     @Transactional
-    public String getUserId(String nickname) {
-        Optional<User> findUser = userRepository.findByNickname(nickname);
+    public String getUserId(String email) {
+        Optional<User> findUser = userRepository.findByEmail(email);
         if (findUser.isPresent()) {
             User user = findUser.get();
             return user.getLoginId();
@@ -175,19 +180,38 @@ public class UserService {
             return fromUser(user);
     }
 
+    //랜덤 비밀번호 생성
+    @Transactional
+    public String randomPassword(String loginId) {
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+
+        if (findUser.isEmpty()) {
+            throw new UsernameNotFoundException("일치하는 유저가 없습니다.");
+        }
+        User user = findUser.get();
+
+        String uuid = UUID.randomUUID().toString();
+
+        user.setPassword(bCryptPasswordEncoder.encode(uuid));
+        return uuid;
+    }
+
     //비밀번호 변경
     @Transactional
     public void updateUserPassword(String loginId, String password) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-            User user = findUser.get();
-            if (bCryptPasswordEncoder.matches(password, user.getPassword())) {
-                throw new DuplicatePasswordException("기존 비밀번호와 동일합니다.");
-            }
-            user.setPassword(bCryptPasswordEncoder.encode(password));
-            user.setUpdateDate(LocalDateTime.now());
-            userRepository.save(user);
+        if (findUser.isEmpty()) {
+            throw new UsernameNotFoundException("일치하는 유저가 없습니다.");
+        }
 
+        User user = findUser.get();
+        if (bCryptPasswordEncoder.matches(password, user.getPassword())) {
+            throw new DuplicatePasswordException("기존 비밀번호와 동일합니다.");
+        }
+        user.setPassword(bCryptPasswordEncoder.encode(password));
+        user.setUpdateDate(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     //회원 위치 정보 업데이트

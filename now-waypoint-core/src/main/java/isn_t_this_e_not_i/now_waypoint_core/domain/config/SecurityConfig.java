@@ -79,9 +79,10 @@ public class SecurityConfig {
                 .httpBasic(auth -> auth.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/user/login","/api/user/register","/api/user/userId","/api/user/find/password").permitAll()
+                        .requestMatchers("/", "/api/user/login","/api/user/register","/api/user/userId","/api/user/password/find","/api/mail/**").permitAll()
                         .requestMatchers("/favicon.ico","/api/user/login/kakao", "/login/oauth2/code/kakao","/error").permitAll()
-                        .requestMatchers("/ws/**","/main/**","/testStomp").permitAll()
+                        .requestMatchers("/ws/**","/main/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger 경로 추가
                         .anyRequest().authenticated())
                 .exceptionHandling(handler -> handler.authenticationEntryPoint(oAuth2FailureHandler))
                 .oauth2Login(login -> login
