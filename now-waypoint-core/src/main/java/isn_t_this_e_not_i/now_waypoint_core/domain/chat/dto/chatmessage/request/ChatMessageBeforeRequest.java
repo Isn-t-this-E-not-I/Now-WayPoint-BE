@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateMessageRequest {
+public class ChatMessageBeforeRequest {
     private Long chatRoomId;
-    private String content;
+    private String timestamp;
 }
