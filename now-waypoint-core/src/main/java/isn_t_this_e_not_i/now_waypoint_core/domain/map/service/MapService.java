@@ -23,18 +23,31 @@ public class MapService {
     @Value("${kakao.api.url}")
     private String apiUrl;
 
-    public String getMapInfo(String roadFullAddr){
+    public String getMapInfo(String query) {
         String jsonString = null;
 
         try {
             // 1. URL 인코딩
-            roadFullAddr = URLEncoder.encode(roadFullAddr, "UTF-8");
+            query = URLEncoder.encode(query, "UTF-8");
+            log.info("Encoded query: {}", query);
 
             // 2. 요청 url을 만들기
-            String addr = apiUrl + "?query=" + roadFullAddr;
+            String addr;
+            if (query.matches("-?\\d+(\\.\\d+)?%2C-?\\d+(\\.\\d+)?")) { // 좌표 형태인 경우
+                log.info("Query is recognized as coordinates");
+                String[] coords = query.split("%2C");
+                addr = String.format("https://dapi.kakao.com/v2/local/geo/coord2address.json?x=%s&y=%s", coords[1], coords[0]);
+
+                // 위도와 경도를 로그에 기록
+                log.info("Received coordinates: latitude={}, longitude={}", coords[0], coords[1]);
+            } else { // 주소 형태인 경우
+                log.info("Query is recognized as an address");
+                addr = apiUrl + "?query=" + query;
+            }
 
             // 3. URL 객체 생성
             URL url = new URL(addr);
+            log.info("Request URL: {}", url);
 
             // 4. URL Connection 객체 생성
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -56,14 +69,14 @@ public class MapService {
             rd.close();
 
             // 응답 로그
-            log.info("mapInfo ={}", jsonString);
+            log.info("mapInfo = {}", jsonString);
 
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            log.error("Encoding error: ", e);
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+            log.error("Malformed URL: ", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("IO error: ", e);
         }
 
         return jsonString;
