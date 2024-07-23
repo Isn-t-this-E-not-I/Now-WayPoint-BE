@@ -42,17 +42,19 @@ public class PostService {
     private final FileUploadService fileUploadService;
 
     @Transactional
-    public Post createPost(Authentication auth, PostRequest postRequest, MultipartFile file) {
+    public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
         User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
-        String fileUrl = fileUploadService.fileUpload(file);
+        List<String> fileUrls = files.stream()
+                .map(file -> fileUploadService.fileUpload(file))
+                .collect(Collectors.toList());
 
         Post post = Post.builder()
                 .content(postRequest.getContent())
                 .hashtags(hashtags)
                 .locationTag(postRequest.getLocationTag())
                 .category(postRequest.getCategory())
-                .mediaUrl(fileUrl)
+                .mediaUrls(fileUrls)
                 .user(user)
                 .build();
 
@@ -80,7 +82,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post updatePost(Long postId, PostRequest postRequest, MultipartFile file, Authentication auth) {
+    public Post updatePost(Long postId, PostRequest postRequest, List<MultipartFile> files, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
         if (!post.getUser().getId().equals(user.getId())) {
@@ -92,9 +94,11 @@ public class PostService {
         post.setLocationTag(postRequest.getLocationTag());
         post.setCategory(postRequest.getCategory());
 
-        if (file != null && !file.isEmpty()) {
-            String fileUrl = fileUploadService.fileUpload(file);
-            post.setMediaUrl(fileUrl);
+        if (files != null && !files.isEmpty()) {
+            List<String> fileUrls = files.stream()
+                    .map(file -> fileUploadService.fileUpload(file))
+                    .collect(Collectors.toList());
+            post.setMediaUrls(fileUrls);
         }
 
         Post savePost = postRepository.save(post);

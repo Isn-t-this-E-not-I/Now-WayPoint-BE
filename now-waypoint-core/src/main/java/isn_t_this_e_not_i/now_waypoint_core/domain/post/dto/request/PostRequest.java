@@ -27,5 +27,5 @@ public class PostRequest {
     @NotNull
     private PostCategory category;
 
-    private String mediaUrl;
+    private List<String> mediaUrls;
 }

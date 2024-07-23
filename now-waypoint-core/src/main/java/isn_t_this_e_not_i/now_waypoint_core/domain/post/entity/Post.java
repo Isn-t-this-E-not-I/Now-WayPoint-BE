@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -38,8 +39,10 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostCategory category;
 
-    @Column(name = "media_url", columnDefinition = "TEXT")
-    private String mediaUrl;
+    @ElementCollection
+    @CollectionTable(name = "post_media_urls", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "media_url")
+    private List<String> mediaUrls;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

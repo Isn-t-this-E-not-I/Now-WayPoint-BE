@@ -21,8 +21,9 @@ public class PostResponse {
     private List<String> hashtags;
     private String locationTag;
     private PostCategory category;
-    private String mediaUrl;
-    private String username;
+    private List<String> mediaUrls;
+    private String nickname;
+    private String profileImageUrl;
     private LocalDateTime createdAt;
     private int likeCount;
 
@@ -32,8 +33,9 @@ public class PostResponse {
         this.hashtags = post.getHashtags().stream().map(hashtag -> hashtag.getName()).toList();
         this.locationTag = post.getLocationTag();
         this.category = post.getCategory();
-        this.mediaUrl = post.getMediaUrl();
-        this.username = post.getUser().getLoginId();
+        this.mediaUrls = post.getMediaUrls();
+        this.nickname = post.getUser().getNickname();
+        this.profileImageUrl = post.getUser().getProfileImageUrl();
         this.createdAt = post.getCreatedAt();
         this.likeCount = post.getLikeCount();
     }
