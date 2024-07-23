@@ -1,11 +1,14 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.post.controller;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.HashtagService;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,22 +27,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostController {
 
+    private  final UserService userService;
     private final PostService postService;
     private final HashtagService hashtagService;
 
     @PostMapping
     public ResponseEntity<PostResponse> createPost(@RequestPart("data") @Valid PostRequest postRequest,
-                                                   @RequestPart("file") MultipartFile file, Authentication auth) {
-        Post post = postService.createPost(auth, postRequest, file);
+                                                   @RequestPart("files") List<MultipartFile> files, Authentication auth) {
+        Post post = postService.createPost(auth, postRequest, files);
         return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post));
     }
 
     @PutMapping("/{postId}")
     public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId,
                                                    @RequestPart("data") @Valid PostRequest postRequest,
-                                                   @RequestPart(value = "file", required = false) MultipartFile file,
+                                                   @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                                    Authentication auth) {
-        Post post = postService.updatePost(postId, postRequest, file, auth);
+        Post post = postService.updatePost(postId, postRequest, files, auth);
         return ResponseEntity.ok(new PostResponse(post));
     }
 
@@ -84,5 +88,25 @@ public class PostController {
         List<Post> posts = hashtagService.getPostsByHashtag(name);
         List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    @PostConstruct
+    public void initUser() {
+        UserRequest.registerRequest registerRequest = UserRequest.registerRequest.builder()
+                .loginId("test@test.com")
+                .password("1234")
+                .nickname("test")
+                .email("test@test.com")
+                .build();
+
+        UserRequest.registerRequest registerRequest2 = UserRequest.registerRequest.builder()
+                .loginId("test2@test.com")
+                .password("1234")
+                .nickname("test2")
+                .email("test2@test.com")
+                .build();
+
+        userService.register(registerRequest);
+        userService.register(registerRequest2);
     }
 }
