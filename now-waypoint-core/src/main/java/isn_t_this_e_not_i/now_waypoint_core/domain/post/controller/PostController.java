@@ -89,24 +89,4 @@ public class PostController {
         List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
-
-    @PostConstruct
-    public void initUser() {
-        UserRequest.registerRequest registerRequest = UserRequest.registerRequest.builder()
-                .loginId("test@test.com")
-                .password("1234")
-                .nickname("test")
-                .email("test@test.com")
-                .build();
-
-        UserRequest.registerRequest registerRequest2 = UserRequest.registerRequest.builder()
-                .loginId("test2@test.com")
-                .password("1234")
-                .nickname("test2")
-                .email("test2@test.com")
-                .build();
-
-        userService.register(registerRequest);
-        userService.register(registerRequest2);
-    }
 }
