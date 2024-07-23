@@ -99,7 +99,7 @@ CREATE TABLE user_chat_room (
                                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
--- comment 테이블 생성
+-- comment 테이블 생성-
 CREATE TABLE comment (
                          comment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                          content TEXT NOT NULL,
