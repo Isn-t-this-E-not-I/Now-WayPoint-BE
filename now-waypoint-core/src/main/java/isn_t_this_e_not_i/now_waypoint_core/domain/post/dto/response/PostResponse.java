@@ -22,7 +22,8 @@ public class PostResponse {
     private String locationTag;
     private PostCategory category;
     private List<String> mediaUrls;
-    private String username;
+    private String nickname;
+    private String profileImageUrl;
     private LocalDateTime createdAt;
     private int likeCount;
 
@@ -33,7 +34,8 @@ public class PostResponse {
         this.locationTag = post.getLocationTag();
         this.category = post.getCategory();
         this.mediaUrls = post.getMediaUrls();
-        this.username = post.getUser().getLoginId();
+        this.nickname = post.getUser().getNickname();
+        this.profileImageUrl = post.getUser().getProfileImageUrl();
         this.createdAt = post.getCreatedAt();
         this.likeCount = post.getLikeCount();
     }
