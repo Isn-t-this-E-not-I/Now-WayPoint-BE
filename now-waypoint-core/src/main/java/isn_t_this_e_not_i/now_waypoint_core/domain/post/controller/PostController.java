@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostController {
 
-    private  final UserService userService;
+    private final UserService userService;
     private final PostService postService;
     private final HashtagService hashtagService;
 
