@@ -22,7 +22,7 @@ public class PostResponseDTO {
     private List<String> hashtags;
     private String locationTag;
     private PostCategory category;
-    private String mediaUrl;
+    private List<String> mediaUrls;
     private String username;
     private int likeCount;
     private LocalDateTime createdAt;
@@ -31,7 +31,7 @@ public class PostResponseDTO {
         this.content = post.getContent();
         this.hashtags = post.getHashtags().stream().map(Hashtag::getName).collect(Collectors.toList());
         this.locationTag = post.getLocationTag();
-        this.mediaUrl = post.getMediaUrl();
+        this.mediaUrls = post.getMediaUrls();
         this.username = post.getUser().getNickname();
         this.likeCount = post.getLikeCount();
         this.createdAt = post.getCreatedAt();
