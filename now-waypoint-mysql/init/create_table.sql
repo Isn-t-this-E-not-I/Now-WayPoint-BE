@@ -98,3 +98,25 @@ CREATE TABLE user_chat_room (
                                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- comment 테이블 생성
+CREATE TABLE comment (
+                         comment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         content TEXT NOT NULL,
+                         post_id BIGINT NOT NULL,
+                         user_id INT(11) NOT NULL,
+                         parent_id BIGINT,
+                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                         FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE,
+                         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                         FOREIGN KEY (parent_id) REFERENCES comment(comment_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- comment_like 테이블 생성
+CREATE TABLE comment_like (
+                              comment_like_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                              comment_id BIGINT NOT NULL,
+                              user_id INT(11) NOT NULL,
+                              FOREIGN KEY (comment_id) REFERENCES comment(comment_id) ON DELETE CASCADE,
+                              FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
