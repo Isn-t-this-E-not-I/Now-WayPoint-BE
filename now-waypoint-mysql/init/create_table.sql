@@ -48,6 +48,13 @@ CREATE TABLE post (
                       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+-- post_media_urls 테이블 생성
+CREATE TABLE post_media_urls (
+                                 post_id BIGINT NOT NULL,
+                                 media_url TEXT NOT NULL,
+                                 FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
 -- post_likes 테이블 생성
 CREATE TABLE post_likes (
                             like_id BIGINT AUTO_INCREMENT PRIMARY KEY,

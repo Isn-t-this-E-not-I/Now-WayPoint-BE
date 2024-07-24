@@ -52,7 +52,7 @@ public class PostService {
         Post post = Post.builder()
                 .content(postRequest.getContent())
                 .hashtags(hashtags)
-                .locationTag(postRequest.getLocationTag())
+                .locationTag(user.getLocate())
                 .category(postRequest.getCategory())
                 .mediaUrls(fileUrls)
                 .user(user)
@@ -91,7 +91,7 @@ public class PostService {
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         post.setContent(postRequest.getContent());
         post.setHashtags(hashtags);
-        post.setLocationTag(postRequest.getLocationTag());
+        post.setLocationTag(user.getLocate());
         post.setCategory(postRequest.getCategory());
 
         if (files != null && !files.isEmpty()) {
@@ -132,6 +132,7 @@ public class PostService {
         return postRepository.findByUser(user);
     }
 
+    @Transactional
     public Post getPost(Long postId) {
         return postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
     }
@@ -187,14 +188,20 @@ public class PostService {
         User user = userRepository.findByLoginId(loginId).get();
         String nickname = user.getNickname();
         String locate = user.getLocate();
+        double latitude =Double.parseDouble(locate.split(",")[0]);
+        double longitude =Double.parseDouble(locate.split(",")[1]);
+        int radius = 100;
+
         List<PostResponseDTO> responsePostRedis = null;
 
         if (category.equalsIgnoreCase("PHOTO")) {
-            responsePostRedis = postRedisService.findByCategoryAndLocate(PostCategory.PHOTO, locate);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.PHOTO, latitude, longitude, radius);
         } else if (category.equalsIgnoreCase("VIDEO")) {
-            responsePostRedis = postRedisService.findByCategoryAndLocate(PostCategory.VIDEO, locate);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.VIDEO, latitude, longitude, radius);
+        } else if (category.equalsIgnoreCase("MP3")) {
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.MP3, latitude, longitude, radius);
         } else {
-            responsePostRedis = postRedisService.findByLocate(locate);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.ALL, latitude, longitude, radius);
         }
 
         messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
