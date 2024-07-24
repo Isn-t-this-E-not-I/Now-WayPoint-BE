@@ -1,8 +1,13 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.map.service;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +20,10 @@ import java.net.URLEncoder;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MapService {
+
+    private final UserRepository userRepository;
 
     @Value("${kakao.api.key}")
     private String apiKey;
@@ -23,7 +31,8 @@ public class MapService {
     @Value("${kakao.api.url}")
     private String apiUrl;
 
-    public String getMapInfo(String query) {
+    @Transactional
+    public String getMapInfo(String loginId, String query) {
         String jsonString = null;
 
         try {
@@ -37,8 +46,12 @@ public class MapService {
                 log.info("Query is recognized as coordinates");
                 String[] coords = query.split("%2C");
                 addr = String.format("https://dapi.kakao.com/v2/local/geo/coord2address.json?x=%s&y=%s", coords[1], coords[0]);
+                User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
 
-                // 위도와 경도를 로그에 기록
+                String locate = coords[0] + "," + coords[1];
+                user.setLocate(locate);
+
+                // 위도와 경도를 로그에 기록 0 = x, 1 = y
                 log.info("Received coordinates: latitude={}, longitude={}", coords[0], coords[1]);
             } else { // 주소 형태인 경우
                 log.info("Query is recognized as an address");
