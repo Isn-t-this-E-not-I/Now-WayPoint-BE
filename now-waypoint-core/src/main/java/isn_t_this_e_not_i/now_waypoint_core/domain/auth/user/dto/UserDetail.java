@@ -8,9 +8,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Getter
 @Builder
@@ -71,5 +75,13 @@ public class UserDetail implements UserDetails, OAuth2User {
     @Override
     public String getName() {
         return user.getLoginId();
+    }
+
+    public String getNickname() throws UnsupportedEncodingException {
+        String nickname = user.getNickname();
+        if(Pattern.compile("[ㄱ-ㅎㅏ-ㅣ가-힣]").matcher(user.getNickname()).find()){
+            nickname = URLEncoder.encode(nickname, StandardCharsets.UTF_8.toString());
+        }
+        return nickname;
     }
 }
