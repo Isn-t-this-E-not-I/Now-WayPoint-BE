@@ -30,7 +30,7 @@ public class EmailAuthService {
     private String username;
 
     public void sendEmail(String email,String state,String loginId) {
-        if (loginId != null) {
+        if (loginId != null && !loginId.equals("")) {
             Optional<User> findUser = userRepository.findByLoginId(loginId);
             if (findUser.isEmpty()) {
                 throw new UsernameNotFoundException("일치하는 회원이 없습니다.");
