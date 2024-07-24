@@ -21,22 +21,16 @@ public class PostRedis {
     @Id
     private String id;
 
+    private String nickname;
+
     private PostResponseDTO post;
 
     @Indexed
-    private String locate;
+    private double latitude;
 
     @Indexed
-    private String nickname;
+    private double longitude;
 
     @Indexed
     private PostCategory category;
-
-    public PostRedis(PostResponseDTO post, String locate, String nickname, PostCategory category) {
-        this.id = UUID.randomUUID().toString();
-        this.post = post;
-        this.locate = locate;
-        this.nickname = nickname;
-        this.category = category;
-    }
 }
