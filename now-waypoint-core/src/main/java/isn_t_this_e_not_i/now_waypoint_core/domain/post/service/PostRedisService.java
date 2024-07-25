@@ -50,7 +50,7 @@ public class PostRedisService {
 
     public List<PostResponseDTO> findPostRedisByCategoryAndUserLocate(PostCategory category, double longitude, double latitude, double radius) {
         String key = "post:" + category;
-        Circle within = new Circle(new Point(longitude, latitude), new Distance(radius, Metrics.METERS));
+        Circle within = new Circle(new Point(longitude, latitude), new Distance(radius, Metrics.KILOMETERS));
         GeoResults<RedisGeoCommands.GeoLocation<Object>> results = redisTemplate.opsForGeo().radius(key, within);
 
         List<PostRedis> posts = new ArrayList<>();

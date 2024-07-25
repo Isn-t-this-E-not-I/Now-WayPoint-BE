@@ -169,15 +169,19 @@ public class UserService {
     public UserResponse updateUserInfo(String loginId, UserRequest userRequest) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-            User user = findUser.get();
-            user.setNickname(userRequest.getNickname());
-            user.setName(userRequest.getName());
-            user.setDescription(userRequest.getDescription());
-            user.setProfileImageUrl(userRequest.getProfileImageUrl());
-            user.setUpdateDate(LocalDateTime.now());
+        if (userRepository.findByNickname(userRequest.getNickname()).isPresent()) {
+            throw new UsernameNotFoundException("이미 존재하는 닉네임입니다.");
+        }
 
-            userRepository.save(user);
-            return fromUser(user);
+        User user = findUser.get();
+        user.setNickname(userRequest.getNickname());
+        user.setName(userRequest.getName());
+        user.setDescription(userRequest.getDescription());
+        user.setProfileImageUrl(userRequest.getProfileImageUrl());
+        user.setUpdateDate(LocalDateTime.now());
+
+        userRepository.save(user);
+        return fromUser(user);
     }
 
     //랜덤 비밀번호 생성
