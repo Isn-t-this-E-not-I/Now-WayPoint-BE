@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostRedisService {
 
     private final PostRedisRepository postRedisRepository;
@@ -29,13 +30,15 @@ public class PostRedisService {
                 .id(UUID.randomUUID().toString().substring(10))
                 .post(postResponseDTO)
                 .nickname(postResponseDTO.getUsername())
-                .latitude(Double.parseDouble(postResponseDTO.getLocationTag().split(",")[0]))
-                .longitude(Double.parseDouble(postResponseDTO.getLocationTag().split(",")[1]))
+                .longitude(Double.parseDouble(postResponseDTO.getLocationTag().split(",")[0]))
+                .latitude(Double.parseDouble(postResponseDTO.getLocationTag().split(",")[1]))
                 .category(postResponseDTO.getCategory())
                 .build();
 
 
         PostRedis save = postRedisRepository.save(postRedis);
+        log.info("longitude = {}", save.getLongitude());
+        log.info("latitude = {}", save.getLatitude());
 
         String key = "post:" + save.getCategory();
         String allKey = "post:ALL";
@@ -45,9 +48,9 @@ public class PostRedisService {
         return save;
     }
 
-    public List<PostResponseDTO> findPostRedisByCategoryAndUserLocate(PostCategory category, double locateX, double locateY, double radius) {
+    public List<PostResponseDTO> findPostRedisByCategoryAndUserLocate(PostCategory category, double longitude, double latitude, double radius) {
         String key = "post:" + category;
-        Circle within = new Circle(new Point(locateX, locateY), new Distance(radius, Metrics.METERS));
+        Circle within = new Circle(new Point(longitude, latitude), new Distance(radius, Metrics.METERS));
         GeoResults<RedisGeoCommands.GeoLocation<Object>> results = redisTemplate.opsForGeo().radius(key, within);
 
         List<PostRedis> posts = new ArrayList<>();
