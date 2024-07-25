@@ -15,7 +15,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash(value = "post", timeToLive=1800)
+@RedisHash(value = "post", timeToLive=18000)
 public class PostRedis {
 
     @Id
