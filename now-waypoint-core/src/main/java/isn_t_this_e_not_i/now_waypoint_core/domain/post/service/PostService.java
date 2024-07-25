@@ -188,20 +188,20 @@ public class PostService {
         User user = userRepository.findByLoginId(loginId).get();
         String nickname = user.getNickname();
         String locate = user.getLocate();
-        double latitude =Double.parseDouble(locate.split(",")[0]);
-        double longitude =Double.parseDouble(locate.split(",")[1]);
+        double latitude =Double.parseDouble(locate.split(",")[1]);
+        double longitude =Double.parseDouble(locate.split(",")[0]);
         int radius = 100;
 
         List<PostResponseDTO> responsePostRedis = null;
 
         if (category.equalsIgnoreCase("PHOTO")) {
-            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.PHOTO, latitude, longitude, radius);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.PHOTO, longitude, latitude, radius);
         } else if (category.equalsIgnoreCase("VIDEO")) {
-            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.VIDEO, latitude, longitude, radius);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.VIDEO, longitude, latitude, radius);
         } else if (category.equalsIgnoreCase("MP3")) {
-            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.MP3, latitude, longitude, radius);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.MP3, longitude, latitude, radius);
         } else {
-            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.ALL, latitude, longitude, radius);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.ALL, longitude, latitude, radius);
         }
 
         messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
