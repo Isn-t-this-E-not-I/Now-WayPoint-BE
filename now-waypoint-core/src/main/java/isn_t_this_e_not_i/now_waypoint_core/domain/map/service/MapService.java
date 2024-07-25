@@ -48,7 +48,7 @@ public class MapService {
                 addr = String.format("https://dapi.kakao.com/v2/local/geo/coord2address.json?x=%s&y=%s", coords[1], coords[0]);
                 User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
 
-                String locate = coords[0] + "," + coords[1];
+                String locate = coords[1] + "," + coords[0];
                 user.setLocate(locate);
 
                 // 위도와 경도를 로그에 기록 0 = x, 1 = y
