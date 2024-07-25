@@ -40,7 +40,6 @@ CREATE TABLE post (
                       content TEXT NOT NULL,
                       location_tag VARCHAR(255),
                       category VARCHAR(50),
-                      media_url TEXT,
                       user_id INT(11),
                       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
