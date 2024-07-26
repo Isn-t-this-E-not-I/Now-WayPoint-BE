@@ -80,6 +80,16 @@ public class UserController {
         return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }
 
+    @PutMapping("/nickname/change")
+    public ResponseEntity<UserResponse.updateNickname> updateNickname(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
+        return ResponseEntity.ok().body(userService.updateNickname(auth.getName(),userRequest.getNickname()));
+    }
+
+    @PutMapping("/profileImage/change")
+    public ResponseEntity<UserResponse.updateProfileImage> updateProfileImage(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
+        return ResponseEntity.ok().body(userService.updateProfileImage(auth.getName(), userRequest.getProfileImageUrl()));
+    }
+
     @PutMapping
     public ResponseEntity<UserResponse> updateInfo(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
         return ResponseEntity.ok().body(userService.updateUserInfo(auth.getName(), userRequest));
