@@ -32,6 +32,7 @@ public class UserResponse {
         private String nickname;
         private String profileImageUrl;
         private String description;
+        private String email;
         private String follower;
         private String following;
         private List<PostResponse> posts;
