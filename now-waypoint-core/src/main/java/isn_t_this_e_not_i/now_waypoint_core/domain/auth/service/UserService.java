@@ -14,6 +14,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.FileUploadService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,6 +46,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final TokenService tokenService;
+    private final FileUploadService fileUploadService;
 
     //회원 등록
     @Transactional
@@ -181,9 +184,9 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse.updateProfileImage updateProfileImage(String loginId,String profileImageUrl) {
+    public UserResponse.updateProfileImage updateProfileImage(String loginId, MultipartFile file) {
         User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("존재하는 아이디가 없습니다."));
-
+        String profileImageUrl = fileUploadService.fileUpload(file);
         user.setProfileImageUrl(profileImageUrl);
 
         UserResponse.updateProfileImage userResponse = UserResponse.updateProfileImage.builder().profileImageUrl(profileImageUrl).build();

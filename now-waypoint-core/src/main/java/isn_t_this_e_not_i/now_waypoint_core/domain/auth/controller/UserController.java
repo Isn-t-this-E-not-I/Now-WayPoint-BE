@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -86,8 +87,8 @@ public class UserController {
     }
 
     @PutMapping("/profileImage/change")
-    public ResponseEntity<UserResponse.updateProfileImage> updateProfileImage(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
-        return ResponseEntity.ok().body(userService.updateProfileImage(auth.getName(), userRequest.getProfileImageUrl()));
+    public ResponseEntity<UserResponse.updateProfileImage> updateProfileImage(Authentication auth, @RequestPart("file")MultipartFile file) {
+        return ResponseEntity.ok().body(userService.updateProfileImage(auth.getName(), file));
     }
 
     @PutMapping
