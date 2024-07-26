@@ -245,6 +245,7 @@ public class UserService {
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
                 .description(user.getDescription())
+                .email(user.getEmail())
                 .follower(String.valueOf(user.getFollowers().size()))
                 .following(String.valueOf(user.getFollowings().size()))
                 .posts(response)
