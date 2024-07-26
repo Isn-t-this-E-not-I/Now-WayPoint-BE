@@ -164,20 +164,40 @@ public class UserService {
         throw new NicknameNotFoundException("일치하는 닉네임이 없습니다.");
     }
 
+    @Transactional
+    public UserResponse.updateNickname updateNickname(String loginId, String nickname) {
+        Optional<User> findUser = userRepository.findByLoginId(loginId);
+
+        if (userRepository.findByNickname(nickname).isPresent()) {
+            throw new UsernameNotFoundException("이미 존재하는 닉네임입니다.");
+        }
+
+        User user = findUser.get();
+        user.setNickname(nickname);
+
+        UserResponse.updateNickname userResponse = UserResponse.updateNickname.builder().nickname(nickname).build();
+
+        return userResponse;
+    }
+
+    @Transactional
+    public UserResponse.updateProfileImage updateProfileImage(String loginId,String profileImageUrl) {
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("존재하는 아이디가 없습니다."));
+
+        user.setProfileImageUrl(profileImageUrl);
+
+        UserResponse.updateProfileImage userResponse = UserResponse.updateProfileImage.builder().profileImageUrl(profileImageUrl).build();
+        return userResponse;
+    }
+
     //회원정보 변경
     @Transactional
     public UserResponse updateUserInfo(String loginId, UserRequest userRequest) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-        if (userRepository.findByNickname(userRequest.getNickname()).isPresent()) {
-            throw new UsernameNotFoundException("이미 존재하는 닉네임입니다.");
-        }
-
         User user = findUser.get();
-        user.setNickname(userRequest.getNickname());
         user.setName(userRequest.getName());
         user.setDescription(userRequest.getDescription());
-        user.setProfileImageUrl(userRequest.getProfileImageUrl());
         user.setUpdateDate(LocalDateTime.now());
 
         userRepository.save(user);
@@ -241,6 +261,7 @@ public class UserService {
 
     public UserResponse.userInfo toUserInfo(User user, List<PostResponse> response) {
         return UserResponse.userInfo.builder()
+                .loginId(user.getLoginId())
                 .name(user.getName())
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
