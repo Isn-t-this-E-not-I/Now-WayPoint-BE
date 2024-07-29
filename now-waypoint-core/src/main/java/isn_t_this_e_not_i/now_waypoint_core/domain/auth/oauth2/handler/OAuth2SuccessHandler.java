@@ -46,7 +46,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         createCookie(response, "Authorization", accessToken);
         createCookie(response, "nickname", nickname);
         //Redirect url 설정해야함 (ex: http:localhost:3000/ __ / __ )
-        response.sendRedirect("http://localhost:3000/main");
+        response.sendRedirect("https://goorm.now-waypoint.store/main");
     }
 
     private void createCookie(HttpServletResponse response, String key, String value) {

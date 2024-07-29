@@ -56,8 +56,8 @@ public class UserController {
     }
 
     @PostMapping("/withdrawal")
-    public ResponseEntity<String> withdraw(Authentication auth,@RequestBody @Valid UserRequest.loginRequest loginRequest){
-        userService.withdrawal(auth.getName(),loginRequest.getPassword());
+    public ResponseEntity<String> withdraw(Authentication auth){
+        userService.withdrawal(auth.getName());
         return ResponseEntity.ok("회원탈퇴되었습니다.");
     }
 
