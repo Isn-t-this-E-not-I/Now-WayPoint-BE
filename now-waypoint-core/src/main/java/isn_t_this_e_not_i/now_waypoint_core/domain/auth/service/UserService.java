@@ -112,16 +112,11 @@ public class UserService {
 
     //회원 탈퇴
     @Transactional
-    public void withdrawal(String loginId, String password) {
+    public void withdrawal(String loginId) {
         Optional<User> OptionalUser = userRepository.findByLoginId(loginId);
-        if (OptionalUser.isPresent() && bCryptPasswordEncoder.matches(password, OptionalUser.get().getPassword())) {
-            userRepository.deleteByLoginId(loginId);
-            String accessToken = tokenService.findByLoginId(loginId).get().getAccessToken();
-            tokenService.deleteToken(accessToken);
-            log.info("회원탈퇴되었습니다.");
-        }else{
-            throw new LogoutFailException("존재하지 않는 아이디입니다.");
-        }
+        userRepository.deleteByLoginId(loginId);
+        String accessToken = tokenService.findByLoginId(loginId).get().getAccessToken();
+        tokenService.deleteToken(accessToken);
     }
 
     //회원 조회
