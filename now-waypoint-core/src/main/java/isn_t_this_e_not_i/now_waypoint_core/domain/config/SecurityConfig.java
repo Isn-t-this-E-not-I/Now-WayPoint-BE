@@ -30,6 +30,7 @@ import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -113,13 +114,12 @@ public class SecurityConfig {
         // CORS configuration
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration corsConfiguration = new CorsConfiguration();
-            corsConfiguration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://goorm.now-waypoint.store"));
             corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
             corsConfiguration.setAllowCredentials(true);
             corsConfiguration.setMaxAge(3000L);
-            corsConfiguration.setExposedHeaders(Collections.singletonList("Authorization"));
-            corsConfiguration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
+            corsConfiguration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
 
             return corsConfiguration;
         }));

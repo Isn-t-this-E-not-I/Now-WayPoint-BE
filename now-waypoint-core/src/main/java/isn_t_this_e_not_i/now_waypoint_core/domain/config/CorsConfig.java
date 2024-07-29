@@ -13,7 +13,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedHeaders("Set-Cookie")
                 .allowedHeaders("*")
                 .allowedMethods("*")
-                .allowedOrigins("http://localhost:3000")
+                .allowedOrigins("http://localhost:3000","https://goorm.now-waypoint.store")
                 .allowCredentials(true);
     }
 }

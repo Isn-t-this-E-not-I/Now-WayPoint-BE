@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import isn_t_this_e_not_i.now_waypoint_core.domain.map.service.MapService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 public class MapController {
 
     @Autowired
