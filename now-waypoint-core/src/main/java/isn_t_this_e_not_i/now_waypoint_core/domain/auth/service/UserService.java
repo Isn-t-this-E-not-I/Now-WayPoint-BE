@@ -55,6 +55,10 @@ public class UserService {
         List<UserFollowing> followings = new ArrayList<>();
         String message = "";
 
+        if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+            throw new DuplicateLoginIdException("이미 존재하는 이메일입니다.");
+        }
+
         if (registerRequest.getName() == null) {
             registerRequest.setName(registerRequest.getNickname());
         }
