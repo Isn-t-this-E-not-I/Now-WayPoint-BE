@@ -93,8 +93,8 @@ public class UserFollowService {
         List<UserFollower> userFollowers = userFollowerRepository.getUserFollowersByUser(findUser);
         for (UserFollower userFollower : userFollowers) {
             String nickname = userFollower.getNickname();
-            User user = userRepository.findByNickname(nickname).get();
-            followers.add(user);
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followers::add);
         }
 
         return fromFollow(followers);
@@ -108,9 +108,8 @@ public class UserFollowService {
         List<UserFollowing> userFollowings = userFollowingRepository.findUserFollowingsByUser(findUser);
         for (UserFollowing userFollowing : userFollowings) {
             String nickname = userFollowing.getNickname();
-            User user = userRepository.findByNickname(nickname).get();
-
-            followings.add(user);
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followings::add);
         }
 
         return fromFollow(followings);
@@ -133,7 +132,7 @@ public class UserFollowService {
 
     private NotifyDTO getnotifyDTO(Optional<User> findUser) {
         Notify notify = Notify.builder().senderNickname(findUser.get().getNickname())
-                .message(findUser.get().getName() + "님이 팔로우하였습니다.")
+                .message(findUser.get().getNickname() + "님이 팔로우하였습니다.")
                 .profileImageUrl(findUser.get().getProfileImageUrl()).build();
 
         notifyRepository.save(notify);
