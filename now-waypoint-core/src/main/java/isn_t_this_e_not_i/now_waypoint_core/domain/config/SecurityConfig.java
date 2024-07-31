@@ -10,7 +10,9 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.service.OAuth2Use
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.FileUploadService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +31,7 @@ import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -46,6 +49,8 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final PostService postService;
+    private final FileUploadService fileUploadService;
+    private final UserFollowService userFollowService;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -59,7 +64,7 @@ public class SecurityConfig {
 
     @Bean
     public UserService userService() {
-        return new UserService(postService,userRepository, bCryptPasswordEncoder(), tokenService);
+        return new UserService(postService,userRepository, bCryptPasswordEncoder(), tokenService,fileUploadService, userFollowService);
     }
 
     @Bean
@@ -111,13 +116,12 @@ public class SecurityConfig {
         // CORS configuration
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration corsConfiguration = new CorsConfiguration();
-            corsConfiguration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://goorm.now-waypoint.store"));
             corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
             corsConfiguration.setAllowCredentials(true);
             corsConfiguration.setMaxAge(3000L);
-            corsConfiguration.setExposedHeaders(Collections.singletonList("Authorization"));
-            corsConfiguration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
+            corsConfiguration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
 
             return corsConfiguration;
         }));

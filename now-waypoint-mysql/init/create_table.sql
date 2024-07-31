@@ -40,12 +40,18 @@ CREATE TABLE post (
                       content TEXT NOT NULL,
                       location_tag VARCHAR(255),
                       category VARCHAR(50),
-                      media_url TEXT,
                       user_id INT(11),
                       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                       like_count INT DEFAULT 0,
                       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- post_media_urls 테이블 생성
+CREATE TABLE post_media_urls (
+                                 post_id BIGINT NOT NULL,
+                                 media_url TEXT NOT NULL,
+                                 FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 -- post_likes 테이블 생성
@@ -97,4 +103,26 @@ CREATE TABLE user_chat_room (
                                 FOREIGN KEY (chat_room_id) REFERENCES chat_room(chat_room_id) ON DELETE CASCADE,
                                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- comment 테이블 생성-
+CREATE TABLE comment (
+                         comment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         content TEXT NOT NULL,
+                         post_id BIGINT NOT NULL,
+                         user_id INT(11) NOT NULL,
+                         parent_id BIGINT,
+                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                         FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE,
+                         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                         FOREIGN KEY (parent_id) REFERENCES comment(comment_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- comment_like 테이블 생성
+CREATE TABLE comment_like (
+                              comment_like_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                              comment_id BIGINT NOT NULL,
+                              user_id INT(11) NOT NULL,
+                              FOREIGN KEY (comment_id) REFERENCES comment(comment_id) ON DELETE CASCADE,
+                              FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

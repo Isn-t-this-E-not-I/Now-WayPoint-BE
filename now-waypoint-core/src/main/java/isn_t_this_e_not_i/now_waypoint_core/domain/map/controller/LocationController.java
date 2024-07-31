@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import isn_t_this_e_not_i.now_waypoint_core.domain.map.service.MapService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 public class LocationController {
 
     @Autowired

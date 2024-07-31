@@ -28,10 +28,12 @@ public class UserResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class userInfo {
+        private String loginId;
         private String name;
         private String nickname;
         private String profileImageUrl;
         private String description;
+        private String email;
         private String follower;
         private String following;
         private List<PostResponse> posts;
@@ -44,6 +46,22 @@ public class UserResponse {
     public static class followInfo{
         private String name;
         private String nickname;
+        private String profileImageUrl;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class updateNickname{
+        private String nickname;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class updateProfileImage{
         private String profileImageUrl;
     }
 

@@ -86,6 +86,29 @@ public class UserFollowService {
     }
 
     @Transactional
+    public void deleteFollowingByUser(String nickname) {
+        userFollowingRepository.deleteByNickname(nickname);
+    }
+
+    @Transactional
+    public void updateFollowingNickname(String nickname,String updateNickname) {
+        List<UserFollowing> userFollowings = userFollowingRepository.findByNickname(nickname);
+        for (UserFollowing userFollowing : userFollowings) {
+            userFollowing.setNickname(updateNickname);
+            userFollowingRepository.save(userFollowing);
+        }
+    }
+
+    @Transactional
+    public void updateFollowerNickname(String nickname,String updateNickname) {
+        List<UserFollower> userFollowers = userFollowerRepository.findByNickname(nickname);
+        for (UserFollower userFollower : userFollowers) {
+            userFollower.setNickname(updateNickname);
+            userFollowerRepository.save(userFollower);
+        }
+    }
+
+    @Transactional
     public List<UserResponse.followInfo> getFollowers(String loginId) {
         List<User> followers = new ArrayList<>();
         User findUser = userRepository.findByLoginId(loginId).get();
@@ -93,8 +116,23 @@ public class UserFollowService {
         List<UserFollower> userFollowers = userFollowerRepository.getUserFollowersByUser(findUser);
         for (UserFollower userFollower : userFollowers) {
             String nickname = userFollower.getNickname();
-            User user = userRepository.findByNickname(nickname).get();
-            followers.add(user);
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followers::add);
+        }
+
+        return fromFollow(followers);
+    }
+
+    @Transactional
+    public List<UserResponse.followInfo> getOtherFollowers(String otherNickname) {
+        List<User> followers = new ArrayList<>();
+        User findUser = userRepository.findByNickname(otherNickname).get();
+
+        List<UserFollower> userFollowers = userFollowerRepository.getUserFollowersByUser(findUser);
+        for (UserFollower userFollower : userFollowers) {
+            String nickname = userFollower.getNickname();
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followers::add);
         }
 
         return fromFollow(followers);
@@ -108,9 +146,23 @@ public class UserFollowService {
         List<UserFollowing> userFollowings = userFollowingRepository.findUserFollowingsByUser(findUser);
         for (UserFollowing userFollowing : userFollowings) {
             String nickname = userFollowing.getNickname();
-            User user = userRepository.findByNickname(nickname).get();
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followings::add);
+        }
 
-            followings.add(user);
+        return fromFollow(followings);
+    }
+
+    @Transactional
+    public List<UserResponse.followInfo> getOtherFollowings(String OtherNickname) {
+        List<User> followings = new ArrayList<>();
+        User findUser = userRepository.findByNickname(OtherNickname).get();
+
+        List<UserFollowing> userFollowings = userFollowingRepository.findUserFollowingsByUser(findUser);
+        for (UserFollowing userFollowing : userFollowings) {
+            String nickname = userFollowing.getNickname();
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followings::add);
         }
 
         return fromFollow(followings);
@@ -133,7 +185,7 @@ public class UserFollowService {
 
     private NotifyDTO getnotifyDTO(Optional<User> findUser) {
         Notify notify = Notify.builder().senderNickname(findUser.get().getNickname())
-                .message(findUser.get().getName() + "님이 팔로우하였습니다.")
+                .message(findUser.get().getNickname() + "님이 팔로우하였습니다.")
                 .profileImageUrl(findUser.get().getProfileImageUrl()).build();
 
         notifyRepository.save(notify);

@@ -32,6 +32,7 @@ public class PostResponseDTO {
         this.hashtags = post.getHashtags().stream().map(Hashtag::getName).collect(Collectors.toList());
         this.locationTag = post.getLocationTag();
         this.mediaUrls = post.getMediaUrls();
+        this.category = post.getCategory();
         this.username = post.getUser().getNickname();
         this.likeCount = post.getLikeCount();
         this.createdAt = post.getCreatedAt();

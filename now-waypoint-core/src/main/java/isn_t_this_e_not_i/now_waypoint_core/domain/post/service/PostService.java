@@ -53,7 +53,7 @@ public class PostService {
         Post post = Post.builder()
                 .content(postRequest.getContent())
                 .hashtags(hashtags)
-                .locationTag(postRequest.getLocationTag())
+                .locationTag(user.getLocate())
                 .category(postRequest.getCategory())
                 .mediaUrls(fileUrls)
                 .user(user)
@@ -71,13 +71,13 @@ public class PostService {
     @Async
     public void notifyFollowers(PostRedis postRedis, User user, PostResponseDTO postResponseDTO) {
         List<UserFollower> followers = user.getFollowers();
-        messagingTemplate.convertAndSend("/topic/follower/" + user.getNickname(), postRedis.getPost());
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).build();
                 notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(notify));
+                messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
             }
         }
     }
@@ -92,7 +92,7 @@ public class PostService {
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         post.setContent(postRequest.getContent());
         post.setHashtags(hashtags);
-        post.setLocationTag(postRequest.getLocationTag());
+        post.setLocationTag(user.getLocate());
         post.setCategory(postRequest.getCategory());
 
         // 기존 미디어 URL을 가져옵니다.
@@ -149,6 +149,7 @@ public class PostService {
         return postRepository.findByUser(user);
     }
 
+
     @Transactional(readOnly = true)
     public boolean isLikedByUser(Post post, String loginId) {
         User user = userRepository.findByLoginId(loginId)
@@ -204,14 +205,20 @@ public class PostService {
         User user = userRepository.findByLoginId(loginId).get();
         String nickname = user.getNickname();
         String locate = user.getLocate();
+        double latitude =Double.parseDouble(locate.split(",")[1]);
+        double longitude =Double.parseDouble(locate.split(",")[0]);
+        int radius = 100;
+
         List<PostResponseDTO> responsePostRedis = null;
 
         if (category.equalsIgnoreCase("PHOTO")) {
-            responsePostRedis = postRedisService.findByCategoryAndLocate(PostCategory.PHOTO, locate);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.PHOTO, longitude, latitude, radius);
         } else if (category.equalsIgnoreCase("VIDEO")) {
-            responsePostRedis = postRedisService.findByCategoryAndLocate(PostCategory.VIDEO, locate);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.VIDEO, longitude, latitude, radius);
+        } else if (category.equalsIgnoreCase("MP3")) {
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.MP3, longitude, latitude, radius);
         } else {
-            responsePostRedis = postRedisService.findByLocate(locate);
+            responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.ALL, longitude, latitude, radius);
         }
 
         messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
@@ -227,7 +234,10 @@ public class PostService {
             postResponseDTOS.addAll(postRedisList);
         }
         postResponseDTOS.sort(Comparator.comparing(PostResponseDTO::getCreatedAt).reversed());
-        messagingTemplate.convertAndSend("/queue/" + user.getLocate() + "/" + user.getNickname(), postResponseDTOS);
+        List<PostResponseDTO> limitedPostResponseDTOS = postResponseDTOS.size() > 10
+                ? postResponseDTOS.subList(0, 20)
+                : postResponseDTOS;
+        messagingTemplate.convertAndSend("/queue/posts/" + user.getNickname(), limitedPostResponseDTOS);
     }
 
     private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {

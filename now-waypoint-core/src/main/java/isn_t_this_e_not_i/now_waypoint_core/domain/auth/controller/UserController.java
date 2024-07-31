@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -55,8 +57,8 @@ public class UserController {
     }
 
     @PostMapping("/withdrawal")
-    public ResponseEntity<String> withdraw(Authentication auth,@RequestBody @Valid UserRequest.loginRequest loginRequest){
-        userService.withdrawal(auth.getName(),loginRequest.getPassword());
+    public ResponseEntity<String> withdraw(Authentication auth){
+        userService.withdrawal(auth.getName());
         return ResponseEntity.ok("회원탈퇴되었습니다.");
     }
 
@@ -65,6 +67,11 @@ public class UserController {
         emailAuthService.confirmAuthNumber(findUserInfo.getAuthNumber(),findUserInfo.getEmail());
         UserResponse.findUserInfo userId = UserResponse.findUserInfo.builder().id(userService.getUserId(findUserInfo.getEmail())).build();
         return ResponseEntity.ok().body(userId);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<UserResponse.followInfo>> getFollowers(Authentication auth){
+        return ResponseEntity.ok().body(userService.getAllUser());
     }
 
     @PutMapping("/password/find")
@@ -78,6 +85,16 @@ public class UserController {
     public ResponseEntity<String> changePassword(Authentication auth, @RequestBody @Valid UserRequest.updatePasswordRequest updatePasswordRequest) {
         userService.updateUserPassword(auth.getName(), updatePasswordRequest.getPassword());
         return ResponseEntity.ok("비밀번호가 변경되었습니다.");
+    }
+
+    @PutMapping("/nickname/change")
+    public ResponseEntity<UserResponse.updateNickname> updateNickname(Authentication auth, @RequestBody @Valid UserRequest userRequest) {
+        return ResponseEntity.ok().body(userService.updateNickname(auth.getName(),userRequest.getNickname()));
+    }
+
+    @PutMapping("/profileImage/change")
+    public ResponseEntity<UserResponse.updateProfileImage> updateProfileImage(Authentication auth, @RequestPart("file")MultipartFile file) {
+        return ResponseEntity.ok().body(userService.updateProfileImage(auth.getName(), file));
     }
 
     @PutMapping
