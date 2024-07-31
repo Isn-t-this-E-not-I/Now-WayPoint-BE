@@ -133,6 +133,13 @@ public class UserService {
         return findUser.orElse(null);
     }
 
+    @Transactional
+    public List<UserResponse.followInfo> getAllUser() {
+        List<User> allUser = userRepository.findAll();
+
+        return toAllUserInfo(allUser);
+    }
+
     //마이페이지 회원 조회
     @Transactional
     public UserResponse.userInfo getUserInfo(String loginId) {
@@ -281,5 +288,21 @@ public class UserService {
                 .following(String.valueOf(user.getFollowings().size()))
                 .posts(response)
                 .build();
+    }
+
+    public List<UserResponse.followInfo> toAllUserInfo(List<User> users) {
+        List<UserResponse.followInfo> allUserInfo = new ArrayList<>();
+
+        for (User user : users) {
+            UserResponse.followInfo userInfo = UserResponse.followInfo.builder()
+                    .name(user.getName())
+                    .nickname(user.getNickname())
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .build();
+
+            allUserInfo.add(userInfo);
+        }
+
+        return allUserInfo;
     }
 }
