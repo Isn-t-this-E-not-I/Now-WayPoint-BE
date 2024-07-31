@@ -19,7 +19,6 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,6 +46,7 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final TokenService tokenService;
     private final FileUploadService fileUploadService;
+    private final UserFollowService userFollowService;
 
     //회원 등록
     @Transactional
@@ -117,7 +117,9 @@ public class UserService {
     //회원 탈퇴
     @Transactional
     public void withdrawal(String loginId) {
-        Optional<User> OptionalUser = userRepository.findByLoginId(loginId);
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
+        userFollowService.deleteFollowingByUser(user.getNickname());
+
         userRepository.deleteByLoginId(loginId);
         String accessToken = tokenService.findByLoginId(loginId).get().getAccessToken();
         tokenService.deleteToken(accessToken);
@@ -167,16 +169,20 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse.updateNickname updateNickname(String loginId, String nickname) {
+    public UserResponse.updateNickname updateNickname(String loginId, String updateNickname) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-        if (userRepository.findByNickname(nickname).isPresent()) {
+        if (userRepository.findByNickname(updateNickname).isPresent()) {
             throw new UsernameNotFoundException("이미 존재하는 닉네임입니다.");
         }
 
         User user = findUser.get();
-        user.setNickname(nickname);
+        String nickname = user.getNickname();
+        user.setNickname(updateNickname);
+        userFollowService.updateFollowingNickname(nickname, updateNickname);
+        userFollowService.updateFollowerNickname(nickname, updateNickname);
 
+        userRepository.save(user);
         UserResponse.updateNickname userResponse = UserResponse.updateNickname.builder().nickname(nickname).build();
 
         return userResponse;
@@ -189,6 +195,8 @@ public class UserService {
         user.setProfileImageUrl(profileImageUrl);
 
         UserResponse.updateProfileImage userResponse = UserResponse.updateProfileImage.builder().profileImageUrl(profileImageUrl).build();
+
+        userRepository.save(user);
         return userResponse;
     }
 

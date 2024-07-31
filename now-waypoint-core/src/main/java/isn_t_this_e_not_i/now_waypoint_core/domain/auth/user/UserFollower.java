@@ -20,6 +20,7 @@ public class UserFollower {
     @Setter
     private User user;
 
+    @Setter
     private String nickname;
 
     public UserFollower(User user,String nickname) {
