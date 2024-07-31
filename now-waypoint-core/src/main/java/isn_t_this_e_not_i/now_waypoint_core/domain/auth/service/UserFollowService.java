@@ -124,9 +124,39 @@ public class UserFollowService {
     }
 
     @Transactional
+    public List<UserResponse.followInfo> getOtherFollowers(String otherNickname) {
+        List<User> followers = new ArrayList<>();
+        User findUser = userRepository.findByNickname(otherNickname).get();
+
+        List<UserFollower> userFollowers = userFollowerRepository.getUserFollowersByUser(findUser);
+        for (UserFollower userFollower : userFollowers) {
+            String nickname = userFollower.getNickname();
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followers::add);
+        }
+
+        return fromFollow(followers);
+    }
+
+    @Transactional
     public List<UserResponse.followInfo> getFollowings(String loginId) {
         List<User> followings = new ArrayList<>();
         User findUser = userRepository.findByLoginId(loginId).get();
+
+        List<UserFollowing> userFollowings = userFollowingRepository.findUserFollowingsByUser(findUser);
+        for (UserFollowing userFollowing : userFollowings) {
+            String nickname = userFollowing.getNickname();
+            Optional<User> follower = userRepository.findByNickname(nickname);
+            follower.ifPresent(followings::add);
+        }
+
+        return fromFollow(followings);
+    }
+
+    @Transactional
+    public List<UserResponse.followInfo> getOtherFollowings(String OtherNickname) {
+        List<User> followings = new ArrayList<>();
+        User findUser = userRepository.findByNickname(OtherNickname).get();
 
         List<UserFollowing> userFollowings = userFollowingRepository.findUserFollowingsByUser(findUser);
         for (UserFollowing userFollowing : userFollowings) {
