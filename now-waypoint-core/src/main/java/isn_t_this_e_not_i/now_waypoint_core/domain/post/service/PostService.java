@@ -70,13 +70,13 @@ public class PostService {
     @Async
     public void notifyFollowers(PostRedis postRedis, User user, PostResponseDTO postResponseDTO) {
         List<UserFollower> followers = user.getFollowers();
-        messagingTemplate.convertAndSend("/topic/follower/" + user.getNickname(), postRedis.getPost());
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).build();
                 notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(notify));
+                messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
             }
         }
     }
