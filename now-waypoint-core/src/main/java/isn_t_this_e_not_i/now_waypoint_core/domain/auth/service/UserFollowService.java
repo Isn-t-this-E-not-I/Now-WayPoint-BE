@@ -86,6 +86,11 @@ public class UserFollowService {
     }
 
     @Transactional
+    public void deleteFollowingByUser(String nickname) {
+        userFollowingRepository.deleteByNickname(nickname);
+    }
+
+    @Transactional
     public List<UserResponse.followInfo> getFollowers(String loginId) {
         List<User> followers = new ArrayList<>();
         User findUser = userRepository.findByLoginId(loginId).get();
