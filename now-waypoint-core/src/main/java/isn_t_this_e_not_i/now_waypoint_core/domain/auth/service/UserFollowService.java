@@ -86,6 +86,29 @@ public class UserFollowService {
     }
 
     @Transactional
+    public void deleteFollowingByUser(String nickname) {
+        userFollowingRepository.deleteByNickname(nickname);
+    }
+
+    @Transactional
+    public void updateFollowingNickname(String nickname,String updateNickname) {
+        List<UserFollowing> userFollowings = userFollowingRepository.findByNickname(nickname);
+        for (UserFollowing userFollowing : userFollowings) {
+            userFollowing.setNickname(updateNickname);
+            userFollowingRepository.save(userFollowing);
+        }
+    }
+
+    @Transactional
+    public void updateFollowerNickname(String nickname,String updateNickname) {
+        List<UserFollower> userFollowers = userFollowerRepository.findByNickname(nickname);
+        for (UserFollower userFollower : userFollowers) {
+            userFollower.setNickname(updateNickname);
+            userFollowerRepository.save(userFollower);
+        }
+    }
+
+    @Transactional
     public List<UserResponse.followInfo> getFollowers(String loginId) {
         List<User> followers = new ArrayList<>();
         User findUser = userRepository.findByLoginId(loginId).get();

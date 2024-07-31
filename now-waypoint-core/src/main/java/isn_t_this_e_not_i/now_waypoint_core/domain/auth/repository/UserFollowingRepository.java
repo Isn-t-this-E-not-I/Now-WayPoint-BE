@@ -12,4 +12,8 @@ public interface UserFollowingRepository extends JpaRepository<UserFollowing, Lo
     Optional<UserFollowing> findByNicknameAndUser(String nickname, User user);
 
     List<UserFollowing> findUserFollowingsByUser(User user);
+
+    List<UserFollowing> findByNickname(String nickname);
+
+    void deleteByNickname(String nickname);
 }
