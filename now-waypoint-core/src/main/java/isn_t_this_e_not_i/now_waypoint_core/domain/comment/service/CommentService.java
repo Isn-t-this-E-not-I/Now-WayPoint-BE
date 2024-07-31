@@ -6,6 +6,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.comment.dto.request.CommentRe
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.dto.response.CommentResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.entity.Comment;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.entity.CommentLike;
+import isn_t_this_e_not_i.now_waypoint_core.domain.comment.exception.InvalidMentionException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.repository.CommentLikeRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.repository.CommentRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
@@ -22,6 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,6 +50,12 @@ public class CommentService {
                     .orElseThrow(() -> new ResourceNotFoundException("Parent comment not found"));
         }
 
+        // 멘션된 닉네임 유효성 검사
+        List<String> invalidNicknames = validateMentions(commentRequest.getContent());
+        if (!invalidNicknames.isEmpty()) {
+            throw new InvalidMentionException("존재하지 않는 유저입니다: " + String.join(", ", invalidNicknames));
+        }
+
         Comment comment = Comment.builder()
                 .content(commentRequest.getContent())
                 .post(post)
@@ -57,6 +67,31 @@ public class CommentService {
 
         long likeCount = commentLikeRepository.countByComment(comment);
         return new CommentResponse(comment, likeCount);
+    }
+
+    private List<String> validateMentions(String content) {
+        List<String> mentions = extractMentions(content);
+        List<String> invalidNicknames = new ArrayList<>();
+
+        for (String nickname : mentions) {
+            if (!userRepository.existsByNickname(nickname)) {
+                invalidNicknames.add(nickname);
+            }
+        }
+
+        return invalidNicknames;
+    }
+
+    private List<String> extractMentions(String content) {
+        Pattern pattern = Pattern.compile("@(\\w+)");
+        Matcher matcher = pattern.matcher(content);
+        List<String> mentions = new ArrayList<>();
+
+        while (matcher.find()) {
+            mentions.add(matcher.group(1));
+        }
+
+        return mentions;
     }
 
     @Transactional(readOnly = true)

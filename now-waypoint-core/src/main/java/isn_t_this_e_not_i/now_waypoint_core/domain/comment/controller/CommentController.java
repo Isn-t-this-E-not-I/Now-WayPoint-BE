@@ -2,6 +2,8 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.comment.controller;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.dto.request.CommentRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.dto.response.CommentResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.comment.dto.response.ErrorResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.comment.exception.InvalidMentionException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,11 +25,15 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    public ResponseEntity<CommentResponse> createComment(@PathVariable("postId") Long postId,
-                                                         @RequestBody @Valid CommentRequest commentRequest,
-                                                         Authentication auth) {
-        CommentResponse commentResponse = commentService.createComment(postId, commentRequest, auth);
-        return ResponseEntity.status(HttpStatus.CREATED).body(commentResponse);
+    public ResponseEntity<?> createComment(@PathVariable("postId") Long postId,
+                                           @RequestBody @Valid CommentRequest commentRequest,
+                                           Authentication auth) {
+        try {
+            CommentResponse commentResponse = commentService.createComment(postId, commentRequest, auth);
+            return ResponseEntity.status(HttpStatus.CREATED).body(commentResponse);
+        } catch (InvalidMentionException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     @GetMapping
