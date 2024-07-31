@@ -2,16 +2,14 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostCategory;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostResponse {
@@ -26,8 +24,9 @@ public class PostResponse {
     private String profileImageUrl;
     private LocalDateTime createdAt;
     private int likeCount;
+    private boolean likedByUser;
 
-    public PostResponse(Post post) {
+    public PostResponse(Post post, boolean likedByUser) {
         this.id = post.getId();
         this.content = post.getContent();
         this.hashtags = post.getHashtags().stream().map(hashtag -> hashtag.getName()).toList();
@@ -38,5 +37,6 @@ public class PostResponse {
         this.profileImageUrl = post.getUser().getProfileImageUrl();
         this.createdAt = post.getCreatedAt();
         this.likeCount = post.getLikeCount();
+        this.likedByUser = likedByUser;
     }
 }
