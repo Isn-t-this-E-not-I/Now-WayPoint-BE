@@ -217,7 +217,10 @@ public class PostService {
             postResponseDTOS.addAll(postRedisList);
         }
         postResponseDTOS.sort(Comparator.comparing(PostResponseDTO::getCreatedAt).reversed());
-        messagingTemplate.convertAndSend("/queue/" + user.getLocate() + "/" + user.getNickname(), postResponseDTOS);
+        List<PostResponseDTO> limitedPostResponseDTOS = postResponseDTOS.size() > 10
+                ? postResponseDTOS.subList(0, 20)
+                : postResponseDTOS;
+        messagingTemplate.convertAndSend("/queue/posts/" + user.getNickname(), limitedPostResponseDTOS);
     }
 
     private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {

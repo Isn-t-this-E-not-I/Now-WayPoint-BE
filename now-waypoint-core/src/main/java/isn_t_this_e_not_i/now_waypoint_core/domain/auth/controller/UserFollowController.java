@@ -32,12 +32,21 @@ public class UserFollowController {
     }
 
     @GetMapping("/follower")
-    public ResponseEntity<List<UserResponse.followInfo>> getFollowers(Authentication auth){
-        return ResponseEntity.ok().body(userFollowService.getFollowers(auth.getName()));
+    public ResponseEntity<List<UserResponse.followInfo>> getFollowers(Authentication auth,@RequestParam(value ="nickname", required = false)String nickname){
+        if(nickname == null){
+            return ResponseEntity.ok().body(userFollowService.getFollowers(auth.getName()));
+        }else {
+            return ResponseEntity.ok().body(userFollowService.getOtherFollowers(nickname));
+        }
     }
 
     @GetMapping("/following")
-    public ResponseEntity<List<UserResponse.followInfo>> getFollowings(Authentication auth) {
-        return ResponseEntity.ok().body(userFollowService.getFollowings(auth.getName()));
+    public ResponseEntity<List<UserResponse.followInfo>> getFollowings(Authentication auth,@RequestParam(value ="nickname", required = false)String nickname) {
+        if(nickname == null){
+            return ResponseEntity.ok().body(userFollowService.getFollowings(auth.getName()));
+        }else{
+            return ResponseEntity.ok().body(userFollowService.getOtherFollowings(nickname));
+        }
     }
+
 }
