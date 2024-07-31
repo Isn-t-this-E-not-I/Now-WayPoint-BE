@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -66,6 +67,11 @@ public class UserController {
         emailAuthService.confirmAuthNumber(findUserInfo.getAuthNumber(),findUserInfo.getEmail());
         UserResponse.findUserInfo userId = UserResponse.findUserInfo.builder().id(userService.getUserId(findUserInfo.getEmail())).build();
         return ResponseEntity.ok().body(userId);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<UserResponse.followInfo>> getFollowers(Authentication auth){
+        return ResponseEntity.ok().body(userService.getAllUser());
     }
 
     @PutMapping("/password/find")
