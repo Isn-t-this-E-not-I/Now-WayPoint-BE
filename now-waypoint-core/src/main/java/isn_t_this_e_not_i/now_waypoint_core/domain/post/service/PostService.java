@@ -9,6 +9,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.repository.NotifyRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.*;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
@@ -82,7 +83,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post updatePost(Long postId, PostRequest postRequest, List<MultipartFile> files, Authentication auth) {
+    public Post updatePost(Long postId, PostRequest postRequest, List<MultipartFile> files, List<String> removeMedia, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
         if (!post.getUser().getId().equals(user.getId())) {
@@ -94,12 +95,28 @@ public class PostService {
         post.setLocationTag(user.getLocate());
         post.setCategory(postRequest.getCategory());
 
+        // 기존 미디어 URL을 가져옵니다.
+        List<String> existingMediaUrls = post.getMediaUrls();
+
+        // 삭제할 미디어 URL을 제거하고 파일 저장소에서 삭제합니다.
+        if (removeMedia != null && !removeMedia.isEmpty()) {
+            for (String url : removeMedia) {
+                existingMediaUrls.remove(url);
+                // 파일 저장소에서 파일 삭제 로직
+                fileUploadService.deleteFile(url);
+            }
+        }
+
+        // 새로 업로드된 파일의 URL을 추가합니다.
         if (files != null && !files.isEmpty()) {
-            List<String> fileUrls = files.stream()
+            List<String> newMediaUrls = files.stream()
                     .map(file -> fileUploadService.fileUpload(file))
                     .collect(Collectors.toList());
-            post.setMediaUrls(fileUrls);
+            existingMediaUrls.addAll(newMediaUrls);
         }
+
+        // 합쳐진 미디어 URL 리스트를 게시글에 설정합니다.
+        post.setMediaUrls(existingMediaUrls);
 
         Post savePost = postRepository.save(post);
 
@@ -132,45 +149,45 @@ public class PostService {
         return postRepository.findByUser(user);
     }
 
-    @Transactional
-    public Post getPost(Long postId) {
-        return postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
+
+    @Transactional(readOnly = true)
+    public boolean isLikedByUser(Post post, String loginId) {
+        User user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return likeRepository.findByPostAndUser(post, user).isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public PostResponse getPost(Long postId, Authentication auth) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
+        boolean likedByUser = isLikedByUser(post, auth.getName());
+        return new PostResponse(post, likedByUser);
     }
 
     @Transactional
-    public void likePost(Long postId, Authentication auth) {
+    public boolean toggleLikePost(Long postId, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
 
-        if (likeRepository.findByPostAndUser(post, user).isPresent()) {
-            throw new IllegalArgumentException("이미 좋아요를 눌렀습니다.");
+        Like existingLike = likeRepository.findByPostAndUser(post, user).orElse(null);
+        if (existingLike != null) {
+            likeRepository.delete(existingLike);
+            post.decrementLikeCount();
+            postRepository.save(post);
+            return false; // 좋아요 취소
+        } else {
+            Like like = Like.builder()
+                    .post(post)
+                    .user(user)
+                    .build();
+            likeRepository.save(like);
+            post.incrementLikeCount();
+            postRepository.save(post);
+            return true; // 좋아요 추가
         }
-
-        Like like = Like.builder()
-                .post(post)
-                .user(user)
-                .build();
-
-        likeRepository.save(like);
-        post.incrementLikeCount();
-        postRepository.save(post);
-    }
-
-    @Transactional
-    public void unlikePost(Long postId, Authentication auth) {
-        User user = userRepository.findByLoginId(auth.getName())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
-
-        Like like = likeRepository.findByPostAndUser(post, user)
-                .orElseThrow(() -> new IllegalArgumentException("좋아요를 누르지 않았습니다."));
-
-        likeRepository.delete(like);
-        post.decrementLikeCount();
-        postRepository.save(post);
     }
 
     @Transactional(readOnly = true)
