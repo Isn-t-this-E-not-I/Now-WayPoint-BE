@@ -169,16 +169,20 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse.updateNickname updateNickname(String loginId, String nickname) {
+    public UserResponse.updateNickname updateNickname(String loginId, String updateNickname) {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
 
-        if (userRepository.findByNickname(nickname).isPresent()) {
+        if (userRepository.findByNickname(updateNickname).isPresent()) {
             throw new UsernameNotFoundException("이미 존재하는 닉네임입니다.");
         }
 
         User user = findUser.get();
-        user.setNickname(nickname);
+        String nickname = user.getNickname();
+        user.setNickname(updateNickname);
+        userFollowService.updateFollowingNickname(nickname, updateNickname);
+        userFollowService.updateFollowerNickname(nickname, updateNickname);
 
+        userRepository.save(user);
         UserResponse.updateNickname userResponse = UserResponse.updateNickname.builder().nickname(nickname).build();
 
         return userResponse;
@@ -191,6 +195,8 @@ public class UserService {
         user.setProfileImageUrl(profileImageUrl);
 
         UserResponse.updateProfileImage userResponse = UserResponse.updateProfileImage.builder().profileImageUrl(profileImageUrl).build();
+
+        userRepository.save(user);
         return userResponse;
     }
 
