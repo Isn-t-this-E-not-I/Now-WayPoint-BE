@@ -135,7 +135,13 @@ public class UserService {
         Optional<User> findUser = userRepository.findByLoginId(loginId);
         //포스트 리스트 조회
         List<Post> posts = postService.getPostsByUser(loginId);
-        List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
+        List<PostResponse> response = new ArrayList<>();
+
+        for (Post post : posts) {
+            boolean likedByUser = postService.isLikedByUser(post, findUser.get().getLoginId());
+            PostResponse postResponse = new PostResponse(post, likedByUser);
+            response.add(postResponse);
+        }
         User user = findUser.get();
         return toUserInfo(user, response);
     }
@@ -147,7 +153,13 @@ public class UserService {
         //포스트 리스트 조회
 
         List<Post> posts = postService.getPostsByOtherUser(nickname);
-        List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
+        List<PostResponse> response = new ArrayList<>();
+
+        for (Post post : posts) {
+            boolean likedByUser = postService.isLikedByUser(post, findUser.get().getLoginId());
+            PostResponse postResponse = new PostResponse(post, likedByUser);
+            response.add(postResponse);
+        }
 
         User user = findUser.get();
         return toUserInfo(user, response);

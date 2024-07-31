@@ -8,7 +8,6 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostRespons
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.HashtagService;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,16 +34,19 @@ public class PostController {
     public ResponseEntity<PostResponse> createPost(@RequestPart("data") @Valid PostRequest postRequest,
                                                    @RequestPart("files") List<MultipartFile> files, Authentication auth) {
         Post post = postService.createPost(auth, postRequest, files);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post));
+        boolean likedByUser = postService.isLikedByUser(post, auth.getName()); // 수정된 부분
+        return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post, likedByUser));
     }
 
     @PutMapping("/{postId}")
     public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId,
                                                    @RequestPart("data") @Valid PostRequest postRequest,
                                                    @RequestPart(value = "files", required = false) List<MultipartFile> files,
+                                                   @RequestPart(value = "removeMedia", required = false) List<String> removeMedia,
                                                    Authentication auth) {
-        Post post = postService.updatePost(postId, postRequest, files, auth);
-        return ResponseEntity.ok(new PostResponse(post));
+        Post post = postService.updatePost(postId, postRequest, files, removeMedia, auth);
+        boolean likedByUser = postService.isLikedByUser(post, auth.getName()); // 수정된 부분
+        return ResponseEntity.ok(new PostResponse(post, likedByUser));
     }
 
     @DeleteMapping("/{postId}")
@@ -56,24 +58,16 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<PostResponse> getPost(@PathVariable("postId") Long postId) {
-        Post post = postService.getPost(postId);
-        return ResponseEntity.ok(new PostResponse(post));
+    public ResponseEntity<PostResponse> getPost(@PathVariable("postId") Long postId, Authentication auth) {
+        PostResponse postResponse = postService.getPost(postId, auth);
+        return ResponseEntity.ok(postResponse);
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseEntity<Map<String, String>> likePost(@PathVariable("postId") Long postId, Authentication auth) {
-        postService.likePost(postId, auth);
+    public ResponseEntity<Map<String, String>> toggleLikePost(@PathVariable("postId") Long postId, Authentication auth) {
+        boolean liked = postService.toggleLikePost(postId, auth);
         Map<String, String> response = new HashMap<>();
-        response.put("message", "게시글에 좋아요를 눌렀습니다.");
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/{postId}/like")
-    public ResponseEntity<Map<String, String>> unlikePost(@PathVariable("postId") Long postId, Authentication auth) {
-        postService.unlikePost(postId, auth);
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "게시글에 좋아요를 취소했습니다.");
+        response.put("message", liked ? "게시글에 좋아요를 눌렀습니다." : "게시글에 좋아요를 취소했습니다.");
         return ResponseEntity.ok(response);
     }
 
@@ -84,9 +78,12 @@ public class PostController {
     }
 
     @GetMapping("/hashtags/{name}")
-    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable("name") String name) {
+    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable("name") String name, Authentication auth) {
         List<Post> posts = hashtagService.getPostsByHashtag(name);
-        List<PostResponse> response = posts.stream().map(PostResponse::new).collect(Collectors.toList());
+        List<PostResponse> response = posts.stream().map(post -> {
+            boolean likedByUser = postService.isLikedByUser(post, auth.getName()); // 수정된 부분
+            return new PostResponse(post, likedByUser);
+        }).collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
 }
