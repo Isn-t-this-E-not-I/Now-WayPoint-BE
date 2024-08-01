@@ -82,15 +82,15 @@ public class CommentService {
                     .createDate(LocalDateTime.now())
                     .build();
 
+            Notify save = notifyRepository.save(notify);
             NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .id(notify.getId())
-                    .nickname(notify.getSenderNickname())
-                    .message(notify.getMessage())
-                    .profileImageUrl(notify.getProfileImageUrl())
-                    .createDate(notify.getCreateDate())
+                    .id(save.getId())
+                    .nickname(save.getSenderNickname())
+                    .message(save.getMessage())
+                    .profileImageUrl(save.getProfileImageUrl())
+                    .createDate(save.getCreateDate())
                     .build();
 
-            notifyRepository.save(notify);
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
         }
 
@@ -107,15 +107,14 @@ public class CommentService {
                         .createDate(LocalDateTime.now())
                         .build();
 
+                Notify save = notifyRepository.save(notify);
                 NotifyDTO notifyDTO = NotifyDTO.builder()
-                        .id(notify.getId())
-                        .nickname(notify.getSenderNickname())
-                        .message(notify.getMessage())
-                        .profileImageUrl(notify.getProfileImageUrl())
-                        .createDate(notify.getCreateDate())
+                        .id(save.getId())
+                        .nickname(save.getSenderNickname())
+                        .message(save.getMessage())
+                        .profileImageUrl(save.getProfileImageUrl())
+                        .createDate(save.getCreateDate())
                         .build();
-
-                notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + nickname, notifyDTO);
             }
         }
@@ -226,15 +225,15 @@ public class CommentService {
                     .createDate(LocalDateTime.now())
                     .build();
 
+            Notify save = notifyRepository.save(notify);
             NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .id(notify.getId())
-                    .nickname(notify.getSenderNickname())
-                    .message(notify.getMessage())
-                    .profileImageUrl(notify.getProfileImageUrl())
-                    .createDate(notify.getCreateDate())
+                    .id(save.getId())
+                    .nickname(save.getSenderNickname())
+                    .message(save.getMessage())
+                    .profileImageUrl(save.getProfileImageUrl())
+                    .createDate(save.getCreateDate())
                     .build();
 
-            notifyRepository.save(notify);
             messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
         }
     }

@@ -189,13 +189,13 @@ public class UserFollowService {
                 .message(findUser.get().getNickname() + "님이 팔로우하였습니다.")
                 .profileImageUrl(findUser.get().getProfileImageUrl()).createDate(LocalDateTime.now()).build();
 
-        notifyRepository.save(notify);
+        Notify save = notifyRepository.save(notify);
         NotifyDTO notifyDTO = NotifyDTO.builder().
-                id(notify.getId()).
-                nickname(notify.getSenderNickname()).
-                message(notify.getMessage()).
-                profileImageUrl(notify.getProfileImageUrl()).
-                createDate(notify.getCreateDate()).build();
+                id(save.getId()).
+                nickname(save.getSenderNickname()).
+                message(save.getMessage()).
+                profileImageUrl(save.getProfileImageUrl()).
+                createDate(save.getCreateDate()).build();
         return notifyDTO;
     }
 
