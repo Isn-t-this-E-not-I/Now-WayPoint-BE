@@ -9,6 +9,9 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.comment.entity.CommentLike;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.exception.InvalidMentionException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.repository.CommentLikeRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.comment.repository.CommentRepository;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.repository.NotifyRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.UnauthorizedException;
@@ -17,11 +20,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,6 +41,8 @@ public class CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final NotifyRepository notifyRepository;
 
     @Transactional
     public CommentResponse createComment(Long postId, CommentRequest commentRequest, Authentication auth) {
@@ -64,6 +71,52 @@ public class CommentService {
                 .build();
 
         commentRepository.save(comment);
+
+        // 게시글 작성자에게 댓글 작성 알림 전송
+        if (!post.getUser().getId().equals(user.getId())) {
+            String notificationMessage = user.getNickname() + "님이 게시글에 댓글을 남겼습니다.";
+            Notify notify = Notify.builder()
+                    .senderNickname(user.getNickname())
+                    .message(notificationMessage)
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .createDate(LocalDateTime.now())
+                    .build();
+
+            NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .nickname(notify.getSenderNickname())
+                    .message(notify.getMessage())
+                    .profileImageUrl(notify.getProfileImageUrl())
+                    .createDate(notify.getCreateDate())
+                    .build();
+
+            notifyRepository.save(notify);
+            messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
+        }
+
+        // 멘션된 사용자에게 알림 전송
+        List<String> mentionedNicknames = extractMentions(commentRequest.getContent());
+        for (String nickname : mentionedNicknames) {
+            User mentionedUser = userRepository.findByNickname(nickname).orElse(null);
+            if (mentionedUser != null && !mentionedUser.getId().equals(user.getId())) {
+                String notificationMessage = user.getNickname() + "님이 댓글에서 당신을 언급했습니다.";
+                Notify notify = Notify.builder()
+                        .senderNickname(user.getNickname())
+                        .message(notificationMessage)
+                        .profileImageUrl(user.getProfileImageUrl())
+                        .createDate(LocalDateTime.now())
+                        .build();
+
+                NotifyDTO notifyDTO = NotifyDTO.builder()
+                        .nickname(notify.getSenderNickname())
+                        .message(notify.getMessage())
+                        .profileImageUrl(notify.getProfileImageUrl())
+                        .createDate(notify.getCreateDate())
+                        .build();
+
+                notifyRepository.save(notify);
+                messagingTemplate.convertAndSend("/queue/notify/" + nickname, notifyDTO);
+            }
+        }
 
         long likeCount = commentLikeRepository.countByComment(comment);
         return new CommentResponse(comment, likeCount);
@@ -99,13 +152,9 @@ public class CommentService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
-        // 모든 댓글을 페이징 처리하여 가져옴
         Page<Comment> commentsPage = commentRepository.findByPost(post, pageable);
-
-        // 모든 댓글을 리스트로 변환
         List<Comment> comments = commentsPage.getContent();
 
-        // 좋아요 많은 상위 3개 댓글 추출
         List<CommentResponse> topLikedComments = comments.stream()
                 .sorted((c1, c2) -> Long.compare(
                         commentLikeRepository.countByComment(c2),
@@ -114,17 +163,14 @@ public class CommentService {
                 .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment)))
                 .collect(Collectors.toList());
 
-        // 나머지 댓글
         List<CommentResponse> otherComments = comments.stream()
                 .filter(comment -> topLikedComments.stream()
                         .noneMatch(topComment -> topComment.getId().equals(comment.getId())))
                 .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment)))
                 .collect(Collectors.toList());
 
-        // 상위 3개 좋아요 많은 댓글을 맨 앞에 추가
         topLikedComments.addAll(otherComments);
 
-        // 최종 결과를 페이지 형태로 반환
         return new PageImpl<>(topLikedComments, pageable, commentsPage.getTotalElements());
     }
 
@@ -139,6 +185,17 @@ public class CommentService {
             throw new UnauthorizedException("사용자에게 이 댓글을 삭제할 권한이 없습니다.");
         }
 
+        deleteCommentWithReplies(comment);
+    }
+
+    @Transactional
+    protected void deleteCommentWithReplies(Comment comment) {
+        List<Comment> replies = commentRepository.findByParent(comment);
+        for (Comment reply : replies) {
+            deleteCommentWithReplies(reply);
+        }
+
+        commentLikeRepository.deleteByComment(comment);
         commentRepository.delete(comment);
     }
 
@@ -157,6 +214,15 @@ public class CommentService {
                     .user(user)
                     .build();
             commentLikeRepository.save(commentLike);
+
+            // 댓글 작성자에게 좋아요 알림 전송
+            String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
+            NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .nickname(user.getNickname())
+                    .message(notificationMessage)
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .build();
+            messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
         }
     }
 }
