@@ -80,6 +80,7 @@ public class CommentService {
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(LocalDateTime.now())
+                    .receiverNickname(post.getUser().getNickname())
                     .build();
 
             Notify save = notifyRepository.save(notify);
@@ -105,6 +106,7 @@ public class CommentService {
                         .message(notificationMessage)
                         .profileImageUrl(user.getProfileImageUrl())
                         .createDate(LocalDateTime.now())
+                        .receiverNickname(post.getUser().getNickname())
                         .build();
 
                 Notify save = notifyRepository.save(notify);
@@ -223,6 +225,7 @@ public class CommentService {
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(LocalDateTime.now())
+                    .receiverNickname(comment.getUser().getNickname())
                     .build();
 
             Notify save = notifyRepository.save(notify);
