@@ -4,8 +4,10 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepositor
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.MessageType;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.ChatMessageResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.ErrorMessageResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.StompMessageResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatroom.response.ChatRoomListResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatroom.response.CreateChatRoomResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.entity.ChatMessage;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.entity.ChatRoom;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.entity.UserChatRoom;
@@ -51,6 +53,12 @@ public class UserChatRoomService {
         if (!allowDuplicates) {
             boolean chatRoomExists = findChatRoomWithUsers(logInUserId, nicknames).isPresent();
             if (chatRoomExists) {
+                ErrorMessageResponse response = ErrorMessageResponse.builder()
+                        .messageType(MessageType.ERROR)
+                        .nicknames(nicknames)
+                        .content("해당하는 채팅방이 이미 존재합니다. ")
+                        .build();
+                messagingTemplate.convertAndSend("/queue/chatroom/" + logInUser.getNickname(), response);
                 throw new IllegalArgumentException("해당하는 채팅방이 이미 존재합니다.");
             }
         }
@@ -67,10 +75,11 @@ public class UserChatRoomService {
         final ChatRoom chatRoom = ChatRoom.builder().name(chatRoomName).build();
         chatRoomRepository.save(chatRoom);
 
-        StompMessageResponse response = StompMessageResponse.builder()
+        CreateChatRoomResponse response = CreateChatRoomResponse.builder()
                 .messageType(MessageType.CREATE)
                 .chatRoomId(chatRoom.getId())
-                .content("채팅방 생성")
+                .chatRoomName(chatRoomName)
+                .userCount(nicknames.length + 1)
                 .build();
 
         if (allowDuplicates) {
@@ -93,6 +102,7 @@ public class UserChatRoomService {
                 })
                 .collect(Collectors.toList());
 
+        messagingTemplate.convertAndSend("/queue/chatroom/" + logInUser.getNickname(), response);
         // 로그인한 유저도 채팅방에 추가
         UserChatRoom logInUserChatRoom = UserChatRoom.builder()
                 .user(logInUser)
@@ -133,7 +143,6 @@ public class UserChatRoomService {
 
     /**
      * 채팅방에 유저 초대
-     *
      * @Request : Long chatRoomId, String[] nicknames
      */
     @Transactional
@@ -158,9 +167,7 @@ public class UserChatRoomService {
         StompMessageResponse response = StompMessageResponse.builder()
                 .messageType(MessageType.INVITE)
                 .chatRoomId(chatRoom.getId())
-                .content(nicknames.toString())
                 .build();
-
 
         alertMessage(chatRoomId, Arrays.stream(nicknames).collect(Collectors.joining(", ")) + "님이 초대되었습니다.");
 
@@ -182,7 +189,6 @@ public class UserChatRoomService {
 
     /**
      * 채팅방 나가기
-     *
      * @Request : String loginId, Long chatRoomId
      */
     @Transactional
@@ -199,11 +205,11 @@ public class UserChatRoomService {
         StompMessageResponse response = StompMessageResponse.builder()
                 .messageType(MessageType.LEAVE)
                 .chatRoomId(chatRoomId)
-                .content(logInUser.getNickname())
                 .build();
 
         if (chatRoomUsers.size() == 1) {
             // 채팅방에 유저가 1명인 경우 채팅방 자체를 삭제
+            response.setMessageType(MessageType.DELETE);
             userChatRoomRepository.delete(userChatRoom);
             chatRoomRepository.deleteById(chatRoomId);
             messagingTemplate.convertAndSend("/queue/chatroom/" + logInUser.getNickname(), response);
@@ -217,15 +223,11 @@ public class UserChatRoomService {
 
     /**
      * 채팅방 목록 조회
-     *
      * @Request : String logInUserId
      * @Response : Long chatRoomId, String chatRoomName, Long 채팅방에 있는 유저의 수
      */
     @Transactional
     public List<ChatRoomListResponse> getChatRoomsForUser(String logInUserId) {
-        User logInUser = userRepository.findByLoginId(logInUserId)
-                .orElseThrow(() -> new IllegalArgumentException("해당하는 로그인 ID가 없습니다: " + logInUserId));
-
         List<UserChatRoom> userChatRooms = userChatRoomRepository.findByUserLoginId(logInUserId);
 
         return userChatRooms.stream()
@@ -261,7 +263,7 @@ public class UserChatRoomService {
         StompMessageResponse response = StompMessageResponse.builder()
                 .messageType(MessageType.NAME_UPDATE)
                 .chatRoomId(chatRoomId)
-                .content(newChatRoomName)
+                .chatRoomName(newChatRoomName)
                 .build();
 
         messagingTemplate.convertAndSend("/topic/chatroom/" + chatRoomId, response);
