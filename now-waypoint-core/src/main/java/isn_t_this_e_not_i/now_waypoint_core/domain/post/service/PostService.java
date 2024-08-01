@@ -74,7 +74,7 @@ public class PostService {
         List<UserFollower> followers = user.getFollowers();
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
-                Notify notify = Notify.builder().senderNickname(user.getNickname()).
+                Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(LocalDateTime.now()).build();
                 Notify save = notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save));
@@ -191,6 +191,7 @@ public class PostService {
             String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
             Notify notify = Notify.builder()
                     .senderNickname(user.getNickname())
+                    .receiverNickname(post.getUser().getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(LocalDateTime.now())

@@ -60,7 +60,7 @@ public class UserFollowService {
         userFollowerRepository.save(userFollower);
         userFollowingRepository.save(userFollowing);
 
-        messagingTemplate.convertAndSend("/queue/notify/" + followUserNickname, getnotifyDTO(findUser));
+        messagingTemplate.convertAndSend("/queue/notify/" + followUserNickname, getnotifyDTO(findUser, followUserNickname));
     }
 
     @Transactional
@@ -184,10 +184,13 @@ public class UserFollowService {
         return fromFollows;
     }
 
-    private NotifyDTO getnotifyDTO(Optional<User> findUser) {
+    private NotifyDTO getnotifyDTO(Optional<User> findUser, String followUserNickname) {
         Notify notify = Notify.builder().senderNickname(findUser.get().getNickname())
                 .message(findUser.get().getNickname() + "님이 팔로우하였습니다.")
-                .profileImageUrl(findUser.get().getProfileImageUrl()).createDate(LocalDateTime.now()).build();
+                .profileImageUrl(findUser.get().getProfileImageUrl())
+                .createDate(LocalDateTime.now())
+                .receiverNickname(followUserNickname)
+                .build();
 
         Notify save = notifyRepository.save(notify);
         NotifyDTO notifyDTO = NotifyDTO.builder().
