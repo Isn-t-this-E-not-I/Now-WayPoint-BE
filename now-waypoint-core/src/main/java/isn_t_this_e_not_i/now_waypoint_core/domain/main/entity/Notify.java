@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Builder
@@ -23,4 +25,6 @@ public class Notify {
     private String profileImageUrl;
 
     private String message;
+
+    private LocalDateTime createDate;
 }

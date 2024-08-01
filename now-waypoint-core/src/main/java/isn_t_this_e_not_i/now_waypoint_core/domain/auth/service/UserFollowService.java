@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -186,13 +187,14 @@ public class UserFollowService {
     private NotifyDTO getnotifyDTO(Optional<User> findUser) {
         Notify notify = Notify.builder().senderNickname(findUser.get().getNickname())
                 .message(findUser.get().getNickname() + "님이 팔로우하였습니다.")
-                .profileImageUrl(findUser.get().getProfileImageUrl()).build();
+                .profileImageUrl(findUser.get().getProfileImageUrl()).createDate(LocalDateTime.now()).build();
 
         notifyRepository.save(notify);
         NotifyDTO notifyDTO = NotifyDTO.builder().
                 nickname(notify.getSenderNickname()).
                 message(notify.getMessage()).
-                profileImageUrl(notify.getProfileImageUrl()).build();
+                profileImageUrl(notify.getProfileImageUrl()).
+                createDate(notify.getCreateDate()).build();
         return notifyDTO;
     }
 
