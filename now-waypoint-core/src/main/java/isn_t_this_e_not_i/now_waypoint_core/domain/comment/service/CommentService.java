@@ -83,6 +83,7 @@ public class CommentService {
                     .build();
 
             NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .id(notify.getId())
                     .nickname(notify.getSenderNickname())
                     .message(notify.getMessage())
                     .profileImageUrl(notify.getProfileImageUrl())
@@ -107,6 +108,7 @@ public class CommentService {
                         .build();
 
                 NotifyDTO notifyDTO = NotifyDTO.builder()
+                        .id(notify.getId())
                         .nickname(notify.getSenderNickname())
                         .message(notify.getMessage())
                         .profileImageUrl(notify.getProfileImageUrl())
@@ -225,6 +227,7 @@ public class CommentService {
                     .build();
 
             NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .id(notify.getId())
                     .nickname(notify.getSenderNickname())
                     .message(notify.getMessage())
                     .profileImageUrl(notify.getProfileImageUrl())
