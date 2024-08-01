@@ -191,6 +191,7 @@ public class UserFollowService {
 
         notifyRepository.save(notify);
         NotifyDTO notifyDTO = NotifyDTO.builder().
+                id(notify.getId()).
                 nickname(notify.getSenderNickname()).
                 message(notify.getMessage()).
                 profileImageUrl(notify.getProfileImageUrl()).

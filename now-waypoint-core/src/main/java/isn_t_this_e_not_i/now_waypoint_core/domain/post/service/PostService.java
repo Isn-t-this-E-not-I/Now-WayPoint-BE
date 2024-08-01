@@ -75,7 +75,7 @@ public class PostService {
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).
-                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).build();
+                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(LocalDateTime.now()).build();
                 notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(notify));
                 messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
@@ -272,9 +272,11 @@ public class PostService {
 
     private static NotifyDTO getNotifyDTO(Notify notify) {
         return NotifyDTO.builder()
+                .id(notify.getId())
                 .nickname(notify.getSenderNickname())
                 .message(notify.getMessage())
                 .profileImageUrl(notify.getProfileImageUrl())
+                .createDate(notify.getCreateDate())
                 .build();
     }
 }
