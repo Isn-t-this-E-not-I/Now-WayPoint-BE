@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotifyDTO {
+    private Long id;
     private String nickname;
     @Setter
     private String message;
