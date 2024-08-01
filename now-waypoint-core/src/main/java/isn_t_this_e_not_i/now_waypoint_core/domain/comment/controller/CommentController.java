@@ -38,8 +38,9 @@ public class CommentController {
 
     @GetMapping
     public ResponseEntity<Page<CommentResponse>> getCommentsByPost(@PathVariable("postId") Long postId,
-                                                                   Pageable pageable) {
-        Page<CommentResponse> comments = commentService.getCommentsByPost(postId, pageable);
+                                                                   Pageable pageable,
+                                                                   Authentication auth) {
+        Page<CommentResponse> comments = commentService.getCommentsByPost(postId, pageable, auth);
         return ResponseEntity.ok(comments);
     }
 
@@ -52,8 +53,10 @@ public class CommentController {
     }
 
     @PostMapping("/{commentId}/like")
-    public ResponseEntity<Void> likeComment(@PathVariable("commentId") Long commentId, Authentication auth) {
-        commentService.likeComment(commentId, auth);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, Boolean>> likeComment(@PathVariable("commentId") Long commentId, Authentication auth) {
+        boolean liked = commentService.likeComment(commentId, auth);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("liked", liked);
+        return ResponseEntity.ok(response);
     }
 }
