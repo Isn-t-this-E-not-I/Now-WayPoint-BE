@@ -217,11 +217,21 @@ public class CommentService {
 
             // 댓글 작성자에게 좋아요 알림 전송
             String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
-            NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .nickname(user.getNickname())
+            Notify notify = Notify.builder()
+                    .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
+                    .createDate(LocalDateTime.now())
                     .build();
+
+            NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .nickname(notify.getSenderNickname())
+                    .message(notify.getMessage())
+                    .profileImageUrl(notify.getProfileImageUrl())
+                    .createDate(notify.getCreateDate())
+                    .build();
+
+            notifyRepository.save(notify);
             messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
         }
     }
