@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class PostResponseDTO {
 
+    private Long id;
     private String content;
     private List<String> hashtags;
     private String locationTag;
@@ -28,6 +29,7 @@ public class PostResponseDTO {
     private LocalDateTime createdAt;
 
     public PostResponseDTO(Post post) {
+        this.id = post.getId();
         this.content = post.getContent();
         this.hashtags = post.getHashtags().stream().map(Hashtag::getName).collect(Collectors.toList());
         this.locationTag = post.getLocationTag();

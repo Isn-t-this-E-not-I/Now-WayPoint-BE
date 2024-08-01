@@ -6,7 +6,6 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostRedis;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRedisRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.*;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,7 +18,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class PostRedisService {
 
     private final PostRedisRepository postRedisRepository;
@@ -37,8 +35,6 @@ public class PostRedisService {
 
 
         PostRedis save = postRedisRepository.save(postRedis);
-        log.info("longitude = {}", save.getLongitude());
-        log.info("latitude = {}", save.getLatitude());
 
         String key = "post:" + save.getCategory();
         String allKey = "post:ALL";

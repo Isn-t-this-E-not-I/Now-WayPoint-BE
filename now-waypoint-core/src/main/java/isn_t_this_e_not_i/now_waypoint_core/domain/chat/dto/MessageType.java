@@ -7,7 +7,8 @@ public enum MessageType {
     CHAT_LIST,
     INVITE,
     LEAVE,
+    DELETE,
     UPDATE,
-    LIST,
-    NAME_UPDATE
+    NAME_UPDATE,
+    ERROR
 }

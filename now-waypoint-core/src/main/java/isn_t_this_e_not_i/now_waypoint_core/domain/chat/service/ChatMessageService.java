@@ -60,10 +60,12 @@ public class ChatMessageService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String formattedDate = dateFormat.format(new Date(currentTimeMillis));
 
-        StompMessageResponse response = StompMessageResponse.builder()
+        ChatMessageResponse response = ChatMessageResponse.builder()
                 .messageType(MessageType.CHAT)
-                .chatRoomId(chatRoomId)
-                .content("new Message")
+                .chatRoomId(chatMessage.getChatRoomId())
+                .sender(chatMessage.getSender())
+                .content(chatMessage.getContent())
+                .timestamp(formattedDate)
                 .build();
 
         // 마지막 메시지 저장(내용/시간)
@@ -82,13 +84,7 @@ public class ChatMessageService {
                 });
 
         // DTO 객체 반환
-        return ChatMessageResponse.builder()
-                .messageType(MessageType.CHAT)
-                .chatRoomId(chatMessage.getChatRoomId())
-                .sender(chatMessage.getSender())
-                .content(chatMessage.getContent())
-                .timestamp(formattedDate)
-                .build();
+        return response;
     }
 
     /**
@@ -167,7 +163,6 @@ public class ChatMessageService {
             Map<String, String> lastMessageInfo = getLastMessageInfo(chatRoomId);
 
             UpdateInfoResponse chatRoomInfo = UpdateInfoResponse.builder()
-                    .messageType(MessageType.LIST)
                     .chatRoomId(chatRoomId)
                     .unreadMessagesCount(unreadMessagesCount)
                     .lastMessageContent(lastMessageInfo.get("content"))
