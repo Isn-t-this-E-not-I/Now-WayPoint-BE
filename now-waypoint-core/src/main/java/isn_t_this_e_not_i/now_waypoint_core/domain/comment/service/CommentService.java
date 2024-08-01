@@ -139,6 +139,18 @@ public class CommentService {
             throw new UnauthorizedException("사용자에게 이 댓글을 삭제할 권한이 없습니다.");
         }
 
+        deleteCommentWithReplies(comment);
+    }
+
+    @Transactional
+    protected void deleteCommentWithReplies(Comment comment) {
+        List<Comment> replies = commentRepository.findByParent(comment);
+        for (Comment reply : replies) {
+            deleteCommentWithReplies(reply);
+        }
+
+        commentLikeRepository.deleteByComment(comment);
+
         commentRepository.delete(comment);
     }
 
