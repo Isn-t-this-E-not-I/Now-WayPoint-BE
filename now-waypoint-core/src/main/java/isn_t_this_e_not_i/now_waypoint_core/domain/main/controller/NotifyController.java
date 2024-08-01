@@ -4,13 +4,11 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.service.NotifyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notify")
@@ -25,7 +23,8 @@ public class NotifyController {
     }
 
     @DeleteMapping
-    public void deleteNotify(Long id){
+    public void deleteNotify(@RequestBody Map<String, Long> request){
+        Long id = request.get("id");
         notifyService.deleteNotify(id);
     }
 }
