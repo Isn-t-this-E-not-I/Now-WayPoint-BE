@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -149,7 +150,6 @@ public class PostService {
         return postRepository.findByUser(user);
     }
 
-
     @Transactional(readOnly = true)
     public boolean isLikedByUser(Post post, String loginId) {
         User user = userRepository.findByLoginId(loginId)
@@ -186,6 +186,26 @@ public class PostService {
             likeRepository.save(like);
             post.incrementLikeCount();
             postRepository.save(post);
+
+            // 게시글 작성자에게 좋아요 알림 전송
+            String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
+            Notify notify = Notify.builder()
+                    .senderNickname(user.getNickname())
+                    .message(notificationMessage)
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .createDate(LocalDateTime.now())
+                    .build();
+
+            NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .nickname(notify.getSenderNickname())
+                    .message(notify.getMessage())
+                    .profileImageUrl(notify.getProfileImageUrl())
+                    .createDate(notify.getCreateDate())
+                    .build();
+
+            notifyRepository.save(notify);
+            messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
+
             return true; // 좋아요 추가
         }
     }
