@@ -6,6 +6,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.repository.NotifyRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotifyService {
 
     private final NotifyRepository notifyRepository;
