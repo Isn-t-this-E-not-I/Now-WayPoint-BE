@@ -76,8 +76,8 @@ public class PostService {
             if (!follower.getNickname().equals(user.getNickname())) {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(LocalDateTime.now()).build();
-                notifyRepository.save(notify);
-                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(notify));
+                Notify save = notifyRepository.save(notify);
+                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save));
                 messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
             }
         }
@@ -195,15 +195,16 @@ public class PostService {
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(LocalDateTime.now())
                     .build();
+            Notify save = notifyRepository.save(notify);
 
             NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .nickname(notify.getSenderNickname())
-                    .message(notify.getMessage())
-                    .profileImageUrl(notify.getProfileImageUrl())
-                    .createDate(notify.getCreateDate())
+                    .id(save.getId())
+                    .nickname(save.getSenderNickname())
+                    .message(save.getMessage())
+                    .profileImageUrl(save.getProfileImageUrl())
+                    .createDate(save.getCreateDate())
                     .build();
 
-            notifyRepository.save(notify);
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
 
             return true; // 좋아요 추가
