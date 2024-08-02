@@ -1,9 +1,10 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.List;
 public class UserFollowController {
 
     private final UserFollowService userFollowService;
+    private final PostService postService;
 
     @PutMapping("/add")
     public ResponseEntity<String> addFollow(Authentication auth, @RequestBody @Valid UserRequest.followUserInfo followUserInfo){
@@ -47,6 +49,11 @@ public class UserFollowController {
         }else{
             return ResponseEntity.ok().body(userFollowService.getOtherFollowings(nickname));
         }
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<PostResponseDTO>> getFollowrList(Authentication auth){
+        return ResponseEntity.ok().body(postService.getFollowerPost(auth.getName()));
     }
 
 }
