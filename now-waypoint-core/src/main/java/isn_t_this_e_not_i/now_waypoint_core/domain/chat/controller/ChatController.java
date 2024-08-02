@@ -57,7 +57,7 @@ public class ChatController {
         userChatRoomService.createChatRoom(principal.getName(), request.getNicknames(), true);
     }
 
-    @MessageMapping("chat/send")
+    @MessageMapping("/chat/send")
     @Operation(summary = "채팅 메시지 전송", description = "지정된 채팅방에 채팅 메시지를 전송합니다.")
     public void sendMessage(@Payload CreateMessageRequest createMessageRequest, Principal principal) {
         ChatMessageResponse response = chatMessageService.saveMessage(principal.getName(), createMessageRequest.getChatRoomId(), createMessageRequest.getContent());
