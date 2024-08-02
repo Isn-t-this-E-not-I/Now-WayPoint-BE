@@ -247,7 +247,7 @@ public class PostService {
     }
 
     @Transactional
-    public void getFollowerPost(String loginId) {
+    public List<PostResponseDTO> getFollowerPost(String loginId) {
         User user = userRepository.findByLoginId(loginId).get();
         List<UserFollowing> followings = user.getFollowings();
         List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
@@ -259,7 +259,8 @@ public class PostService {
         List<PostResponseDTO> limitedPostResponseDTOS = postResponseDTOS.size() > 10
                 ? postResponseDTOS.subList(0, 20)
                 : postResponseDTOS;
-        messagingTemplate.convertAndSend("/queue/posts/" + user.getNickname(), limitedPostResponseDTOS);
+
+        return limitedPostResponseDTOS;
     }
 
     private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
