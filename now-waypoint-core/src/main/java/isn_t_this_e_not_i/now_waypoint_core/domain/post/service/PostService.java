@@ -27,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,9 +61,16 @@ public class PostService {
                 .category(postRequest.getCategory())
                 .mediaUrls(fileUrls)
                 .user(user)
+                .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
 
-        return postRepository.save(post);
+        Post savePost = postRepository.save(post);
+
+        PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
+        PostRedis postRedis = postRedisService.register(postResponseDTO);
+        notifyFollowers(postRedis, user, postResponseDTO);
+
+        return savePost;
     }
 
     @Async
