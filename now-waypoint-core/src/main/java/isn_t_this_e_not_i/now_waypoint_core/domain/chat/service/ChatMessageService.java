@@ -37,7 +37,7 @@ public class ChatMessageService {
      * @Request : Long chatRoomId, String loginUserId, String content
      * @Response : String sender, String content, LocalDateTime timestamp;
      */
-    public ChatMessageResponse saveMessage(String loginUserId, Long chatRoomId, String content) {
+    public void saveMessage(String loginUserId, Long chatRoomId, String content) {
         String sender = userRepository.findByLoginId(loginUserId).get().getNickname();
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoomId(chatRoomId)
@@ -83,9 +83,8 @@ public class ChatMessageService {
                     // 각 사용자에게 업데이트 메시지 보내기
                     messagingTemplate.convertAndSend("/queue/chatroom/" + userNickname, response);
                 });
-
-        // DTO 객체 반환
-        return response;
+        messagingTemplate.convertAndSend("/queue/chatroom/" + sender, response);
+        messagingTemplate.convertAndSend("/topic/chatroom/" + chatRoomId, response);
     }
 
     /**
