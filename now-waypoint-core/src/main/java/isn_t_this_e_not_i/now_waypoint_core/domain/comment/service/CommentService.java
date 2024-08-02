@@ -26,7 +26,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -224,23 +223,25 @@ public class CommentService {
             commentLikeRepository.save(commentLike);
 
             // 댓글 작성자에게 좋아요 알림 전송
-            String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
-            Notify notify = Notify.builder()
-                    .senderNickname(user.getNickname())
-                    .message(notificationMessage)
-                    .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                    .build();
+            if (!comment.getUser().getId().equals(user.getId())) {
+                String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
+                Notify notify = Notify.builder()
+                        .senderNickname(user.getNickname())
+                        .message(notificationMessage)
+                        .profileImageUrl(user.getProfileImageUrl())
+                        .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                        .build();
 
-            NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .nickname(notify.getSenderNickname())
-                    .message(notify.getMessage())
-                    .profileImageUrl(notify.getProfileImageUrl())
-                    .createDate(notify.getCreateDate())
-                    .build();
+                NotifyDTO notifyDTO = NotifyDTO.builder()
+                        .nickname(notify.getSenderNickname())
+                        .message(notify.getMessage())
+                        .profileImageUrl(notify.getProfileImageUrl())
+                        .createDate(notify.getCreateDate())
+                        .build();
 
-            notifyRepository.save(notify);
-            messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
+                notifyRepository.save(notify);
+                messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
+            }
             return true; // 좋아요 추가
         }
     }
