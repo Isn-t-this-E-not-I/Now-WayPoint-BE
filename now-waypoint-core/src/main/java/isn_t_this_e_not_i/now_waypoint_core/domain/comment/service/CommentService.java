@@ -82,16 +82,18 @@ public class CommentService {
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                    .receiverNickname(post.getUser().getNickname())
                     .build();
 
+            Notify save = notifyRepository.save(notify);
             NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .nickname(notify.getSenderNickname())
-                    .message(notify.getMessage())
-                    .profileImageUrl(notify.getProfileImageUrl())
-                    .createDate(notify.getCreateDate())
+                    .id(save.getId())
+                    .nickname(save.getSenderNickname())
+                    .message(save.getMessage())
+                    .profileImageUrl(save.getProfileImageUrl())
+                    .createDate(save.getCreateDate())
                     .build();
 
-            notifyRepository.save(notify);
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
         }
 
@@ -106,16 +108,17 @@ public class CommentService {
                         .message(notificationMessage)
                         .profileImageUrl(user.getProfileImageUrl())
                         .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                        .receiverNickname(post.getUser().getNickname())
                         .build();
 
+                Notify save = notifyRepository.save(notify);
                 NotifyDTO notifyDTO = NotifyDTO.builder()
-                        .nickname(notify.getSenderNickname())
-                        .message(notify.getMessage())
-                        .profileImageUrl(notify.getProfileImageUrl())
-                        .createDate(notify.getCreateDate())
+                        .id(save.getId())
+                        .nickname(save.getSenderNickname())
+                        .message(save.getMessage())
+                        .profileImageUrl(save.getProfileImageUrl())
+                        .createDate(save.getCreateDate())
                         .build();
-
-                notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + nickname, notifyDTO);
             }
         }
@@ -223,25 +226,28 @@ public class CommentService {
             commentLikeRepository.save(commentLike);
 
             // 댓글 작성자에게 좋아요 알림 전송
-            if (!comment.getUser().getId().equals(user.getId())) {
-                String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
-                Notify notify = Notify.builder()
-                        .senderNickname(user.getNickname())
-                        .message(notificationMessage)
-                        .profileImageUrl(user.getProfileImageUrl())
-                        .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                        .build();
+              if (!comment.getUser().getId().equals(user.getId())) {
+            String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
+            Notify notify = Notify.builder()
+                    .senderNickname(user.getNickname())
+                    .message(notificationMessage)
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .createDate(LocalDateTime.now())
+                    .receiverNickname(comment.getUser().getNickname())
+                    .build();
 
-                NotifyDTO notifyDTO = NotifyDTO.builder()
-                        .nickname(notify.getSenderNickname())
-                        .message(notify.getMessage())
-                        .profileImageUrl(notify.getProfileImageUrl())
-                        .createDate(notify.getCreateDate())
-                        .build();
+            Notify save = notifyRepository.save(notify);
+            NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .id(save.getId())
+                    .nickname(save.getSenderNickname())
+                    .message(save.getMessage())
+                    .profileImageUrl(save.getProfileImageUrl())
+                    .createDate(save.getCreateDate())
+                    .build();
 
-                notifyRepository.save(notify);
-                messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
-            }
+            messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
+              }
+
             return true; // 좋아요 추가
         }
     }

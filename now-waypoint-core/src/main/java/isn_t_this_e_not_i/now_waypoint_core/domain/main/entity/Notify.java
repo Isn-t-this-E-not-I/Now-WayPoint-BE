@@ -26,5 +26,7 @@ public class Notify {
 
     private String message;
 
+    private String receiverNickname;
+
     private LocalDateTime createDate;
 }

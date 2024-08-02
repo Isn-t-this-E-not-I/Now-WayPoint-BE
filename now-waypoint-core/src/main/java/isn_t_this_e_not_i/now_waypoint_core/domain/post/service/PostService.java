@@ -78,10 +78,10 @@ public class PostService {
         List<UserFollower> followers = user.getFollowers();
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
-                Notify notify = Notify.builder().senderNickname(user.getNickname()).
-                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).build();
-                notifyRepository.save(notify);
-                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(notify));
+                Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).
+                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(LocalDateTime.now()).build();
+                Notify save = notifyRepository.save(notify);
+                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save));
                 messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
             }
         }
@@ -191,26 +191,28 @@ public class PostService {
             post.incrementLikeCount();
             postRepository.save(post);
 
-            if (!post.getUser().getId().equals(user.getId())) {
-                // 게시글 작성자에게 좋아요 알림 전송
-                String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
-                Notify notify = Notify.builder()
-                        .senderNickname(user.getNickname())
-                        .message(notificationMessage)
-                        .profileImageUrl(user.getProfileImageUrl())
-                        .createDate(LocalDateTime.now())
-                        .build();
+            // 게시글 작성자에게 좋아요 알림 전송
+          if (!post.getUser().getId().equals(user.getId())) {
+            String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
+            Notify notify = Notify.builder()
+                    .senderNickname(user.getNickname())
+                    .receiverNickname(post.getUser().getNickname())
+                    .message(notificationMessage)
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .createDate(LocalDateTime.now())
+                    .build();
+            Notify save = notifyRepository.save(notify);
 
-                NotifyDTO notifyDTO = NotifyDTO.builder()
-                        .nickname(notify.getSenderNickname())
-                        .message(notify.getMessage())
-                        .profileImageUrl(notify.getProfileImageUrl())
-                        .createDate(notify.getCreateDate())
-                        .build();
+            NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .id(save.getId())
+                    .nickname(save.getSenderNickname())
+                    .message(save.getMessage())
+                    .profileImageUrl(save.getProfileImageUrl())
+                    .createDate(save.getCreateDate())
+                    .build();
 
-                notifyRepository.save(notify);
-                messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
-            }
+            messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
+          }
 
             return true; // 좋아요 추가
         }
@@ -278,9 +280,11 @@ public class PostService {
 
     private static NotifyDTO getNotifyDTO(Notify notify) {
         return NotifyDTO.builder()
+                .id(notify.getId())
                 .nickname(notify.getSenderNickname())
                 .message(notify.getMessage())
                 .profileImageUrl(notify.getProfileImageUrl())
+                .createDate(notify.getCreateDate())
                 .build();
     }
 }
