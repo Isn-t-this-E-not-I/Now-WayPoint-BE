@@ -12,7 +12,4 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByUser(User user);
 
-    List<Post> findPostsByCategoryAndLocationTag(PostCategory postCategory,String locationTag);
-
-    List<Post> findPostsByLocationTag(String locationTag);
 }
