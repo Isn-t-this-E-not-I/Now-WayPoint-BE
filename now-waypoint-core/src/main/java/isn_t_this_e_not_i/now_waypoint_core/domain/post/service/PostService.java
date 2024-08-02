@@ -253,20 +253,21 @@ public class PostService {
     }
 
     @Transactional
-    public List<PostResponseDTO> getFollowerPost(String loginId) {
+    public List<Post> getFollowerPost(String loginId) {
         User user = userRepository.findByLoginId(loginId).get();
         List<UserFollowing> followings = user.getFollowings();
-        List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
+        List<Post> postResponseDTOS = new ArrayList<>();
         for (UserFollowing following : followings) {
-            List<PostResponseDTO> postRedisList = postRedisService.findByNickname(following.getNickname());
-            postResponseDTOS.addAll(postRedisList);
+            User followingUser = userRepository.findByNickname(following.getNickname()).orElseThrow(() -> new IllegalArgumentException("일치하는 유저가 없습니다."));
+            List<Post> UserContents = postRepository.findByUser(followingUser);
+            postResponseDTOS.addAll(UserContents);
         }
-        postResponseDTOS.sort(Comparator.comparing(PostResponseDTO::getCreatedAt).reversed());
-        List<PostResponseDTO> limitedPostResponseDTOS = postResponseDTOS.size() > 10
+        postResponseDTOS.sort(Comparator.comparing(Post::getCreatedAt).reversed());
+        List<Post> limitedPost = postResponseDTOS.size() > 20
                 ? postResponseDTOS.subList(0, 20)
                 : postResponseDTOS;
 
-        return limitedPostResponseDTOS;
+        return limitedPost;
     }
 
     private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
