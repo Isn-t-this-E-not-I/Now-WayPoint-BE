@@ -35,7 +35,7 @@ public class PostResponse {
         this.mediaUrls = post.getMediaUrls();
         this.nickname = post.getUser().getNickname();
         this.profileImageUrl = post.getUser().getProfileImageUrl();
-        this.createdAt = post.getCreatedAt();
+        this.createdAt = post.getCreatedAt().toLocalDateTime();
         this.likeCount = post.getLikeCount();
         this.likedByUser = likedByUser;
     }

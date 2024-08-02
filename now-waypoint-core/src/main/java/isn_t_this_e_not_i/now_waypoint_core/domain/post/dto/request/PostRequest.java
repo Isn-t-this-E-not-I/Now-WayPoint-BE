@@ -19,7 +19,7 @@ public class PostRequest {
     @NotNull
     private String content;
 
-    @Size(max = 3)
+    @Size(max = 5)
     private List<String> hashtags;
 
     private String locationTag;
