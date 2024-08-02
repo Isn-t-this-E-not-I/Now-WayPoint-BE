@@ -232,7 +232,7 @@ public class CommentService {
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(LocalDateTime.now())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime()
                     .receiverNickname(comment.getUser().getNickname())
                     .build();
 
