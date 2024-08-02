@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,21 +49,21 @@ public class Post {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private ZonedDateTime createdAt;
+    private ZonedDateTime updatedAt;
 
     private int likeCount;
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
         this.likeCount = 0;
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public void incrementLikeCount() {
