@@ -45,7 +45,8 @@ public class PostService {
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
-        User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+        User user = userRepository.findByLoginId(auth.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         List<String> fileUrls = files.stream()
                 .map(file -> fileUploadService.fileUpload(file))
@@ -60,13 +61,7 @@ public class PostService {
                 .user(user)
                 .build();
 
-        Post savePost = postRepository.save(post);
-
-        PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
-        PostRedis postRedis = postRedisService.register(postResponseDTO);
-        notifyFollowers(postRedis, user, postResponseDTO);
-
-        return savePost;
+        return postRepository.save(post);
     }
 
     @Async

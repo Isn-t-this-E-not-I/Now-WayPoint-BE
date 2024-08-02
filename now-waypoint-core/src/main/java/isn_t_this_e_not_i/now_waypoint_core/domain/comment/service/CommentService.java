@@ -27,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,6 +70,7 @@ public class CommentService {
                 .post(post)
                 .user(user)
                 .parent(parentComment)
+                .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
 
         commentRepository.save(comment);
@@ -79,7 +82,7 @@ public class CommentService {
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(LocalDateTime.now())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                     .build();
 
             NotifyDTO notifyDTO = NotifyDTO.builder()
@@ -103,7 +106,7 @@ public class CommentService {
                         .senderNickname(user.getNickname())
                         .message(notificationMessage)
                         .profileImageUrl(user.getProfileImageUrl())
-                        .createDate(LocalDateTime.now())
+                        .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                         .build();
 
                 NotifyDTO notifyDTO = NotifyDTO.builder()
@@ -226,7 +229,7 @@ public class CommentService {
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(LocalDateTime.now())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                     .build();
 
             NotifyDTO notifyDTO = NotifyDTO.builder()

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -18,7 +19,7 @@ public class CommentResponse {
     private String content;
     private String nickname;
     private String profileImageUrl;
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
     private Long parentId;
     private long likeCount;
     private boolean likedByUser;
