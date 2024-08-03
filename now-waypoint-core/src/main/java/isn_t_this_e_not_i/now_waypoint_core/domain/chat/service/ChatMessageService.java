@@ -2,8 +2,8 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.chat.service;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.MessageType;
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.ChatMessageListResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.ChatMessageResponse;
-import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.StompMessageResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.UpdateInfoResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.entity.ChatMessage;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class ChatMessageService {
      * @Request : Long chatRoomId, String loginUserId, String content
      * @Response : String sender, String content, LocalDateTime timestamp;
      */
-    public ChatMessageResponse saveMessage(String loginUserId, Long chatRoomId, String content) {
+    public void saveMessage(String loginUserId, Long chatRoomId, String content) {
         String sender = userRepository.findByLoginId(loginUserId).get().getNickname();
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoomId(chatRoomId)
@@ -58,6 +58,7 @@ public class ChatMessageService {
 
         // 날짜 형식 변환
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
         String formattedDate = dateFormat.format(new Date(currentTimeMillis));
 
         ChatMessageResponse response = ChatMessageResponse.builder()
@@ -82,9 +83,8 @@ public class ChatMessageService {
                     // 각 사용자에게 업데이트 메시지 보내기
                     messagingTemplate.convertAndSend("/queue/chatroom/" + userNickname, response);
                 });
-
-        // DTO 객체 반환
-        return response;
+        messagingTemplate.convertAndSend("/queue/chatroom/" + sender, response);
+        messagingTemplate.convertAndSend("/topic/chatroom/" + chatRoomId, response);
     }
 
     /**
@@ -101,14 +101,13 @@ public class ChatMessageService {
 
         // 날짜 형식 변환
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
 
         // TypedTuple에서 ChatMessage 객체만 추출하여 리스트로 반환
         List<ChatMessageResponse> recentMessages = messages.stream()
                 .map(typedTuple -> {
                     String formattedDate = dateFormat.format(new Date(typedTuple.getScore().longValue()));
                     return ChatMessageResponse.builder()
-                            .messageType(MessageType.CHAT_LIST)
-                            .chatRoomId(typedTuple.getValue().getChatRoomId())
                             .sender(typedTuple.getValue().getSender())
                             .content(typedTuple.getValue().getContent())
                             .timestamp(formattedDate)
@@ -116,11 +115,16 @@ public class ChatMessageService {
                 })
                 .collect(Collectors.toList());
 
+        ChatMessageListResponse response = ChatMessageListResponse.builder()
+                .messageType(MessageType.CHAT_LIST)
+                .messages(recentMessages)
+                .build();
+
         // 해당 사용자의 안 읽은 메시지 개수를 0으로 설정
         String unreadKey = UNREAD_MESSAGES_PREFIX + userNickname + ":" + chatRoomId;
         redisStringTemplate.opsForValue().set(unreadKey, "0");
 
-        messagingTemplate.convertAndSend("/queue/chatroom/" + userNickname, recentMessages);
+        messagingTemplate.convertAndSend("/queue/chatroom/" + userNickname, response);
     }
 
     /**
@@ -138,19 +142,22 @@ public class ChatMessageService {
         // TypedTuple에서 ChatMessage 객체를 DTO로 매핑하여 리스트로 반환
         List<ChatMessageResponse> messagesBefore = messages.stream()
                 .map(typedTuple -> ChatMessageResponse.builder()
-                        .messageType(MessageType.CHAT_LIST)
-                        .chatRoomId(typedTuple.getValue().getChatRoomId())
                         .sender(typedTuple.getValue().getSender())
                         .content(typedTuple.getValue().getContent())
                         .timestamp(String.valueOf(typedTuple.getScore()))
                         .build())
                 .collect(Collectors.toList());
 
+        ChatMessageListResponse response = ChatMessageListResponse.builder()
+                .messageType(MessageType.CHAT_LIST)
+                .messages(messagesBefore)
+                .build();
+
         // 해당 사용자의 안 읽은 메시지 개수를 0으로 설정
         String unreadKey = UNREAD_MESSAGES_PREFIX + userNickname + ":" + chatRoomId;
         redisStringTemplate.opsForValue().set(unreadKey, "0");
 
-        messagingTemplate.convertAndSend("/queue/chatroom/" + userNickname, messagesBefore);
+        messagingTemplate.convertAndSend("/queue/chatroom/" + userNickname, response);
     }
 
     // 전체 채팅방의 업데이트 정보를 조회

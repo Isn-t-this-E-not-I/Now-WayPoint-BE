@@ -26,7 +26,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,6 +69,7 @@ public class CommentService {
                 .post(post)
                 .user(user)
                 .parent(parentComment)
+                .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
 
         commentRepository.save(comment);
@@ -79,7 +81,7 @@ public class CommentService {
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(LocalDateTime.now())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                     .receiverNickname(post.getUser().getNickname())
                     .build();
 
@@ -105,7 +107,7 @@ public class CommentService {
                         .senderNickname(user.getNickname())
                         .message(notificationMessage)
                         .profileImageUrl(user.getProfileImageUrl())
-                        .createDate(LocalDateTime.now())
+                        .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                         .receiverNickname(post.getUser().getNickname())
                         .build();
 
@@ -122,7 +124,8 @@ public class CommentService {
         }
 
         long likeCount = commentLikeRepository.countByComment(comment);
-        return new CommentResponse(comment, likeCount);
+        boolean likedByUser = commentLikeRepository.existsByCommentAndUser(comment, user);
+        return new CommentResponse(comment, likeCount, likedByUser);
     }
 
     private List<String> validateMentions(String content) {
@@ -151,9 +154,12 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CommentResponse> getCommentsByPost(Long postId, Pageable pageable) {
+    public Page<CommentResponse> getCommentsByPost(Long postId, Pageable pageable, Authentication auth) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+
+        User currentUser = userRepository.findByLoginId(auth.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Page<Comment> commentsPage = commentRepository.findByPost(post, pageable);
         List<Comment> comments = commentsPage.getContent();
@@ -163,13 +169,13 @@ public class CommentService {
                         commentLikeRepository.countByComment(c2),
                         commentLikeRepository.countByComment(c1)))
                 .limit(3)
-                .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment)))
+                .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment), commentLikeRepository.existsByCommentAndUser(comment, currentUser)))
                 .collect(Collectors.toList());
 
         List<CommentResponse> otherComments = comments.stream()
                 .filter(comment -> topLikedComments.stream()
                         .noneMatch(topComment -> topComment.getId().equals(comment.getId())))
-                .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment)))
+                .map(comment -> new CommentResponse(comment, commentLikeRepository.countByComment(comment), commentLikeRepository.existsByCommentAndUser(comment, currentUser)))
                 .collect(Collectors.toList());
 
         topLikedComments.addAll(otherComments);
@@ -203,7 +209,7 @@ public class CommentService {
     }
 
     @Transactional
-    public void likeComment(Long commentId, Authentication auth) {
+    public boolean likeComment(Long commentId, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Comment comment = commentRepository.findById(commentId)
@@ -211,6 +217,7 @@ public class CommentService {
 
         if (commentLikeRepository.existsByCommentAndUser(comment, user)) {
             commentLikeRepository.deleteByCommentAndUser(comment, user);
+            return false; // 좋아요 취소
         } else {
             CommentLike commentLike = CommentLike.builder()
                     .comment(comment)
@@ -219,12 +226,13 @@ public class CommentService {
             commentLikeRepository.save(commentLike);
 
             // 댓글 작성자에게 좋아요 알림 전송
+              if (!comment.getUser().getId().equals(user.getId())) {
             String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
             Notify notify = Notify.builder()
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(LocalDateTime.now())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                     .receiverNickname(comment.getUser().getNickname())
                     .build();
 
@@ -238,6 +246,9 @@ public class CommentService {
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
+              }
+
+            return true; // 좋아요 추가
         }
     }
 }

@@ -3,7 +3,6 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.chat.controller;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.request.ChatMessageBeforeRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.request.ChatRoomIdRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.request.CreateMessageRequest;
-import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.ChatMessageResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatmessage.response.UpdateInfoResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatroom.request.CreateChatRoomRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatroom.request.InviteUserRequest;
@@ -17,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +28,6 @@ import java.util.List;
 public class ChatController {
     private final UserChatRoomService userChatRoomService;
     private final ChatMessageService chatMessageService;
-    private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/list")
     @Operation(summary = "유저의 채팅방 목록 조회", description = "로그인한 유저의 채팅방 목록을 조회합니다.")
@@ -57,19 +54,16 @@ public class ChatController {
         userChatRoomService.createChatRoom(principal.getName(), request.getNicknames(), true);
     }
 
-    @MessageMapping("chat/send")
+    @MessageMapping("/chat/send")
     @Operation(summary = "채팅 메시지 전송", description = "지정된 채팅방에 채팅 메시지를 전송합니다.")
     public void sendMessage(@Payload CreateMessageRequest createMessageRequest, Principal principal) {
-        ChatMessageResponse response = chatMessageService.saveMessage(principal.getName(), createMessageRequest.getChatRoomId(), createMessageRequest.getContent());
-        // 채팅방의 모든 클라이언트에게 메시지 전송
-        messagingTemplate.convertAndSend("/topic/chatroom/" + createMessageRequest.getChatRoomId(), response);
+        chatMessageService.saveMessage(principal.getName(), createMessageRequest.getChatRoomId(), createMessageRequest.getContent());
     }
 
     @MessageMapping("/chat/messages")
     @Operation(summary = "메시지 조회", description = "특정 채팅방의 메시지를 조회합니다.")
     public void getRecentMessages(@Payload ChatRoomIdRequest chatRoomIdRequest, Principal principal) {
         chatMessageService.getRecentMessages(chatRoomIdRequest.getChatRoomId(), principal.getName());
-
     }
 
     @MessageMapping("/chat/messages/before")

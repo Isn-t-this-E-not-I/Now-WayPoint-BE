@@ -27,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,7 +47,8 @@ public class PostService {
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
-        User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+        User user = userRepository.findByLoginId(auth.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         List<String> fileUrls = files.stream()
                 .map(file -> fileUploadService.fileUpload(file))
@@ -58,6 +61,7 @@ public class PostService {
                 .category(postRequest.getCategory())
                 .mediaUrls(fileUrls)
                 .user(user)
+                .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
 
         Post savePost = postRepository.save(post);
@@ -188,6 +192,7 @@ public class PostService {
             postRepository.save(post);
 
             // 게시글 작성자에게 좋아요 알림 전송
+          if (!post.getUser().getId().equals(user.getId())) {
             String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
             Notify notify = Notify.builder()
                     .senderNickname(user.getNickname())
@@ -207,6 +212,7 @@ public class PostService {
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
+          }
 
             return true; // 좋아요 추가
         }

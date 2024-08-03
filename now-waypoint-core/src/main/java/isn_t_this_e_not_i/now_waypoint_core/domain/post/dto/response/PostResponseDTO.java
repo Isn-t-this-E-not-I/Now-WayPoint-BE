@@ -38,7 +38,7 @@ public class PostResponseDTO {
         this.category = post.getCategory();
         this.username = post.getUser().getNickname();
         this.likeCount = post.getLikeCount();
-        this.createdAt = post.getCreatedAt();
+        this.createdAt = post.getCreatedAt().toLocalDateTime();
         this.profileImageUrl = post.getUser().getProfileImageUrl();
     }
 }
