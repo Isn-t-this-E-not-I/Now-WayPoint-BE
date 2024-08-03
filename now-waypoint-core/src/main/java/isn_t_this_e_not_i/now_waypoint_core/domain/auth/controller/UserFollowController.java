@@ -3,6 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import jakarta.validation.Valid;
@@ -52,7 +53,7 @@ public class UserFollowController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<Post>> getFollowerList(Authentication auth){
+    public ResponseEntity<List<PostResponseDTO>> getFollowerList(Authentication auth){
         return ResponseEntity.ok().body(postService.getFollowerPost(auth.getName()));
     }
 
