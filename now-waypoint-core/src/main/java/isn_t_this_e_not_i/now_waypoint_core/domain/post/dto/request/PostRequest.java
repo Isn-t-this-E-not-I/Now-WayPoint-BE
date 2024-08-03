@@ -28,4 +28,6 @@ public class PostRequest {
     private PostCategory category;
 
     private List<String> mediaUrls;
+
+    private List<String> removeMedia;
 }
