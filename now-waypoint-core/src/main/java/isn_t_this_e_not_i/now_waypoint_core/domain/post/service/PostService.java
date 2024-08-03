@@ -247,19 +247,20 @@ public class PostService {
     }
 
     @Transactional
-    public List<Post> getFollowerPost(String loginId) {
+    public List<PostResponseDTO> getFollowerPost(String loginId) {
         User user = userRepository.findByLoginId(loginId).get();
         List<UserFollowing> followings = user.getFollowings();
-        List<Post> postResponseDTOS = new ArrayList<>();
+        List<PostResponseDTO> responseDTOS = new ArrayList<>();
         for (UserFollowing following : followings) {
             User followingUser = userRepository.findByNickname(following.getNickname()).orElseThrow(() -> new IllegalArgumentException("일치하는 유저가 없습니다."));
-            List<Post> UserContents = postRepository.findByUser(followingUser);
-            postResponseDTOS.addAll(UserContents);
+            List<Post> userContents = postRepository.findByUser(followingUser);
+            List<PostResponseDTO> responseDTO = toResponseDTO(userContents);
+            responseDTOS.addAll(responseDTO);
         }
-        postResponseDTOS.sort(Comparator.comparing(Post::getCreatedAt).reversed());
-        List<Post> limitedPost = postResponseDTOS.size() > 20
-                ? postResponseDTOS.subList(0, 20)
-                : postResponseDTOS;
+        responseDTOS.sort(Comparator.comparing(PostResponseDTO::getCreatedAt).reversed());
+        List<PostResponseDTO> limitedPost = responseDTOS.size() > 20
+                ? responseDTOS.subList(0, 20)
+                : responseDTOS;
 
         return limitedPost;
     }
@@ -282,5 +283,16 @@ public class PostService {
                 .profileImageUrl(notify.getProfileImageUrl())
                 .createDate(notify.getCreateDate())
                 .build();
+    }
+
+    private List<PostResponseDTO> toResponseDTO(List<Post> posts){
+        List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
+
+        for (Post post : posts) {
+            PostResponseDTO postResponseDTO = new PostResponseDTO(post);
+            postResponseDTOS.add(postResponseDTO);
+        }
+
+        return postResponseDTOS;
     }
 }
