@@ -250,6 +250,7 @@ public class PostService {
         }
 
         messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
+        messagingTemplate.convertAndSend("/queue/category/" + nickname, responsePostRedis);
     }
 
     @Transactional
