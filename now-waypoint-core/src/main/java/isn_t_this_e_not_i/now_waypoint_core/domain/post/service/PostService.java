@@ -88,7 +88,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post updatePost(Long postId, PostRequest postRequest, List<MultipartFile> files, List<String> removeMedia, Authentication auth) {
+    public Post updatePost(Long postId, PostRequest postRequest, List<MultipartFile> files, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
         if (!post.getUser().getId().equals(user.getId())) {
@@ -101,14 +101,17 @@ public class PostService {
         post.setCategory(postRequest.getCategory());
 
         // 기존 미디어 URL을 가져옵니다.
-        List<String> existingMediaUrls = post.getMediaUrls();
-
+        List<String> existingMediaUrls = new ArrayList<>(post.getMediaUrls());
+        System.out.println(existingMediaUrls);
+        System.out.println(postRequest.getRemoveMedia());
         // 삭제할 미디어 URL을 제거하고 파일 저장소에서 삭제합니다.
-        if (removeMedia != null && !removeMedia.isEmpty()) {
-            for (String url : removeMedia) {
-                existingMediaUrls.remove(url);
-                // 파일 저장소에서 파일 삭제 로직
-                fileUploadService.deleteFile(url);
+        if (postRequest.getRemoveMedia() != null && !postRequest.getRemoveMedia().isEmpty()) {
+            for (String url : postRequest.getRemoveMedia()) {
+                if (existingMediaUrls.contains(url)) {
+                    existingMediaUrls.remove(url);
+                    // 파일 저장소에서 파일 삭제 로직
+                    fileUploadService.deleteFile(url);
+                }
             }
         }
 
@@ -192,27 +195,27 @@ public class PostService {
             postRepository.save(post);
 
             // 게시글 작성자에게 좋아요 알림 전송
-          if (!post.getUser().getId().equals(user.getId())) {
-            String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
-            Notify notify = Notify.builder()
-                    .senderNickname(user.getNickname())
-                    .receiverNickname(post.getUser().getNickname())
-                    .message(notificationMessage)
-                    .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(LocalDateTime.now())
-                    .build();
-            Notify save = notifyRepository.save(notify);
+            if (!post.getUser().getId().equals(user.getId())) {
+                String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
+                Notify notify = Notify.builder()
+                        .senderNickname(user.getNickname())
+                        .receiverNickname(post.getUser().getNickname())
+                        .message(notificationMessage)
+                        .profileImageUrl(user.getProfileImageUrl())
+                        .createDate(LocalDateTime.now())
+                        .build();
+                Notify save = notifyRepository.save(notify);
 
-            NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .id(save.getId())
-                    .nickname(save.getSenderNickname())
-                    .message(save.getMessage())
-                    .profileImageUrl(save.getProfileImageUrl())
-                    .createDate(save.getCreateDate())
-                    .build();
+                NotifyDTO notifyDTO = NotifyDTO.builder()
+                        .id(save.getId())
+                        .nickname(save.getSenderNickname())
+                        .message(save.getMessage())
+                        .profileImageUrl(save.getProfileImageUrl())
+                        .createDate(save.getCreateDate())
+                        .build();
 
-            messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
-          }
+                messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
+            }
 
             return true; // 좋아요 추가
         }
@@ -250,6 +253,7 @@ public class PostService {
         }
 
         messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
+        messagingTemplate.convertAndSend("/queue/category/" + nickname, responsePostRedis);
     }
 
     @Transactional

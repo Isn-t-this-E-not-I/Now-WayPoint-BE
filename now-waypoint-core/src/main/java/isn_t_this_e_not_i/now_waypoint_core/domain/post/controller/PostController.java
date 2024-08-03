@@ -34,7 +34,7 @@ public class PostController {
     public ResponseEntity<PostResponse> createPost(@RequestPart("data") @Valid PostRequest postRequest,
                                                    @RequestPart("files") List<MultipartFile> files, Authentication auth) {
         Post post = postService.createPost(auth, postRequest, files);
-        boolean likedByUser = postService.isLikedByUser(post, auth.getName()); // 수정된 부분
+        boolean likedByUser = postService.isLikedByUser(post, auth.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post, likedByUser));
     }
 
@@ -42,10 +42,9 @@ public class PostController {
     public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId,
                                                    @RequestPart("data") @Valid PostRequest postRequest,
                                                    @RequestPart(value = "files", required = false) List<MultipartFile> files,
-                                                   @RequestPart(value = "removeMedia", required = false) List<String> removeMedia,
                                                    Authentication auth) {
-        Post post = postService.updatePost(postId, postRequest, files, removeMedia, auth);
-        boolean likedByUser = postService.isLikedByUser(post, auth.getName()); // 수정된 부분
+        Post post = postService.updatePost(postId, postRequest, files, auth);
+        boolean likedByUser = postService.isLikedByUser(post, auth.getName());
         return ResponseEntity.ok(new PostResponse(post, likedByUser));
     }
 
@@ -81,7 +80,7 @@ public class PostController {
     public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable("name") String name, Authentication auth) {
         List<Post> posts = hashtagService.getPostsByHashtag(name);
         List<PostResponse> response = posts.stream().map(post -> {
-            boolean likedByUser = postService.isLikedByUser(post, auth.getName()); // 수정된 부분
+            boolean likedByUser = postService.isLikedByUser(post, auth.getName());
             return new PostResponse(post, likedByUser);
         }).collect(Collectors.toList());
         return ResponseEntity.ok(response);
