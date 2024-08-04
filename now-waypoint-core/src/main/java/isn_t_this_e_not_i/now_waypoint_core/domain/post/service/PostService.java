@@ -230,13 +230,13 @@ public class PostService {
     }
 
     @Transactional
-    public void selectCategory(String loginId, String category) {
+    public void selectCategory(String loginId, String category, double distance) {
         User user = userRepository.findByLoginId(loginId).get();
         String nickname = user.getNickname();
         String locate = user.getLocate();
         double latitude =Double.parseDouble(locate.split(",")[1]);
         double longitude =Double.parseDouble(locate.split(",")[0]);
-        int radius = 100;
+        double radius = distance;
 
         List<PostResponseDTO> responsePostRedis = null;
 
