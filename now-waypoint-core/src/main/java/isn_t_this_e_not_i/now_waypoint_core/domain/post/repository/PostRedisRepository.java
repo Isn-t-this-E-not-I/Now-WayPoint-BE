@@ -13,6 +13,4 @@ public interface PostRedisRepository extends CrudRepository<PostRedis, Long> {
     List<PostRedis> findPostRedisByNickname(String nickname);
 
     Optional<PostRedis> findById(String id);
-
-    Optional<PostRedis> findByPost(PostResponseDTO postResponseDTO);
 }

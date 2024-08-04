@@ -24,9 +24,10 @@ public class PostRedisService {
     private final PostRedisRepository postRedisRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public PostRedis register(PostResponseDTO postResponseDTO) {
+    public PostRedis register(Post post) {
+        PostResponseDTO postResponseDTO = new PostResponseDTO(post);
         PostRedis postRedis = PostRedis.builder()
-                .id(UUID.randomUUID().toString().substring(10))
+                .id(post.getId().toString())
                 .post(postResponseDTO)
                 .nickname(postResponseDTO.getUsername())
                 .longitude(Double.parseDouble(postResponseDTO.getLocationTag().split(",")[0]))
@@ -39,15 +40,22 @@ public class PostRedisService {
 
         String key = "post:" + save.getCategory();
         String allKey = "post:ALL";
-        redisTemplate.opsForGeo().add(key, new Point(save.getLongitude(), save.getLatitude()), save.getId());
-        redisTemplate.opsForGeo().add(allKey, new Point(save.getLongitude(), save.getLatitude()), save.getId());
+//        redisTemplate.opsForGeo().add(key, new Point(save.getLongitude(), save.getLatitude()), save.getId());
+//        redisTemplate.opsForGeo().add(allKey, new Point(save.getLongitude(), save.getLatitude()), save.getId());
 
         return save;
     }
 
+    public void update(Post post,String updateNickname){
+        PostResponseDTO postResponseDTO = new PostResponseDTO(post);
+        PostRedis postRedis = postRedisRepository.findById(postResponseDTO.getId()).orElseThrow(() -> new IllegalArgumentException("레디스에 일치하는 게시글이 없습니다."));
+        postRedis.setNickname(updateNickname);
+        postRedisRepository.save(postRedis);
+    }
+
     public void delete(Post post){
         PostResponseDTO postResponseDTO = new PostResponseDTO(post);
-        PostRedis postRedis = postRedisRepository.findByPost(postResponseDTO).orElseThrow(() -> new IllegalArgumentException("일치하는 게시글이 레디스에 없습니다."));
+        PostRedis postRedis = postRedisRepository.findById(postResponseDTO.getId()).orElseThrow(() -> new IllegalArgumentException("일치하는 게시글이 레디스에 없습니다."));
         String key = "post:" + postResponseDTO.getCategory();
         String allKey = "post:ALL";
 

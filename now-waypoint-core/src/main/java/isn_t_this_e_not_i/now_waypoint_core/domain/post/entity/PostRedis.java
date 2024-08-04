@@ -2,10 +2,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.post.entity;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
@@ -21,6 +18,7 @@ public class PostRedis {
     @Id
     private String id;
 
+    @Setter
     private String nickname;
 
     private PostResponseDTO post;

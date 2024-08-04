@@ -67,7 +67,7 @@ public class PostService {
         Post savePost = postRepository.save(post);
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
-        PostRedis postRedis = postRedisService.register(postResponseDTO);
+        PostRedis postRedis = postRedisService.register(post);
         notifyFollowers(postRedis, user, postResponseDTO);
 
         return savePost;
@@ -126,7 +126,7 @@ public class PostService {
         Post savePost = postRepository.save(post);
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
-        PostRedis postRedis = postRedisService.register(postResponseDTO);
+        PostRedis postRedis = postRedisService.register(savePost);
         notifyFollowers(postRedis, user, postResponseDTO);
 
         return savePost;
@@ -141,6 +141,16 @@ public class PostService {
         }
         postRepository.delete(post);
         postRedisService.delete(post);
+    }
+
+    @Transactional
+    public void updatePostByNickname(User user, String updateNickname){
+        List<Post> UserPosts = postRepository.findByUser(user);
+        for (Post userPost : UserPosts) {
+            userPost.getUser().setNickname(updateNickname);
+            postRedisService.update(userPost, updateNickname);
+            postRepository.save(userPost);
+        }
     }
 
     @Transactional
