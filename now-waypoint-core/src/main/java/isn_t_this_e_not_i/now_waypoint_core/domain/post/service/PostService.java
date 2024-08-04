@@ -140,6 +140,7 @@ public class PostService {
             throw new UnauthorizedException("사용자에게 이 게시물을 삭제할 권한이 없습니다.");
         }
         postRepository.delete(post);
+        postRedisService.delete(post);
     }
 
     @Transactional

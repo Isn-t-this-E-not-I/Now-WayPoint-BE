@@ -1,6 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.post.service;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostCategory;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostRedis;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
@@ -44,6 +45,20 @@ public class PostRedisService {
         return save;
     }
 
+    public void delete(Post post){
+        PostResponseDTO postResponseDTO = new PostResponseDTO(post);
+        PostRedis postRedis = postRedisRepository.findByPost(postResponseDTO).orElseThrow(() -> new IllegalArgumentException("일치하는 게시글이 레디스에 없습니다."));
+        String key = "post:" + postResponseDTO.getCategory();
+        String allKey = "post:ALL";
+
+        String postId = postRedis.getId();
+
+        redisTemplate.opsForGeo().remove(key, postId);
+        redisTemplate.opsForGeo().remove(allKey, postId);
+
+        postRedisRepository.delete(postRedis);
+    }
+
     public List<PostResponseDTO> findPostRedisByCategoryAndUserLocate(PostCategory category, double longitude, double latitude, double radius) {
         String key = "post:" + category;
         Circle within = new Circle(new Point(longitude, latitude), new Distance(radius, Metrics.KILOMETERS));
@@ -65,16 +80,6 @@ public class PostRedisService {
         for (PostRedis post : posts) {
             postResponseDTOS.add(post.getPost());
         }
-        return postResponseDTOS;
-    }
-
-    public List<PostResponseDTO> findByNickname(String nickname) {
-        List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
-        List<PostRedis> postRedisList = postRedisRepository.findPostRedisByNickname(nickname);
-        for (PostRedis postRedis : postRedisList) {
-            postResponseDTOS.add(postRedis.getPost());
-        }
-
         return postResponseDTOS;
     }
 }
