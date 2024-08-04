@@ -67,7 +67,7 @@ public class PostService {
         Post savePost = postRepository.save(post);
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
-        PostRedis postRedis = postRedisService.register(postResponseDTO);
+        PostRedis postRedis = postRedisService.register(post);
         notifyFollowers(postRedis, user, postResponseDTO);
 
         return savePost;
@@ -129,7 +129,7 @@ public class PostService {
         Post savePost = postRepository.save(post);
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
-        PostRedis postRedis = postRedisService.register(postResponseDTO);
+        PostRedis postRedis = postRedisService.register(savePost);
         notifyFollowers(postRedis, user, postResponseDTO);
 
         return savePost;
@@ -143,6 +143,17 @@ public class PostService {
             throw new UnauthorizedException("사용자에게 이 게시물을 삭제할 권한이 없습니다.");
         }
         postRepository.delete(post);
+        postRedisService.delete(post);
+    }
+
+    @Transactional
+    public void updatePostByNickname(User user, String updateNickname){
+        List<Post> UserPosts = postRepository.findByUser(user);
+        for (Post userPost : UserPosts) {
+            userPost.getUser().setNickname(updateNickname);
+            postRedisService.update(userPost, updateNickname);
+            postRepository.save(userPost);
+        }
     }
 
     @Transactional
@@ -232,13 +243,13 @@ public class PostService {
     }
 
     @Transactional
-    public void selectCategory(String loginId, String category) {
+    public void selectCategory(String loginId, String category, double distance) {
         User user = userRepository.findByLoginId(loginId).get();
         String nickname = user.getNickname();
         String locate = user.getLocate();
         double latitude =Double.parseDouble(locate.split(",")[1]);
         double longitude =Double.parseDouble(locate.split(",")[0]);
-        int radius = 100;
+        double radius = distance;
 
         List<PostResponseDTO> responsePostRedis = null;
 

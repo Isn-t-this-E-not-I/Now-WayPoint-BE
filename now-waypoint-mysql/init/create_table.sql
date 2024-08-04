@@ -82,6 +82,7 @@ CREATE TABLE post_hashtags (
 CREATE TABLE notify (
                         notify_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         sender_nickname VARCHAR(30) NOT NULL,
+                        receiver_nickname VARCHAR(30) NOT NULL,
                         profile_image_url VARCHAR(255),
                         message TEXT NOT NULL,
                         create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
