@@ -1,5 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.main.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +18,22 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MainController {
 
-    //실시간으로 해야할 목록
-    //사이드바(좋아요 높은순, 팔로잉 게시글), 알림(팔로우정보, 게시글정보, 그 외 메세지들), 카테고리
     private final PostService postService;
     private final UserService userService;
+    private final ObjectMapper objectMapper;
 
     @MessageMapping("/category")
-    public void selectCategory(Principal principal, @Payload Map<String, String> category) {
-        postService.selectCategory(principal.getName(), category.get("category"));
+    public void selectCategory(Principal principal, @Payload String payload) {
+        try {
+            JsonNode jsonNode = objectMapper.readTree(payload);
+
+            String category = jsonNode.get("category").asText();
+            double distance = jsonNode.get("distance").asDouble();
+
+            postService.selectCategory(principal.getName(), category, distance);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @MessageMapping("/locate")

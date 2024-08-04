@@ -201,6 +201,8 @@ public class UserService {
         userFollowService.updateFollowingNickname(nickname, updateNickname);
         userFollowService.updateFollowerNickname(nickname, updateNickname);
 
+        postService.updatePostByNickname(user, updateNickname);
+
         userRepository.save(user);
         UserResponse.updateNickname userResponse = UserResponse.updateNickname.builder().nickname(nickname).build();
 

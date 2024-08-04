@@ -1,6 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.post.service;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostCategory;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostRedis;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
@@ -23,9 +24,10 @@ public class PostRedisService {
     private final PostRedisRepository postRedisRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public PostRedis register(PostResponseDTO postResponseDTO) {
+    public PostRedis register(Post post) {
+        PostResponseDTO postResponseDTO = new PostResponseDTO(post);
         PostRedis postRedis = PostRedis.builder()
-                .id(UUID.randomUUID().toString().substring(10))
+                .id(post.getId().toString())
                 .post(postResponseDTO)
                 .nickname(postResponseDTO.getUsername())
                 .longitude(Double.parseDouble(postResponseDTO.getLocationTag().split(",")[0]))
@@ -42,6 +44,27 @@ public class PostRedisService {
         redisTemplate.opsForGeo().add(allKey, new Point(save.getLongitude(), save.getLatitude()), save.getId());
 
         return save;
+    }
+
+    public void update(Post post,String updateNickname){
+        PostResponseDTO postResponseDTO = new PostResponseDTO(post);
+        PostRedis postRedis = postRedisRepository.findById(postResponseDTO.getId()).orElseThrow(() -> new IllegalArgumentException("레디스에 일치하는 게시글이 없습니다."));
+        postRedis.setNickname(updateNickname);
+        postRedisRepository.save(postRedis);
+    }
+
+    public void delete(Post post){
+        PostResponseDTO postResponseDTO = new PostResponseDTO(post);
+        PostRedis postRedis = postRedisRepository.findById(postResponseDTO.getId()).orElseThrow(() -> new IllegalArgumentException("일치하는 게시글이 레디스에 없습니다."));
+        String key = "post:" + postResponseDTO.getCategory();
+        String allKey = "post:ALL";
+
+        String postId = postRedis.getId();
+
+        redisTemplate.opsForGeo().remove(key, postId);
+        redisTemplate.opsForGeo().remove(allKey, postId);
+
+        postRedisRepository.delete(postRedis);
     }
 
     public List<PostResponseDTO> findPostRedisByCategoryAndUserLocate(PostCategory category, double longitude, double latitude, double radius) {
@@ -65,16 +88,6 @@ public class PostRedisService {
         for (PostRedis post : posts) {
             postResponseDTOS.add(post.getPost());
         }
-        return postResponseDTOS;
-    }
-
-    public List<PostResponseDTO> findByNickname(String nickname) {
-        List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
-        List<PostRedis> postRedisList = postRedisRepository.findPostRedisByNickname(nickname);
-        for (PostRedis postRedis : postRedisList) {
-            postResponseDTOS.add(postRedis.getPost());
-        }
-
         return postResponseDTOS;
     }
 }
