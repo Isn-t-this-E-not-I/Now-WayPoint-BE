@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -79,7 +78,7 @@ public class PostService {
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).
-                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(LocalDateTime.now()).build();
+                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul"))).build();
                 Notify save = notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save));
                 messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
@@ -210,7 +209,7 @@ public class PostService {
                     .receiverNickname(post.getUser().getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(LocalDateTime.now())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .build();
             Notify save = notifyRepository.save(notify);
 
