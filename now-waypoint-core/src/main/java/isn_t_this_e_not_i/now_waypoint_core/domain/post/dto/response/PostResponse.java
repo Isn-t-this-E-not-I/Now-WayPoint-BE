@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -29,7 +30,7 @@ public class PostResponse {
     public PostResponse(Post post, boolean likedByUser) {
         this.id = post.getId();
         this.content = post.getContent();
-        this.hashtags = post.getHashtags().stream().map(hashtag -> hashtag.getName()).toList();
+        this.hashtags = post.getHashtags().stream().map(hashtag -> hashtag.getName()).collect(Collectors.toList());
         this.locationTag = post.getLocationTag();
         this.category = post.getCategory();
         this.mediaUrls = post.getMediaUrls();

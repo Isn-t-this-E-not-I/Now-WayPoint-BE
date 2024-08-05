@@ -48,7 +48,7 @@ public class PostService {
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
+        List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         List<String> fileUrls = files.stream()
                 .map(file -> fileUploadService.fileUpload(file))
                 .collect(Collectors.toList());
@@ -93,7 +93,7 @@ public class PostService {
         if (!post.getUser().getId().equals(user.getId())) {
             throw new UnauthorizedException("사용자에게 이 게시물을 수정할 권한이 없습니다");
         }
-        Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
+        List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         post.setContent(postRequest.getContent());
         post.setHashtags(hashtags);
         post.setLocationTag(user.getLocate());
@@ -286,14 +286,15 @@ public class PostService {
         return limitedPost;
     }
 
-    private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
+    @Transactional
+    public List<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
         if (hashtagNames == null) {
-            return new HashSet<>();
+            return new ArrayList<>();
         }
         return hashtagNames.stream().map(name -> {
             Hashtag hashtag = hashtagRepository.findByName(name).orElse(new Hashtag(name));
             return hashtagRepository.save(hashtag);
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toList());
     }
 
     private static NotifyDTO getNotifyDTO(Notify notify) {
