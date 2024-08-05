@@ -18,7 +18,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -188,7 +189,7 @@ public class UserFollowService {
         Notify notify = Notify.builder().senderNickname(findUser.get().getNickname())
                 .message(findUser.get().getNickname() + "님이 팔로우하였습니다.")
                 .profileImageUrl(findUser.get().getProfileImageUrl())
-                .createDate(LocalDateTime.now())
+                .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .receiverNickname(followUserNickname)
                 .build();
 
