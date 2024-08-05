@@ -83,6 +83,7 @@ public class CommentService {
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .receiverNickname(post.getUser().getNickname())
+                    .postId(post.getId())
                     .build();
 
             Notify save = notifyRepository.save(notify);
@@ -92,7 +93,7 @@ public class CommentService {
                     .message(save.getMessage())
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
-                    .postId(postId)
+                    .postId(save.getPostId())
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
@@ -111,6 +112,7 @@ public class CommentService {
                         .profileImageUrl(user.getProfileImageUrl())
                         .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                         .receiverNickname(post.getUser().getNickname())
+                        .postId(post.getId())
                         .build();
 
                 Notify save = notifyRepository.save(notify);
@@ -120,7 +122,7 @@ public class CommentService {
                         .message(save.getMessage())
                         .profileImageUrl(save.getProfileImageUrl())
                         .createDate(save.getCreateDate())
-                        .postId(postId)
+                        .postId(save.getPostId())
                         .build();
                 messagingTemplate.convertAndSend("/queue/notify/" + nickname, notifyDTO);
             }
@@ -213,7 +215,7 @@ public class CommentService {
     }
 
     @Transactional
-    public boolean likeComment(Long commentId, Authentication auth) {
+    public boolean likeComment(Long commentId, Long postId, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Comment comment = commentRepository.findById(commentId)
@@ -238,6 +240,7 @@ public class CommentService {
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .receiverNickname(comment.getUser().getNickname())
+                    .postId(postId)
                     .build();
 
             Notify save = notifyRepository.save(notify);
@@ -247,6 +250,7 @@ public class CommentService {
                     .message(save.getMessage())
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
+                    .postId(save.getPostId())
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
