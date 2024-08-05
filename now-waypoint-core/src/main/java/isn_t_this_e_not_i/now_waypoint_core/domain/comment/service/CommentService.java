@@ -111,7 +111,7 @@ public class CommentService {
                         .message(notificationMessage)
                         .profileImageUrl(user.getProfileImageUrl())
                         .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
-                        .receiverNickname(post.getUser().getNickname())
+                        .receiverNickname(nickname)
                         .postId(post.getId())
                         .build();
 
