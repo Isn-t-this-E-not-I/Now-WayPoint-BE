@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Getter
@@ -28,5 +28,5 @@ public class Notify {
 
     private String receiverNickname;
 
-    private LocalDateTime createDate;
+    private ZonedDateTime createDate;
 }

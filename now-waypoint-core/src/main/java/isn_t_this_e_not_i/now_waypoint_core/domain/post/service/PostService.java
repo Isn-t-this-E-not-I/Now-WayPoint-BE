@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -49,7 +48,7 @@ public class PostService {
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
+        List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         List<String> fileUrls = files.stream()
                 .map(file -> fileUploadService.fileUpload(file))
                 .collect(Collectors.toList());
@@ -79,7 +78,7 @@ public class PostService {
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).
-                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(LocalDateTime.now()).build();
+                        message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul"))).build();
                 Notify save = notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save));
                 messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
@@ -94,7 +93,7 @@ public class PostService {
         if (!post.getUser().getId().equals(user.getId())) {
             throw new UnauthorizedException("사용자에게 이 게시물을 수정할 권한이 없습니다");
         }
-        Set<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
+        List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
         post.setContent(postRequest.getContent());
         post.setHashtags(hashtags);
         post.setLocationTag(user.getLocate());
@@ -206,24 +205,25 @@ public class PostService {
             postRepository.save(post);
 
             // 게시글 작성자에게 좋아요 알림 전송
-            if (!post.getUser().getId().equals(user.getId())) {
-                String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
-                Notify notify = Notify.builder()
-                        .senderNickname(user.getNickname())
-                        .receiverNickname(post.getUser().getNickname())
-                        .message(notificationMessage)
-                        .profileImageUrl(user.getProfileImageUrl())
-                        .createDate(LocalDateTime.now())
-                        .build();
-                Notify save = notifyRepository.save(notify);
+          if (!post.getUser().getId().equals(user.getId())) {
+            String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
+            Notify notify = Notify.builder()
+                    .senderNickname(user.getNickname())
+                    .receiverNickname(post.getUser().getNickname())
+                    .message(notificationMessage)
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
+                    .build();
+            Notify save = notifyRepository.save(notify);
 
-                NotifyDTO notifyDTO = NotifyDTO.builder()
-                        .id(save.getId())
-                        .nickname(save.getSenderNickname())
-                        .message(save.getMessage())
-                        .profileImageUrl(save.getProfileImageUrl())
-                        .createDate(save.getCreateDate())
-                        .build();
+            NotifyDTO notifyDTO = NotifyDTO.builder()
+                    .id(save.getId())
+                    .nickname(save.getSenderNickname())
+                    .message(save.getMessage())
+                    .profileImageUrl(save.getProfileImageUrl())
+                    .createDate(save.getCreateDate())
+                    .build();
+
 
                 messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
             }
@@ -286,14 +286,15 @@ public class PostService {
         return limitedPost;
     }
 
-    private Set<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
+    @Transactional
+    public List<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
         if (hashtagNames == null) {
-            return new HashSet<>();
+            return new ArrayList<>();
         }
         return hashtagNames.stream().map(name -> {
             Hashtag hashtag = hashtagRepository.findByName(name).orElse(new Hashtag(name));
             return hashtagRepository.save(hashtag);
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toList());
     }
 
     private static NotifyDTO getNotifyDTO(Notify notify) {

@@ -81,7 +81,7 @@ public class CommentService {
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .receiverNickname(post.getUser().getNickname())
                     .build();
 
@@ -107,7 +107,7 @@ public class CommentService {
                         .senderNickname(user.getNickname())
                         .message(notificationMessage)
                         .profileImageUrl(user.getProfileImageUrl())
-                        .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                        .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                         .receiverNickname(post.getUser().getNickname())
                         .build();
 
@@ -128,7 +128,8 @@ public class CommentService {
         return new CommentResponse(comment, likeCount, likedByUser);
     }
 
-    private List<String> validateMentions(String content) {
+    @Transactional
+    public List<String> validateMentions(String content) {
         List<String> mentions = extractMentions(content);
         List<String> invalidNicknames = new ArrayList<>();
 
@@ -232,7 +233,7 @@ public class CommentService {
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
                     .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .receiverNickname(comment.getUser().getNickname())
                     .build();
 

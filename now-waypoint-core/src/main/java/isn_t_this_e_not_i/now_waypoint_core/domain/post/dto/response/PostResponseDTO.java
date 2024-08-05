@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +26,7 @@ public class PostResponseDTO {
     private List<String> mediaUrls;
     private String username;
     private int likeCount;
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
     private String profileImageUrl;
 
     public PostResponseDTO(Post post) {
@@ -38,7 +38,7 @@ public class PostResponseDTO {
         this.category = post.getCategory();
         this.username = post.getUser().getNickname();
         this.likeCount = post.getLikeCount();
-        this.createdAt = post.getCreatedAt().toLocalDateTime();
+        this.createdAt = post.getCreatedAt();
         this.profileImageUrl = post.getUser().getProfileImageUrl();
     }
 }
