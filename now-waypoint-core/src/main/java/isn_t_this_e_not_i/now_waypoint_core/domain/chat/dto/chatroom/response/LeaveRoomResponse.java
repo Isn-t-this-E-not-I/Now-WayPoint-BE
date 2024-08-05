@@ -6,10 +6,11 @@ import lombok.*;
 import java.util.List;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateChatRoomResponse {
+public class LeaveRoomResponse {
     private MessageType messageType;
     private Long chatRoomId;
     private String chatRoomName;
