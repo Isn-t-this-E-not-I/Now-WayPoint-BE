@@ -26,6 +26,9 @@ public class PostResponseDTO {
     private ZonedDateTime createdAt;
     private String profileImageUrl;
 
+    @Setter
+    private double distance;
+
     public PostResponseDTO(Post post) {
         this.id = post.getId();
         this.content = post.getContent();
