@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,15 +84,16 @@ public class PostRedisService {
             posts.add(postRedis);
         }
 
-        return fromPostRedis(posts);
+        return fromPostRedis(posts, radius);
     }
 
-    private List<PostResponseDTO> fromPostRedis(List<PostRedis> posts) {
-        List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
-
-        for (PostRedis post : posts) {
-            postResponseDTOS.add(post.getPost());
-        }
-        return postResponseDTOS;
+    private List<PostResponseDTO> fromPostRedis(List<PostRedis> posts, double radius) {
+        return posts.stream()
+                .map(post -> {
+                    PostResponseDTO postResponseDTO = post.getPost();
+                    postResponseDTO.setDistance(radius);
+                    return postResponseDTO;
+                })
+                .collect(Collectors.toList());
     }
 }

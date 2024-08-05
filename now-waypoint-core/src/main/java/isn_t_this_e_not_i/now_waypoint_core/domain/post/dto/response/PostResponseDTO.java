@@ -3,10 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Hashtag;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.PostCategory;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -28,6 +25,9 @@ public class PostResponseDTO {
     private int likeCount;
     private ZonedDateTime createdAt;
     private String profileImageUrl;
+
+    @Setter
+    private double distance;
 
     public PostResponseDTO(Post post) {
         this.id = post.getId();
