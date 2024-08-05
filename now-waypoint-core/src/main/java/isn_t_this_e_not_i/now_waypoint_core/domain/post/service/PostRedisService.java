@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -55,16 +55,20 @@ public class PostRedisService {
 
     public void delete(Post post){
         PostResponseDTO postResponseDTO = new PostResponseDTO(post);
-        PostRedis postRedis = postRedisRepository.findById(postResponseDTO.getId()).orElseThrow(() -> new IllegalArgumentException("일치하는 게시글이 레디스에 없습니다."));
-        String key = "post:" + postResponseDTO.getCategory();
-        String allKey = "post:ALL";
+        Optional<PostRedis> optPostRedis = postRedisRepository.findById(postResponseDTO.getId());
 
-        String postId = postRedis.getId();
+        if(optPostRedis.isPresent()){
+            PostRedis postRedis = optPostRedis.get();
+            String key = "post:" + postResponseDTO.getCategory();
+            String allKey = "post:ALL";
 
-        redisTemplate.opsForGeo().remove(key, postId);
-        redisTemplate.opsForGeo().remove(allKey, postId);
+            String postId = postRedis.getId();
 
-        postRedisRepository.delete(postRedis);
+            redisTemplate.opsForGeo().remove(key, postId);
+            redisTemplate.opsForGeo().remove(allKey, postId);
+
+            postRedisRepository.delete(postRedis);
+        }
     }
 
     public List<PostResponseDTO> findPostRedisByCategoryAndUserLocate(PostCategory category, double longitude, double latitude, double radius) {
