@@ -31,9 +31,9 @@ public class ChatController {
 
     @GetMapping("/list")
     @Operation(summary = "유저의 채팅방 목록 조회", description = "로그인한 유저의 채팅방 목록을 조회합니다.")
-    public ResponseEntity<ChatRoomsInfoResponse> getChatRooms(Authentication auth) {
+    public ResponseEntity<ChatRoomsInfoResponse> getChatRoomList(Authentication auth) {
         String logInUserId = auth.getName();
-        List<ChatRoomListResponse> chatRooms = userChatRoomService.getChatRoomsForUser(logInUserId);
+        List<ChatRoomListResponse> chatRooms = userChatRoomService.getChatRoomList(logInUserId);
         List<UpdateInfoResponse> chatRoomsInfoByUser = chatMessageService.getChatRoomsInfoByUser(logInUserId);
         // 커스텀 클래스에 담아서 반환
         ChatRoomsInfoResponse response = new ChatRoomsInfoResponse(chatRooms, chatRoomsInfoByUser);
@@ -45,13 +45,7 @@ public class ChatController {
     @MessageMapping("/chatRoom/create")
     @Operation(summary = "채팅방 생성", description = "새로운 채팅방을 생성합니다.")
     public void createChatRoom(@Payload CreateChatRoomRequest request, Principal principal) {
-        userChatRoomService.createChatRoom(principal.getName(), request.getNicknames(), false);
-    }
-
-    @MessageMapping("/chatRoom/createDuplicate")
-    @Operation(summary = "중복 채팅방 생성", description = "새로운 채팅방을 생성합니다.")
-    public void createDuplicateChatRoom(@Payload CreateChatRoomRequest request, Principal principal) {
-        userChatRoomService.createChatRoom(principal.getName(), request.getNicknames(), true);
+        userChatRoomService.createChatRoom(principal.getName(), request.getNicknames());
     }
 
     @MessageMapping("/chat/send")
