@@ -69,6 +69,8 @@ public class PostService {
         PostRedis postRedis = postRedisService.register(post);
         notifyFollowers(postRedis, user, postResponseDTO);
 
+        messagingTemplate.convertAndSend("/topic/category" , postRedis.getPost());
+
         return savePost;
     }
 
