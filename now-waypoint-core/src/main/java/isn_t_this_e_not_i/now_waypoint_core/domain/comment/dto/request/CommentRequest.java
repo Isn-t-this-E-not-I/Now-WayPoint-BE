@@ -16,4 +16,11 @@ public class CommentRequest {
     private String content;
 
     private Long parentId;
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class likeCommentRequest {
+        Long id;
+    }
 }

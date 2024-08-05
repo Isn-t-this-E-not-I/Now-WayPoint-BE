@@ -29,4 +29,6 @@ public class Notify {
     private String receiverNickname;
 
     private ZonedDateTime createDate;
+
+    private Long postId;
 }
