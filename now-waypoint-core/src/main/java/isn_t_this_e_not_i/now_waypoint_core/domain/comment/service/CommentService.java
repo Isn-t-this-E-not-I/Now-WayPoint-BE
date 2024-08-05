@@ -92,6 +92,7 @@ public class CommentService {
                     .message(save.getMessage())
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
+                    .postId(postId)
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
@@ -103,6 +104,7 @@ public class CommentService {
             User mentionedUser = userRepository.findByNickname(nickname).orElse(null);
             if (mentionedUser != null && !mentionedUser.getId().equals(user.getId())) {
                 String notificationMessage = user.getNickname() + "님이 댓글에서 당신을 언급했습니다.";
+
                 Notify notify = Notify.builder()
                         .senderNickname(user.getNickname())
                         .message(notificationMessage)
@@ -118,6 +120,7 @@ public class CommentService {
                         .message(save.getMessage())
                         .profileImageUrl(save.getProfileImageUrl())
                         .createDate(save.getCreateDate())
+                        .postId(postId)
                         .build();
                 messagingTemplate.convertAndSend("/queue/notify/" + nickname, notifyDTO);
             }
@@ -210,7 +213,7 @@ public class CommentService {
     }
 
     @Transactional
-    public boolean likeComment(Long commentId, Authentication auth) {
+    public boolean likeComment(Long commentId, Long postId, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Comment comment = commentRepository.findById(commentId)
@@ -227,7 +230,7 @@ public class CommentService {
             commentLikeRepository.save(commentLike);
 
             // 댓글 작성자에게 좋아요 알림 전송
-              if (!comment.getUser().getId().equals(user.getId())) {
+            if (!comment.getUser().getId().equals(user.getId())) {
             String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
             Notify notify = Notify.builder()
                     .senderNickname(user.getNickname())
@@ -244,10 +247,11 @@ public class CommentService {
                     .message(save.getMessage())
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
+                    .postId(postId)
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
-              }
+            }
 
             return true; // 좋아요 추가
         }
