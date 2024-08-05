@@ -213,7 +213,7 @@ public class CommentService {
     }
 
     @Transactional
-    public boolean likeComment(Long commentId, Long postId, Authentication auth) {
+    public boolean likeComment(Long commentId, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Comment comment = commentRepository.findById(commentId)
@@ -247,7 +247,6 @@ public class CommentService {
                     .message(save.getMessage())
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
-                    .postId(postId)
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
