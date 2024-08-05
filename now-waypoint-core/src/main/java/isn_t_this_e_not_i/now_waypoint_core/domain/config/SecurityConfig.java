@@ -121,7 +121,7 @@ public class SecurityConfig {
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
             corsConfiguration.setAllowCredentials(true);
             corsConfiguration.setMaxAge(3000L);
-            corsConfiguration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
+            corsConfiguration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie", "ETag"));
 
             return corsConfiguration;
         }));
