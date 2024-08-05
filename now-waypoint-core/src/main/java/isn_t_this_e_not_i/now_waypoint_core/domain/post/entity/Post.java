@@ -7,9 +7,8 @@ import lombok.*;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -33,7 +32,8 @@ public class Post {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
-    private Set<Hashtag> hashtags = new HashSet<>();
+    @OrderColumn(name = "order_index") // 순서를 보장하기 위해 추가
+    private List<Hashtag> hashtags = new ArrayList<>();
 
     private String locationTag;
 
