@@ -129,7 +129,6 @@ public class PostService {
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
         PostRedis postRedis = postRedisService.register(savePost);
-        notifyFollowers(postRedis, user, postResponseDTO);
 
         return savePost;
     }
