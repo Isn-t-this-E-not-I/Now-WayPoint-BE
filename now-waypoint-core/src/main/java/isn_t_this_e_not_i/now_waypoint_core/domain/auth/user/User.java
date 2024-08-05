@@ -24,7 +24,6 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @Email(message = "로그인 아이디는 이메일 형식이어야 합니다.")
     @NotNull
     @Column(unique = true)
     private String loginId;
