@@ -48,6 +48,7 @@ public class PostService {
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
         validatePostContent(postRequest.getContent());
+
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
