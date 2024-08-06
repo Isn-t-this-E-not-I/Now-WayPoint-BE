@@ -126,27 +126,37 @@ public class UserChatRoomService {
     // 특정 채팅방에 로그인된 유저와 다른 유저들이 있는지 확인
     @Transactional
     private Optional<ChatRoom> findChatRoomWithUsers(String logInUserId, String[] nicknames) {
+        User logInUser = userRepository.findByLoginId(logInUserId)
+                .orElseThrow(() -> new IllegalArgumentException("해당하는 로그인 ID가 없습니다: " + logInUserId));
+        String logInUserNickname = logInUser.getNickname();
+
+        // 닉네임 배열을 Set으로 변환하여 빠른 검색을 가능하게 함
+        Set<String> nicknameSet = new HashSet<>(Arrays.asList(nicknames));
+
+        // 로그인 유저의 닉네임을 닉네임 세트에서 제거
+        nicknameSet.remove(logInUserNickname);
+
+        // 로그인 유저가 참여하고 있는 채팅방 조회
         List<UserChatRoom> userChatRooms = userChatRoomRepository.findByUserLoginId(logInUserId);
 
+        // 모든 참여자들의 채팅방 아이디를 찾아 리스트로 만듦
         for (UserChatRoom userChatRoom : userChatRooms) {
             ChatRoom chatRoom = userChatRoom.getChatRoom();
-            List<User> usersInChatRoom = userChatRoomRepository.findByChatRoomId(chatRoom.getId()).stream()
-                    .map(UserChatRoom::getUser)
+            List<String> usersInChatRoomNicknames = userChatRoomRepository.findByChatRoomId(chatRoom.getId()).stream()
+                    .map(ucr -> ucr.getUser().getNickname())
                     .collect(Collectors.toList());
 
-            boolean allNicknamesMatch = true;
-            for (String nickname : nicknames) {
-                boolean nicknameFound = usersInChatRoom.stream().anyMatch(user -> user.getNickname().equals(nickname));
-                if (!nicknameFound) {
-                    allNicknamesMatch = false;
-                    break;
-                }
-            }
-            if (allNicknamesMatch) {
-                return Optional.of(chatRoom);
+            // 로그인한 유저의 닉네임을 채팅방 사용자 닉네임 리스트에서 제거
+            usersInChatRoomNicknames.remove(logInUserNickname);
+
+            // usersInChatRoomNicknames과 nicknameSet의 비교
+            Set<String> chatRoomNicknamesSet = new HashSet<>(usersInChatRoomNicknames);
+
+            if (chatRoomNicknamesSet.equals(nicknameSet)) {
+                return Optional.of(chatRoom); // 모든 닉네임이 일치하는 채팅방 발견
             }
         }
-        return Optional.empty();
+        return Optional.empty(); // 일치하는 채팅방 없음
     }
 
     /**
