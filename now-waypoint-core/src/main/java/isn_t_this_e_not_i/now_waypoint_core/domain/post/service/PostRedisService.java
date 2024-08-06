@@ -41,8 +41,8 @@ public class PostRedisService {
 
         String key = "post:" + save.getCategory();
         String allKey = "post:ALL";
-        redisTemplate.opsForGeo().add(key, new Point(save.getLongitude(), save.getLatitude()), save.getId());
-        redisTemplate.opsForGeo().add(allKey, new Point(save.getLongitude(), save.getLatitude()), save.getId());
+       redisTemplate.opsForGeo().add(key, new Point(save.getLongitude(), save.getLatitude()), save.getId());
+       redisTemplate.opsForGeo().add(allKey, new Point(save.getLongitude(), save.getLatitude()), save.getId());
 
         return save;
     }

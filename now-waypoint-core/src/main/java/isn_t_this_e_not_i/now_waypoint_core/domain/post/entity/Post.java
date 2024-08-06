@@ -32,7 +32,7 @@ public class Post {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
-    @OrderColumn(name = "order_index") // 순서를 보장하기 위해 추가
+    @OrderColumn(name = "order_index")
     private List<Hashtag> hashtags = new ArrayList<>();
 
     private String locationTag;
