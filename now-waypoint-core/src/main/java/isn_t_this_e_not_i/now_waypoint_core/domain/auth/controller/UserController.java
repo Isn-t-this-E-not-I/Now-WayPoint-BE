@@ -111,7 +111,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/checkLoginId")
+    @PostMapping("/checkLoginId")
     public ResponseEntity<String> checkLoginId(@RequestBody UserRequest.updatePasswordRequest updatePasswordRequest){
         userService.checkLoginId(updatePasswordRequest.getLoginId());
         return ResponseEntity.ok().body("가능한 아이디입니다.");
