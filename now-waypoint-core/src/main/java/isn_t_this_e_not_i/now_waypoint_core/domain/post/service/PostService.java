@@ -92,6 +92,8 @@ public class PostService {
 
     @Transactional
     public Post updatePost(Long postId, PostRequest postRequest, List<MultipartFile> files, Authentication auth) {
+        validatePostContent(postRequest.getContent());
+
         User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
         if (!post.getUser().getId().equals(user.getId())) {
@@ -105,8 +107,7 @@ public class PostService {
 
         // 기존 미디어 URL을 가져옵니다.
         List<String> existingMediaUrls = new ArrayList<>(post.getMediaUrls());
-        System.out.println(existingMediaUrls);
-        System.out.println(postRequest.getRemoveMedia());
+
         // 삭제할 미디어 URL을 제거하고 파일 저장소에서 삭제합니다.
         if (postRequest.getRemoveMedia() != null && !postRequest.getRemoveMedia().isEmpty()) {
             for (String url : postRequest.getRemoveMedia()) {
@@ -292,8 +293,8 @@ public class PostService {
     }
 
     private void validatePostContent(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            throw new InvalidPostContentException("게시글 내용이 비어있거나 공백으로만 이루어져 있습니다.");
+        if (content == null || content.isBlank()) {
+            throw new InvalidPostContentException("게시글 내용이 비어있습니다.");
         }
     }
 
