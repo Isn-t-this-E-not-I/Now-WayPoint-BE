@@ -294,7 +294,7 @@ public class PostService {
     }
 
     private void validatePostContent(String content) {
-        if (content == null || content.isBlank()) {
+        if (content == null || content.isEmpty()) {
             throw new InvalidPostContentException("게시글 내용이 비어있습니다.");
         }
     }
