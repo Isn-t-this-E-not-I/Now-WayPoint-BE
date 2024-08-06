@@ -12,6 +12,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserRes
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponseDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.*;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.InvalidPostContentException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.UnauthorizedException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.HashtagRepository;
@@ -46,6 +47,7 @@ public class PostService {
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
+        validatePostContent(postRequest.getContent());
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
@@ -287,6 +289,12 @@ public class PostService {
                 : responseDTOS;
 
         return limitedPost;
+    }
+
+    private void validatePostContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new InvalidPostContentException("게시글 내용이 비어있거나 공백으로만 이루어져 있습니다.");
+        }
     }
 
     @Transactional
