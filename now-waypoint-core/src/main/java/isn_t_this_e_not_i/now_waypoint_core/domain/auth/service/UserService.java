@@ -125,6 +125,13 @@ public class UserService {
         tokenService.deleteToken(accessToken);
     }
 
+    @Transactional
+    public void checkLoginId(String loginId){
+        if(userRepository.findByLoginId(loginId).isPresent()){
+            throw new DuplicateLoginIdException("이미 존재하는 아이디입니다.");
+        }
+    }
+
     //회원 조회
     @Transactional
     public User findUserByLoginId(String loginId) {
