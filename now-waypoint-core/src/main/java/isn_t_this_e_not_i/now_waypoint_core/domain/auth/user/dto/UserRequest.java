@@ -36,8 +36,6 @@ public class UserRequest {
 
         private String email;
 
-        private int authNumber;
-
         private String nickname;
 
         @Setter
