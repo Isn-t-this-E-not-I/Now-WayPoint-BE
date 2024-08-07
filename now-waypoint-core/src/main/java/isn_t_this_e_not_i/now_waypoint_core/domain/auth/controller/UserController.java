@@ -35,8 +35,6 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> resist(@RequestBody @Valid UserRequest.registerRequest registerRequest) {
-        emailAuthService.confirmAuthNumber(registerRequest.getAuthNumber(), registerRequest.getEmail());
-
         String message = userService.register(registerRequest);
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .status(HttpStatus.OK.value())
