@@ -49,9 +49,13 @@ public class PostRedisService {
 
     public void update(Post post,String updateNickname){
         PostResponseDTO postResponseDTO = new PostResponseDTO(post);
-        PostRedis postRedis = postRedisRepository.findById(postResponseDTO.getId()).orElseThrow(() -> new IllegalArgumentException("레디스에 일치하는 게시글이 없습니다."));
-        postRedis.setNickname(updateNickname);
-        postRedisRepository.save(postRedis);
+        Optional<PostRedis> optPostRedis = postRedisRepository.findById(postResponseDTO.getId());
+
+        if(optPostRedis.isPresent()){
+            PostRedis postRedis = optPostRedis.get();
+            postRedis.setNickname(updateNickname);
+            postRedisRepository.save(postRedis);
+        }
     }
 
     public void delete(Post post){
