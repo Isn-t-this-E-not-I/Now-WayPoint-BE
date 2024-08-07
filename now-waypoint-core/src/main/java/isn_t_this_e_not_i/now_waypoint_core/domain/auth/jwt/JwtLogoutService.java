@@ -3,10 +3,12 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.TokenNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.Token;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -21,6 +23,9 @@ import java.util.Optional;
 public class JwtLogoutService implements LogoutHandler {
 
     private final TokenService tokenService;
+
+    @Value("${cookie.server.domain}")
+    private String domain;
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -45,9 +50,25 @@ public class JwtLogoutService implements LogoutHandler {
             }
         }
 
+        deleteCookie(response,"Authorization");
+        deleteCookie(response,"nickname");
         //header에서 토큰 제거
         response.setHeader("Authorization", "");
         //SecurityContextHoler에서 토큰 제거
         SecurityContextHolder.getContext().setAuthentication(null);
+    }
+
+    private void deleteCookie(HttpServletResponse response, String key) {
+        Cookie cookie = new Cookie(key, null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(false);
+        cookie.setSecure(false); // 개발 환경에서는 false, 프로덕션에서는 true로 설정
+        cookie.setDomain(domain);
+        response.addCookie(cookie);
+
+        // SameSite 속성을 추가한 Set-Cookie 헤더 설정
+        String cookieValue = key + "=; Max-Age=0; Path=/; SameSite=None";
+        response.addHeader("Set-Cookie", cookieValue);
     }
 }
