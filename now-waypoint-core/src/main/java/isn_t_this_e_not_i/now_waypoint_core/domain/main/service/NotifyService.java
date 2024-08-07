@@ -33,6 +33,11 @@ public class NotifyService {
         notifyRepository.deleteById(id);
     }
 
+    @Transactional
+    public void deleteAll(String nickname){
+        notifyRepository.deleteAllByReceiverNickname(nickname);
+    }
+
     private List<NotifyDTO> getNotifyDTO(List<Notify> userNotifyList){
         List<NotifyDTO> NotifyDTOList = new ArrayList<>();
         for (Notify notify : userNotifyList) {
