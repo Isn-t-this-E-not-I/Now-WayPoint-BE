@@ -16,4 +16,5 @@ public class NotifyDTO {
     private String profileImageUrl;
     private ZonedDateTime createDate;
     private Long postId;
+    private String mediaUrl;
 }

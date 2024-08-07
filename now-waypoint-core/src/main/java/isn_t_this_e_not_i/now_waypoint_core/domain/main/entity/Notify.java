@@ -31,4 +31,6 @@ public class Notify {
     private ZonedDateTime createDate;
 
     private Long postId;
+
+    private String mediaUrl;
 }
