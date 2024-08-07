@@ -36,11 +36,7 @@ public class UserChatRoomService {
     private final SimpMessagingTemplate messagingTemplate;
     private static final String CHAT_ROOM_MESSAGES_PREFIX = "chatroom:messages:";
 
-    /**
-     * 채팅방 생성 -> /queue/update/{userNickName} 으로 채팅방 업데이트 웹소켓 메시지 전송
-     * @Request : String logInUserId, String[] nickNames, boolean allowDuplicates
-     * @Response : Long chatRoomId, String ChatRoomName, List<userResponses>
-     */
+    // 채팅방 생성 -> /queue/update/{userNickName} 으로 채팅방 업데이트 웹소켓 메시지 전송
     @Transactional
     public void createChatRoom(String logInUserId, String[] nicknames) {
         User logInUser = userRepository.findByLoginId(logInUserId)
@@ -48,15 +44,21 @@ public class UserChatRoomService {
         String logInUserNickname = logInUser.getNickname();
 
         // 로그인 유저의 닉네임이 nicknames 배열에 포함되어 있는지 체크
-        boolean hasDuplicateNickname = Arrays.stream(nicknames)
-                .anyMatch(nickname -> nickname.equals(logInUserNickname));
-        if (hasDuplicateNickname) {
+        boolean hasDuplicateNickname = Arrays.stream(nicknames).anyMatch(nickname -> nickname.equals(logInUserNickname));
+        if (hasDuplicateNickname && nicknames.length == 1) {
             ErrorMessageResponse response = ErrorMessageResponse.builder()
                     .messageType(MessageType.ERROR)
                     .content("나와의 채팅방 생성에 실패했습니다.")
                     .build();
             messagingTemplate.convertAndSend("/queue/chatroom/" + logInUserNickname, response);
             throw new IllegalArgumentException("나와의 채팅방 생성에 실패했습니다.");
+        } else if(hasDuplicateNickname){
+            ErrorMessageResponse response = ErrorMessageResponse.builder()
+                    .messageType(MessageType.ERROR)
+                    .content("사용자의 닉네임을 입력하셨습니다.")
+                    .build();
+            messagingTemplate.convertAndSend("/queue/chatroom/" + logInUserNickname, response);
+            throw new IllegalArgumentException("사용자의 닉네임을 입력하셨습니다.");
         }
 
         Optional<ChatRoom> existingChatRoom = findChatRoomWithUsers(logInUserId, nicknames);
@@ -70,23 +72,35 @@ public class UserChatRoomService {
             throw new IllegalArgumentException("해당하는 채팅방이 이미 존재합니다.");
         }
         String chatRoomName = logInUserNickname + ", " + Arrays.stream(nicknames).collect(Collectors.joining(","));
-
-        final ChatRoom chatRoom = ChatRoom.builder().name(chatRoomName).build();
+        ChatRoom chatRoom = ChatRoom.builder().name(chatRoomName).build();
         chatRoomRepository.save(chatRoom);
 
-        // 닉네임에 해당하는 유저 정보 수집 및 ChatRoomUserResponse로 변환
-        List<ChatRoomUserResponse> allUsers = Arrays.stream(nicknames)
-                .map(nickname -> userRepository.findByNickname(nickname)
-                        .orElseThrow(() -> new IllegalArgumentException("해당하는 닉네임이 없습니다: " + nickname)))
-                .map(user -> ChatRoomUserResponse.builder()
-                        .userNickname(user.getNickname())
-                        .profileImageUrl(user.getProfileImageUrl())
-                        .build())
-                .collect(Collectors.toList());
+        List<ChatRoomUserResponse> allUsers = new ArrayList<>();
+        List<UserChatRoom> userChatRooms = new ArrayList<>();
+
+        for (String nickname : nicknames) {
+            User user = userRepository.findByNickname(nickname)
+                    .orElseThrow(() -> new IllegalArgumentException("해당하는 닉네임이 없습니다: " + nickname));
+
+            allUsers.add(ChatRoomUserResponse.builder()
+                    .userNickname(user.getNickname())
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .build());
+
+            userChatRooms.add(UserChatRoom.builder()
+                    .user(user)
+                    .chatRoom(chatRoom)
+                    .build());
+        }
 
         allUsers.add(ChatRoomUserResponse.builder()
                 .userNickname(logInUserNickname)
                 .profileImageUrl(logInUser.getProfileImageUrl())
+                .build());
+
+        userChatRooms.add(UserChatRoom.builder()
+                .user(logInUser)
+                .chatRoom(chatRoom)
                 .build());
 
         CreateChatRoomResponse response = CreateChatRoomResponse.builder()
@@ -96,112 +110,109 @@ public class UserChatRoomService {
                 .userResponses(allUsers)
                 .build();
 
-        List<UserChatRoom> userChatRooms = Arrays.stream(nicknames)
-                .map(nickname -> userRepository.findByNickname(nickname)
-                        .orElseThrow(() -> new IllegalArgumentException("해당하는 닉네임이 없습니다: " + nickname)))
-                .map(user -> {
-                    UserChatRoom userChatRoom = UserChatRoom.builder()
-                            .user(user)
-                            .chatRoom(chatRoom)
-                            .build();
-
-                    // 유저에게 새로운 채팅방 생성 메시지 전송
-                    messagingTemplate.convertAndSend("/queue/chatroom/" + user.getNickname(), response);
-
-                    return userChatRoom;
-                })
-                .collect(Collectors.toList());
-
-        messagingTemplate.convertAndSend("/queue/chatroom/" + logInUserNickname, response);
-        // 로그인한 유저도 채팅방에 추가
-        UserChatRoom logInUserChatRoom = UserChatRoom.builder()
-                .user(logInUser)
-                .chatRoom(chatRoom)
-                .build();
-        userChatRooms.add(logInUserChatRoom);
-
+        // 로그인한 유저 및 참여 유저들에게 메시지 전송
+        for (ChatRoomUserResponse userResponse : allUsers) {
+            messagingTemplate.convertAndSend("/queue/chatroom/" + userResponse.getUserNickname(), response);
+        }
         userChatRoomRepository.saveAll(userChatRooms);
     }
 
     // 특정 채팅방에 로그인된 유저와 다른 유저들이 있는지 확인
     @Transactional
     private Optional<ChatRoom> findChatRoomWithUsers(String logInUserId, String[] nicknames) {
-        User logInUser = userRepository.findByLoginId(logInUserId)
-                .orElseThrow(() -> new IllegalArgumentException("해당하는 로그인 ID가 없습니다: " + logInUserId));
-        String logInUserNickname = logInUser.getNickname();
-
-        // 닉네임 배열을 Set으로 변환하여 빠른 검색을 가능하게 함
+        // 닉네임 배열과 로그인 사용자 닉네임을 포함한 집합
         Set<String> nicknameSet = new HashSet<>(Arrays.asList(nicknames));
 
-        // 로그인 유저의 닉네임을 닉네임 세트에서 제거
-        nicknameSet.remove(logInUserNickname);
+        // 모든 유저를 포함해야 하므로 로그인 유저의 닉네임을 추가
+        User logInUser = userRepository.findByLoginId(logInUserId)
+                .orElseThrow(() -> new IllegalArgumentException("해당하는 로그인 ID가 없습니다: " + logInUserId));
+        nicknameSet.add(logInUser.getNickname());
 
-        // 로그인 유저가 참여하고 있는 채팅방 조회
+        // 사용자가 속한 모든 채팅방을 가져옴
         List<UserChatRoom> userChatRooms = userChatRoomRepository.findByUserLoginId(logInUserId);
 
-        // 모든 참여자들의 채팅방 아이디를 찾아 리스트로 만듦
         for (UserChatRoom userChatRoom : userChatRooms) {
             ChatRoom chatRoom = userChatRoom.getChatRoom();
+
+            // 해당 채팅방에 속한 모든 유저의 닉네임을 가져옴
             List<String> usersInChatRoomNicknames = userChatRoomRepository.findByChatRoomId(chatRoom.getId()).stream()
                     .map(ucr -> ucr.getUser().getNickname())
                     .collect(Collectors.toList());
 
-            // 로그인한 유저의 닉네임을 채팅방 사용자 닉네임 리스트에서 제거
-            usersInChatRoomNicknames.remove(logInUserNickname);
+            // 채팅방의 사용자 집합과 주어진 닉네임 집합을 비교
+            Set<String> usersInChatRoomSet = new HashSet<>(usersInChatRoomNicknames);
 
-            // usersInChatRoomNicknames과 nicknameSet의 비교
-            Set<String> chatRoomNicknamesSet = new HashSet<>(usersInChatRoomNicknames);
-
-            if (chatRoomNicknamesSet.equals(nicknameSet)) {
-                return Optional.of(chatRoom); // 모든 닉네임이 일치하는 채팅방 발견
+            // 사용자 집합이 동일하고, 채팅방 내 유저 수와 주어진 닉네임 수가 동일할 경우에만 동일한 채팅방으로 간주
+            if (usersInChatRoomSet.equals(nicknameSet) && usersInChatRoomSet.size() == nicknameSet.size()) {
+                return Optional.of(chatRoom);
             }
         }
-        return Optional.empty(); // 일치하는 채팅방 없음
+        return Optional.empty();
     }
 
-    /**
-     * 채팅방에 유저 초대
-     * @Request : Long chatRoomId, String[] nicknames
-     */
+    // 채팅방에 유저 초대
     @Transactional
     public void inviteUser(Long chatRoomId, String[] nicknames) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("해당하는 채팅방 ID가 없습니다."));
 
-        List<ChatRoomUserResponse> allUsers = Arrays.stream(nicknames)
-                .map(nickname -> userRepository.findByNickname(nickname)
-                        .orElseThrow(() -> new IllegalArgumentException("해당하는 닉네임이 없습니다: " + nickname)))
-                .map(user -> ChatRoomUserResponse.builder()
-                        .userNickname(user.getNickname())
-                        .profileImageUrl(user.getProfileImageUrl())
+        List<UserChatRoom> existingUsers = userChatRoomRepository.findByChatRoomId(chatRoomId);
+        Set<String> existingNicknames = existingUsers.stream()
+                .map(ucr -> ucr.getUser().getNickname())
+                .collect(Collectors.toSet());
+
+        List<ChatRoomUserResponse> allUsers = existingUsers.stream()
+                .map(ucr -> ChatRoomUserResponse.builder()
+                        .userNickname(ucr.getUser().getNickname())
+                        .profileImageUrl(ucr.getUser().getProfileImageUrl())
                         .build())
                 .collect(Collectors.toList());
 
-        List<UserChatRoom> userChatRooms = Arrays.stream(nicknames)
-                .map(nickname -> userRepository.findByNickname(nickname)
-                        .orElseThrow(() -> new IllegalArgumentException("해당하는 닉네임이 없습니다: " + nickname)))
-                .map(user -> UserChatRoom.builder()
-                        .user(user)
-                        .chatRoom(chatRoom)
-                        .build())
-                .collect(Collectors.toList());
+        List<ChatRoomUserResponse> newUsers = new ArrayList<>();
+        List<UserChatRoom> userChatRooms = new ArrayList<>();
+
+        for (String nickname : nicknames) {
+            if (existingNicknames.contains(nickname)) {
+                continue; // 이미 존재하는 유저는 제외
+            }
+
+            User user = userRepository.findByNickname(nickname)
+                    .orElseThrow(() -> new IllegalArgumentException("해당하는 닉네임이 없습니다: " + nickname));
+
+            newUsers.add(ChatRoomUserResponse.builder()
+                    .userNickname(user.getNickname())
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .build());
+
+            userChatRooms.add(UserChatRoom.builder()
+                    .user(user)
+                    .chatRoom(chatRoom)
+                    .build());
+        }
+
+        if (!newUsers.isEmpty()) {
+            // 새로운 유저들을 채팅방 유저 목록에 추가
+            allUsers.addAll(newUsers);
+
+            // 채팅방 이름 업데이트
+            String newNicknames = newUsers.stream()
+                    .map(ChatRoomUserResponse::getUserNickname)
+                    .collect(Collectors.joining(", "));
+            chatRoom.setName(String.join(", ", existingNicknames) + ", " + newNicknames);
+            chatRoomRepository.save(chatRoom);
+
+            InviteChatRoomResponse response = InviteChatRoomResponse.builder()
+                    .messageType(MessageType.INVITE)
+                    .chatRoomId(chatRoom.getId())
+                    .userResponses(allUsers)
+                    .build();
+
+            for (ChatRoomUserResponse userResponse : allUsers) {
+                messagingTemplate.convertAndSend("/queue/chatroom/" + userResponse.getUserNickname(), response);
+            }
+            alertMessage(chatRoomId, newNicknames + "님이 초대되었습니다.");
+        }
         userChatRoomRepository.saveAll(userChatRooms);
-
-        // 채팅방 이름 업데이트
-        updateChatRoomName(chatRoom, nicknames);
-
-        InviteChatRoomResponse response = InviteChatRoomResponse.builder()
-                .messageType(MessageType.INVITE)
-                .chatRoomId(chatRoom.getId())
-                .userResponses(allUsers)
-                .build();
-
-        alertMessage(chatRoomId, Arrays.stream(nicknames).collect(Collectors.joining(", ")) + "님이 초대되었습니다.");
-
-        Arrays.stream(nicknames)
-                .forEach(nickname ->
-                        messagingTemplate.convertAndSend("/queue/chatroom/" + nickname, response)
-                );
     }
 
     // 채팅방 이름 업데이트
@@ -214,10 +225,7 @@ public class UserChatRoomService {
         chatRoomRepository.save(chatRoom);
     }
 
-    /**
-     * 채팅방 나가기
-     * @Request : String loginId, Long chatRoomId
-     */
+    // 채팅방 나가기
     @Transactional
     public void leaveChatRoom(Long chatRoomId, String logInUserId) {
         User logInUser = userRepository.findByLoginId(logInUserId)
@@ -260,11 +268,7 @@ public class UserChatRoomService {
         }
     }
 
-    /**
-     * 채팅방 목록 조회
-     * @Request : String logInUserId
-     * @Response : Long chatRoomId, String chatRoomName, Long 채팅방에 있는 유저의 수
-     */
+    // 채팅방 목록 조회
     @Transactional
     public List<ChatRoomListResponse> getChatRoomList(String logInUserId) {
         List<UserChatRoom> userChatRooms = userChatRoomRepository.findByUserLoginId(logInUserId);
@@ -290,9 +294,7 @@ public class UserChatRoomService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * @Request : String logInUserId, Long chatRoomId, String newChatRoomName
-     */
+    // 채팅방 이름 업데이트
     @Transactional
     public void updateChatRoomName(Long chatRoomId, String logInUserId, String newChatRoomName) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
