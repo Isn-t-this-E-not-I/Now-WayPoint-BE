@@ -85,6 +85,7 @@ public class CommentService {
                     .receiverNickname(post.getUser().getNickname())
                     .postId(post.getId())
                     .mediaUrl(post.getMediaUrls().get(0))
+                    .comment(comment.getContent())
                     .build();
 
             Notify save = notifyRepository.save(notify);
@@ -96,6 +97,7 @@ public class CommentService {
                     .createDate(save.getCreateDate())
                     .postId(save.getPostId())
                     .mediaUrl(save.getMediaUrl())
+                    .comment(save.getComment())
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
@@ -106,7 +108,7 @@ public class CommentService {
         for (String nickname : mentionedNicknames) {
             User mentionedUser = userRepository.findByNickname(nickname).orElse(null);
             if (mentionedUser != null && !mentionedUser.getId().equals(user.getId())) {
-                String notificationMessage = user.getNickname() + "님이 댓글에서 당신을 언급했습니다.";
+                String notificationMessage = user.getNickname() + "님이 댓글에서 회원님을 언급했습니다.";
 
                 Notify notify = Notify.builder()
                         .senderNickname(user.getNickname())
@@ -237,7 +239,7 @@ public class CommentService {
 
             // 댓글 작성자에게 좋아요 알림 전송
             if (!comment.getUser().getId().equals(user.getId())) {
-            String notificationMessage = user.getNickname() + "님이 당신의 댓글을 좋아합니다.";
+            String notificationMessage = user.getNickname() + "님이 회원님의 댓글을 좋아합니다.";
             Notify notify = Notify.builder()
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)
@@ -245,6 +247,7 @@ public class CommentService {
                     .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .receiverNickname(comment.getUser().getNickname())
                     .postId(postId)
+                    .comment(comment.getContent())
                     .build();
 
             Notify save = notifyRepository.save(notify);
@@ -255,6 +258,7 @@ public class CommentService {
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
                     .postId(save.getPostId())
+                    .comment(save.getComment())
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + comment.getUser().getNickname(), notifyDTO);
