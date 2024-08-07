@@ -17,4 +17,5 @@ public class NotifyDTO {
     private ZonedDateTime createDate;
     private Long postId;
     private String mediaUrl;
+    private String comment;
 }
