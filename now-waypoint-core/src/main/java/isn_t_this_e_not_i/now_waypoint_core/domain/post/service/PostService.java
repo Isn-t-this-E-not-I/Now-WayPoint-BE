@@ -82,7 +82,7 @@ public class PostService {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).postId(postResponseDTO.getId()).mediaUrl(postResponseDTO.getMediaUrls().get(0)).
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul"))).build();
                 Notify save = notifyRepository.save(notify);
-                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save));
+                messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save, user.getNickname()));
                 messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
             }
         }
@@ -301,11 +301,11 @@ public class PostService {
         }).collect(Collectors.toSet());
     }
 
-    private static NotifyDTO getNotifyDTO(Notify notify) {
+    private static NotifyDTO getNotifyDTO(Notify notify, String nickname) {
         return NotifyDTO.builder()
                 .id(notify.getId())
                 .nickname(notify.getSenderNickname())
-                .message(notify.getMessage())
+                .message(nickname + "님이 게시글을 작성하였습니다.")
                 .profileImageUrl(notify.getProfileImageUrl())
                 .createDate(notify.getCreateDate())
                 .postId(notify.getPostId())
