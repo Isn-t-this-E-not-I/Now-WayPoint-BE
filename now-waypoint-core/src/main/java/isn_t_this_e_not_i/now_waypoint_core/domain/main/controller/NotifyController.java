@@ -27,4 +27,10 @@ public class NotifyController {
         Long id = request.get("id");
         notifyService.deleteNotify(id);
     }
+
+    @DeleteMapping("/all")
+    public void deleteAllNotification(@RequestBody Map<String, String> request){
+        String nickname = request.get("nickname");
+        notifyService.deleteAll(nickname);
+    }
 }

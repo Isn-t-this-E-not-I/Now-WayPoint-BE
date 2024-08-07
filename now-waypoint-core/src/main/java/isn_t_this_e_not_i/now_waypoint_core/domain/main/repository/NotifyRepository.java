@@ -8,4 +8,6 @@ import java.util.List;
 public interface NotifyRepository extends JpaRepository<Notify, Long> {
 
     List<Notify> findByReceiverNickname(String receiverNickname);
+
+    void deleteAllByReceiverNickname(String receiverNickname);
 }
