@@ -33,4 +33,6 @@ public class Notify {
     private Long postId;
 
     private String mediaUrl;
+
+    private String comment;
 }

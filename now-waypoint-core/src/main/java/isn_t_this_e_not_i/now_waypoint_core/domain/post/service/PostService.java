@@ -211,7 +211,7 @@ public class PostService {
 
             // 게시글 작성자에게 좋아요 알림 전송
           if (!post.getUser().getId().equals(user.getId())) {
-            String notificationMessage = user.getNickname() + "님이 당신의 게시글을 좋아합니다.";
+            String notificationMessage = user.getNickname() + "님이 회원님의 게시글을 좋아합니다.";
             Notify notify = Notify.builder()
                     .senderNickname(user.getNickname())
                     .receiverNickname(post.getUser().getNickname())

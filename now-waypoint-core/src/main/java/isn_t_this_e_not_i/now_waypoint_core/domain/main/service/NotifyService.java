@@ -43,6 +43,8 @@ public class NotifyService {
                     .profileImageUrl(notify.getProfileImageUrl())
                     .createDate(notify.getCreateDate())
                     .postId(notify.getPostId())
+                    .mediaUrl(notify.getMediaUrl())
+                    .comment(notify.getComment())
                     .build();
             NotifyDTOList.add(notifyDTO);
         }
