@@ -79,7 +79,7 @@ public class PostService {
         List<UserFollower> followers = user.getFollowers();
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
-                Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).postId(postResponseDTO.getId()).
+                Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).postId(postResponseDTO.getId()).mediaUrl(postResponseDTO.getMediaUrls().get(0)).
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul"))).build();
                 Notify save = notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save));
@@ -215,6 +215,7 @@ public class PostService {
                     .profileImageUrl(user.getProfileImageUrl())
                     .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .postId(post.getId())
+                    .mediaUrl(post.getMediaUrls().get(0))
                     .build();
             Notify save = notifyRepository.save(notify);
 
@@ -225,6 +226,7 @@ public class PostService {
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
                     .postId(save.getPostId())
+                    .mediaUrl(save.getMediaUrl())
                     .build();
 
 
@@ -307,6 +309,7 @@ public class PostService {
                 .profileImageUrl(notify.getProfileImageUrl())
                 .createDate(notify.getCreateDate())
                 .postId(notify.getPostId())
+                .mediaUrl(notify.getMediaUrl())
                 .build();
     }
 

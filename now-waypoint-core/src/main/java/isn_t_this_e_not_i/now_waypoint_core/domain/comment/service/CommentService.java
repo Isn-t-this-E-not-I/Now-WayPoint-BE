@@ -84,6 +84,7 @@ public class CommentService {
                     .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .receiverNickname(post.getUser().getNickname())
                     .postId(post.getId())
+                    .mediaUrl(post.getMediaUrls().get(0))
                     .build();
 
             Notify save = notifyRepository.save(notify);
@@ -94,6 +95,7 @@ public class CommentService {
                     .profileImageUrl(save.getProfileImageUrl())
                     .createDate(save.getCreateDate())
                     .postId(save.getPostId())
+                    .mediaUrl(save.getMediaUrl())
                     .build();
 
             messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
@@ -113,6 +115,7 @@ public class CommentService {
                         .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                         .receiverNickname(nickname)
                         .postId(post.getId())
+                        .mediaUrl(post.getMediaUrls().get(0))
                         .build();
 
                 Notify save = notifyRepository.save(notify);
@@ -123,6 +126,7 @@ public class CommentService {
                         .profileImageUrl(save.getProfileImageUrl())
                         .createDate(save.getCreateDate())
                         .postId(save.getPostId())
+                        .mediaUrl(save.getMediaUrl())
                         .build();
                 messagingTemplate.convertAndSend("/queue/notify/" + nickname, notifyDTO);
             }
