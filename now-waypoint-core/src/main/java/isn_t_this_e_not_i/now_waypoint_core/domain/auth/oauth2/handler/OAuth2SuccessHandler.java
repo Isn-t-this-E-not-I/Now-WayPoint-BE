@@ -3,6 +3,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.handler;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtUtil;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,23 +44,21 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        createCookie(response, "Authorization", accessToken);
-        createCookie(response, "nickname", nickname);
         //Redirect url 설정해야함 (ex: http:localhost:3000/ __ / __ )
-        response.sendRedirect("https://goorm.now-waypoint.store/main");
+        response.sendRedirect("https://goorm.now-waypoint.store/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname);
     }
 
-    private void createCookie(HttpServletResponse response, String key, String value) {
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(60 * 60 * 60);
-        cookie.setPath("/");
-        cookie.setHttpOnly(false);
-        cookie.setSecure(false); // 개발 환경에서는 false, 프로덕션에서는 true로 설정
-        cookie.setDomain(domain);
-        response.addCookie(cookie);
-
-        // SameSite 속성을 추가한 Set-Cookie 헤더 설정
-        String cookieValue = key + "=" + value + "; Max-Age=" + (60 * 60 * 60) + "; Path=/; SameSite=None";
-        response.addHeader("Set-Cookie", cookieValue);
-    }
+//    private void createCookie(HttpServletResponse response, String key, String value) {
+//        Cookie cookie = new Cookie(key, value);
+//        cookie.setMaxAge(60 * 60 * 60);
+//        cookie.setPath("/");
+//        cookie.setHttpOnly(false);
+//        cookie.setSecure(false); // 개발 환경에서는 false, 프로덕션에서는 true로 설정
+//        cookie.setDomain(domain);
+//        response.addCookie(cookie);
+//
+//        // SameSite 속성을 추가한 Set-Cookie 헤더 설정
+//        String cookieValue = key + "=" + value + "; Max-Age=" + (60 * 60 * 60) + "; Path=/; SameSite=None";
+//        response.addHeader("Set-Cookie", cookieValue);
+//    }
 }
