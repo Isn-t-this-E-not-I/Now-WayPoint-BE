@@ -76,7 +76,7 @@ public class CommentService {
 
         // 게시글 작성자에게 댓글 작성 알림 전송
         if (!post.getUser().getId().equals(user.getId())) {
-            String notificationMessage = user.getNickname() + "님이 게시글에 댓글을 남겼습니다.";
+            String notificationMessage = user.getNickname() + "님이 회원님의 게시글에 댓글을 남겼습니다.";
             Notify notify = Notify.builder()
                     .senderNickname(user.getNickname())
                     .message(notificationMessage)

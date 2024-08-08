@@ -54,9 +54,9 @@ public class CommentController {
 
     @PostMapping("/{commentId}/like")
     public ResponseEntity<Map<String, Boolean>> likeComment(@PathVariable("commentId") Long commentId,
-                                                            @RequestBody CommentRequest.likeCommentRequest likeCommentRequest,
+                                                            @PathVariable("postId")Long postId,
                                                             Authentication auth) {
-        boolean liked = commentService.likeComment(commentId, likeCommentRequest.getId(), auth);
+        boolean liked = commentService.likeComment(commentId, postId, auth);
         Map<String, Boolean> response = new HashMap<>();
         response.put("liked", liked);
         return ResponseEntity.ok(response);
