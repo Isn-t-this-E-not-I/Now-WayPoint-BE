@@ -3,10 +3,9 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.TokenNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.TokenRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.Token;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Optional;
 
 @Service
@@ -15,12 +14,10 @@ public class TokenService {
 
     private final TokenRepository tokenRepository;
 
-    @Transactional
     public void saveToken(String refreshToken, String accessToken, String loginId) {
         tokenRepository.save(new Token(refreshToken, accessToken, loginId));
     }
 
-    @Transactional
     public void updateAccessToken(String accessToken, String updateAccessToken) {
         Optional<Token> findToken = tokenRepository.findByAccessToken(accessToken);
         if (findToken.isPresent()) {
@@ -32,18 +29,15 @@ public class TokenService {
         }
     }
 
-    @Transactional
     public void deleteToken(String accessToken) {
         tokenRepository.findByAccessToken(accessToken)
                 .ifPresent(tokenRepository::delete);
     }
 
-    @Transactional
     public Optional<Token> findByAccessToken(String accessToken) {
         return tokenRepository.findByAccessToken(accessToken);
     }
 
-    @Transactional
     public Optional<Token> findByLoginId(String loginId) {
         return tokenRepository.findByLoginId(loginId);
     }
