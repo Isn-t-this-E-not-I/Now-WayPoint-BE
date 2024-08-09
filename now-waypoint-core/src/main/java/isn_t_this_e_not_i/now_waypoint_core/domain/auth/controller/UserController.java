@@ -1,6 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.mail.service.EmailAuthService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.ApiResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
@@ -70,6 +71,11 @@ public class UserController {
     @GetMapping("/all")
     public ResponseEntity<List<UserResponse.followInfo>> getFollowers(Authentication auth){
         return ResponseEntity.ok().body(userService.getAllUser());
+    }
+
+    @GetMapping("/locate")
+    public ResponseEntity<List<User>> getUserByLocate(Authentication auth){
+        return ResponseEntity.ok().body(userService.getUserByLocate(auth.getName()));
     }
 
     @PutMapping("/password/find")
