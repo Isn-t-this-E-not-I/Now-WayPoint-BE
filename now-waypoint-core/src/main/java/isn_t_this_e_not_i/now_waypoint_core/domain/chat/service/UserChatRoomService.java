@@ -33,8 +33,11 @@ public class UserChatRoomService {
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final RedisTemplate<String, ChatMessage> redisTemplate;
+    private final RedisTemplate<String, String> redisStringTemplate;
     private final SimpMessagingTemplate messagingTemplate;
     private static final String CHAT_ROOM_MESSAGES_PREFIX = "chatroom:messages:";
+    private static final String LAST_MESSAGE_PREFIX = "lastMessage:";
+    private static final String UNREAD_MESSAGES_PREFIX = "unreadMessages:";
 
     // 채팅방 생성 -> /queue/update/{userNickName} 으로 채팅방 업데이트 웹소켓 메시지 전송
     @Transactional
@@ -52,7 +55,7 @@ public class UserChatRoomService {
                     .build();
             messagingTemplate.convertAndSend("/queue/chatroom/" + logInUserNickname, response);
             throw new IllegalArgumentException("나와의 채팅방 생성에 실패했습니다.");
-        } else if(hasDuplicateNickname){
+        } else if (hasDuplicateNickname) {
             ErrorMessageResponse response = ErrorMessageResponse.builder()
                     .messageType(MessageType.ERROR)
                     .content("사용자의 닉네임을 입력하셨습니다.")
@@ -107,6 +110,7 @@ public class UserChatRoomService {
                 .messageType(MessageType.CREATE)
                 .chatRoomId(chatRoom.getId())
                 .chatRoomName(chatRoomName)
+                .requestUser(logInUserNickname)
                 .userResponses(allUsers)
                 .build();
 
@@ -215,16 +219,6 @@ public class UserChatRoomService {
         userChatRoomRepository.saveAll(userChatRooms);
     }
 
-    // 채팅방 이름 업데이트
-    @Transactional
-    private void updateChatRoomName(ChatRoom chatRoom, String[] nicknames) {
-        String updatedName = chatRoom.getUserChatRooms().stream()
-                .map(userChatRoom -> userChatRoom.getUser().getNickname())
-                .collect(Collectors.joining(", "));
-        chatRoom.setName(updatedName);
-        chatRoomRepository.save(chatRoom);
-    }
-
     // 채팅방 나가기
     @Transactional
     public void leaveChatRoom(Long chatRoomId, String logInUserId) {
@@ -234,7 +228,6 @@ public class UserChatRoomService {
         UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(logInUser.getId(), chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("해당하는 채팅방에 사용자가 존재하지 않습니다."));
 
-        // 해당 채팅방의 유저 수를 확인
         List<UserChatRoom> chatRoomUsers = userChatRoomRepository.findByChatRoomId(chatRoomId);
 
         LeaveRoomResponse response = LeaveRoomResponse.builder()
@@ -243,20 +236,18 @@ public class UserChatRoomService {
                 .build();
 
         if (chatRoomUsers.size() == 1) {
-            // 채팅방에 유저가 1명인 경우 채팅방 자체를 삭제
             userChatRoomRepository.delete(userChatRoom);
             chatRoomRepository.deleteById(chatRoomId);
+            deleteAllMessagesInChatRoom(chatRoomId);
             messagingTemplate.convertAndSend("/queue/chatroom/" + logInUser.getNickname(), response);
         } else {
-            // 그렇지 않은 경우, 해당 유저만 삭제
             userChatRoomRepository.delete(userChatRoom);
             alertMessage(chatRoomId, logInUser.getNickname() + "님이 나갔습니다.");
 
             messagingTemplate.convertAndSend("/queue/chatroom/" + logInUser.getNickname(), response);
 
-            // 나머지 유저들의 정보 생성
             List<ChatRoomUserResponse> remainingUsers = chatRoomUsers.stream()
-                    .filter(ucr -> !ucr.getUser().getId().equals(logInUser.getId())) // 나간 유저 제외
+                    .filter(ucr -> !ucr.getUser().getId().equals(logInUser.getId()))
                     .map(ucr -> ChatRoomUserResponse.builder()
                             .userNickname(ucr.getUser().getNickname())
                             .profileImageUrl(ucr.getUser().getProfileImageUrl())
@@ -265,6 +256,21 @@ public class UserChatRoomService {
 
             response.setUserResponses(remainingUsers);
             messagingTemplate.convertAndSend("/topic/chatroom/" + chatRoomId, response);
+        }
+    }
+
+
+    @Transactional
+    public void deleteAllMessagesInChatRoom(Long chatRoomId) {
+        String messagesKey = CHAT_ROOM_MESSAGES_PREFIX + chatRoomId;
+        redisTemplate.delete(messagesKey);
+
+        String lastMessageKey = LAST_MESSAGE_PREFIX + chatRoomId;
+        redisStringTemplate.delete(lastMessageKey);
+
+        Set<String> unreadKeys = redisStringTemplate.keys(UNREAD_MESSAGES_PREFIX + "*:" + chatRoomId);
+        if (unreadKeys != null && !unreadKeys.isEmpty()) {
+            redisStringTemplate.delete(unreadKeys);
         }
     }
 
@@ -328,6 +334,26 @@ public class UserChatRoomService {
         return userChatRoomRepository.findByUserLoginId(logInUserId).stream()
                 .map(userChatRoom -> userChatRoom.getChatRoom().getId())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 사용자 닉네임 변경 시 채팅방 내 모든 유저의 닉네임 업데이트
+     * @param oldNickname : 기존 닉네임
+     * @param newNickname : 변경될 닉네임
+     */
+    @Transactional
+    public void updateUserNicknameInChatRooms(String oldNickname, String newNickname) {
+        List<UserChatRoom> userChatRooms = userChatRoomRepository.findByUserNickname(newNickname);
+        for (UserChatRoom userChatRoom : userChatRooms) {
+            ChatRoom chatRoom = userChatRoom.getChatRoom();
+            UpdateUserNameResponse response = UpdateUserNameResponse.builder()
+                    .messageType(MessageType.USER_NAME_UPDATE)
+                    .chatRoomId(chatRoom.getId())
+                    .oldNickname(oldNickname)
+                    .newNickname(newNickname)
+                    .build();
+            messagingTemplate.convertAndSend("/topic/chatroom/" + chatRoom.getId(), response);
+        }
     }
 
     // 예외 처리 개선 예시

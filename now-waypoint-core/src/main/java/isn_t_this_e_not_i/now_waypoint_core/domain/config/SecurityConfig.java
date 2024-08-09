@@ -12,6 +12,8 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.service.ChatMessageService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.service.UserChatRoomService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.FileUploadService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +53,8 @@ public class SecurityConfig {
     private final PostService postService;
     private final FileUploadService fileUploadService;
     private final UserFollowService userFollowService;
+    private final ChatMessageService chatMessageService;
+    private final UserChatRoomService userChatRoomService;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -64,7 +68,7 @@ public class SecurityConfig {
 
     @Bean
     public UserService userService() {
-        return new UserService(postService,userRepository, bCryptPasswordEncoder(), tokenService,fileUploadService, userFollowService);
+        return new UserService(postService, userRepository, bCryptPasswordEncoder(), tokenService,fileUploadService, userFollowService, chatMessageService, userChatRoomService);
     }
 
     @Bean

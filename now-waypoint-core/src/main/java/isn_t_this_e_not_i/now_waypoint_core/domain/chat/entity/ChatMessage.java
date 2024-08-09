@@ -1,9 +1,6 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.chat.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 
@@ -13,6 +10,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ChatMessage implements Serializable {
     private Long chatRoomId;
+    @Setter
     private String sender;
     private String content;
 }
