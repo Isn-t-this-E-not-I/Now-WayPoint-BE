@@ -10,5 +10,6 @@ public enum MessageType {
     UPDATE,
     NAME_UPDATE,
     ERROR_DUPLICATE,
+    USER_NAME_UPDATE,
     ERROR
 }

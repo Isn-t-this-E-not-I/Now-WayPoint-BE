@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -198,6 +199,35 @@ public class ChatMessageService {
 
         messagingTemplate.convertAndSend("/queue/chatroom/" + userNickname, chatRoomInfo);
     }
+
+    @Transactional
+    public void updateUserNicknameInMessages(String oldNickname, String newNickname, String loginUserId) {
+        List<Long> chatRoomIds = userChatRoomService.getChatRoomIdsByLoginUserId(loginUserId);
+        for (Long chatRoomId : chatRoomIds) {
+            String key = CHAT_ROOM_MESSAGES_PREFIX + chatRoomId;
+            Set<ZSetOperations.TypedTuple<ChatMessage>> messages = redisTemplate.opsForZSet().rangeWithScores(key, 0, -1);
+
+            if (messages != null) {
+                List<ChatMessage> messagesToRemove = new ArrayList<>();
+                messages.forEach(typedTuple -> {
+                    ChatMessage message = typedTuple.getValue();
+                    if (message.getSender().equals(oldNickname)) {
+                        messagesToRemove.add(message);
+                    }
+                });
+                messagesToRemove.forEach(message -> redisTemplate.opsForZSet().remove(key, message));
+
+                messages.forEach(typedTuple -> {
+                    ChatMessage message = typedTuple.getValue();
+                    if (message.getSender().equals(oldNickname)) {
+                        message.setSender(newNickname);
+                    }
+                    redisTemplate.opsForZSet().add(key, message, typedTuple.getScore());
+                });
+            }
+        }
+    }
+
 
     private int getUnreadMessagesCount(String userNickname, Long chatRoomId) {
         String unreadKey = UNREAD_MESSAGES_PREFIX + userNickname + ":" + chatRoomId;

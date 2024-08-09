@@ -10,4 +10,6 @@ public interface UserChatRoomRepository extends JpaRepository<UserChatRoom, Long
     List<UserChatRoom> findByChatRoomId(Long chatRoomId);
     List<UserChatRoom> findByUserLoginId(String loginId);
     Optional<UserChatRoom> findByUserIdAndChatRoomId(Long userId, Long chatRoomId);
+
+    List<UserChatRoom> findByUserNickname(String nickname);
 }
