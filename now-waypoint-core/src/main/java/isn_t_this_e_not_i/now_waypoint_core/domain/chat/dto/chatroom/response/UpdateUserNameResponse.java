@@ -1,18 +1,18 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.chatroom.response;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.chat.dto.MessageType;
-import lombok.*;
-
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateChatRoomResponse {
+public class UpdateUserNameResponse {
     private MessageType messageType;
     private Long chatRoomId;
-    private String chatRoomName;
-    private String requestUser;
-    private List<ChatRoomUserResponse> userResponses;
+    private String oldNickname;
+    private String newNickname;
 }

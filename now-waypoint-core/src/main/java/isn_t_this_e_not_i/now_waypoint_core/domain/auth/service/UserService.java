@@ -12,6 +12,8 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.Duplicate
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserRole;
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.service.ChatMessageService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.chat.service.UserChatRoomService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.FileUploadService;
@@ -47,6 +49,8 @@ public class UserService {
     private final TokenService tokenService;
     private final FileUploadService fileUploadService;
     private final UserFollowService userFollowService;
+    private final ChatMessageService chatMessageService;
+    private final UserChatRoomService userChatRoomService;
 
     //회원 등록
     @Transactional
@@ -209,6 +213,9 @@ public class UserService {
         userFollowService.updateFollowerNickname(nickname, updateNickname);
 
         postService.updatePostByNickname(user, updateNickname);
+
+        userChatRoomService.updateUserNicknameInChatRooms(nickname, updateNickname);
+        chatMessageService.updateUserNicknameInMessages(nickname, updateNickname, loginId);
 
         userRepository.save(user);
         UserResponse.updateNickname userResponse = UserResponse.updateNickname.builder().nickname(nickname).build();
