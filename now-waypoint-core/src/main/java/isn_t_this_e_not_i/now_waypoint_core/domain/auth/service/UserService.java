@@ -278,10 +278,14 @@ public class UserService {
 
     //회원 위치 정보 업데이트
     @Transactional
-    public void getUserLocate(String loginId, String locate) {
-        Optional<User> findUser = userRepository.findByLoginId(loginId);
-        findUser.get().setLocate(locate);
-        userRepository.save(findUser.get());
+    public List<User> getUserByLocate(String loginId) {
+        User findUser = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
+
+        String locate = findUser.getLocate();
+        double longitude =Double.parseDouble(locate.split(",")[0]);
+        double latitude = Double.parseDouble(locate.split(",")[1]);
+
+        return userRepository.findUsersWithinDistance(longitude, latitude);
     }
 
     public UserResponse fromUser(User user) {

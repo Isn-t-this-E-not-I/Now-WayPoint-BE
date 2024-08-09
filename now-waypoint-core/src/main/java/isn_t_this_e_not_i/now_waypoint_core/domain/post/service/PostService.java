@@ -271,8 +271,7 @@ public class PostService {
         } else {
             responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.ALL, longitude, latitude, radius);
         }
-
-        messagingTemplate.convertAndSend("/queue/" + locate + "/" + nickname, responsePostRedis);
+        
         messagingTemplate.convertAndSend("/queue/category/" + nickname, responsePostRedis);
     }
 
