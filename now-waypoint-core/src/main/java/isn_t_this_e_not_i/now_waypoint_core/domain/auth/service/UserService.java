@@ -282,7 +282,7 @@ public class UserService {
         double longitude =Double.parseDouble(locate.split(",")[0]);
         double latitude = Double.parseDouble(locate.split(",")[1]);
 
-        List<User> usersWithinDistance = userRepository.findUsersWithinDistance(longitude, latitude);
+        List<User> usersWithinDistance = userRepository.findUsersWithinDistance(latitude, longitude);
         return toAllUserInfo(usersWithinDistance);
     }
 
