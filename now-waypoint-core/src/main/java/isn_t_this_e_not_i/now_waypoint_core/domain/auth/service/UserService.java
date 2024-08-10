@@ -1,9 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.service;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.DuplicatePasswordException;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.LogoutFailException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.auth.NicknameNotFoundException;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.exception.mail.MessagingConnectException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollowing;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
@@ -31,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.UUID;
 
 
@@ -285,14 +282,15 @@ public class UserService {
 
     //회원 위치 정보 업데이트
     @Transactional
-    public List<User> getUserByLocate(String loginId) {
+    public List<UserResponse.followInfo> getUserByLocate(String loginId) {
         User findUser = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
 
         String locate = findUser.getLocate();
         double longitude =Double.parseDouble(locate.split(",")[0]);
         double latitude = Double.parseDouble(locate.split(",")[1]);
 
-        return userRepository.findUsersWithinDistance(longitude, latitude);
+        List<User> usersWithinDistance = userRepository.findUsersWithinDistance(latitude, longitude);
+        return toAllUserInfo(usersWithinDistance);
     }
 
     public UserResponse fromUser(User user) {
