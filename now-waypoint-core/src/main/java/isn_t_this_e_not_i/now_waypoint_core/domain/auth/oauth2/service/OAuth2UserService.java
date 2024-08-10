@@ -49,7 +49,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             User findUser = userService.findUserByLoginId(loginId);
 
             log.info("카카오 첫 로그인");
-            return new UserDetail(findUser);
+            return new UserDetail(findUser, true);
         }else{
             UserRequest.updateRequest updateRequest = new UserRequest.updateRequest();
             updateRequest.setNickname(oAuth2UserResponse.getNickname());
@@ -60,7 +60,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             User findUser = userService.findUserByLoginId(loginId);
 
             log.info("카카오 로그인");
-            return new UserDetail(findUser);
+            return new UserDetail(findUser, false);
         }
     }
 }

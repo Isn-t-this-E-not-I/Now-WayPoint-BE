@@ -22,6 +22,6 @@ public class UserDetailService implements UserDetailsService {
         User userData = userRepository.findByLoginId(username).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디입니다."));
 
-        return new UserDetail(userData);
+        return new UserDetail(userData, true);
     }
 }
