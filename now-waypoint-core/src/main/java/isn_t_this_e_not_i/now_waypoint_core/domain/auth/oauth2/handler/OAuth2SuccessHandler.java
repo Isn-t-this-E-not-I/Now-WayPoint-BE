@@ -44,21 +44,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        //Redirect url 설정해야함 (ex: http:localhost:3000/ __ / __ )
-        response.sendRedirect("https://goorm.now-waypoint.store/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname);
+
+        if(userDetail.isFirstLogin()){
+            response.sendRedirect("https://goorm.now-waypoint.store/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname + "&isFirstLogin=true");
+        } else {
+            response.sendRedirect("https://goorm.now-waypoint.store/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname + "&isFirstLogin=false");
+        }
+
     }
 
-//    private void createCookie(HttpServletResponse response, String key, String value) {
-//        Cookie cookie = new Cookie(key, value);
-//        cookie.setMaxAge(60 * 60 * 60);
-//        cookie.setPath("/");
-//        cookie.setHttpOnly(false);
-//        cookie.setSecure(false); // 개발 환경에서는 false, 프로덕션에서는 true로 설정
-//        cookie.setDomain(domain);
-//        response.addCookie(cookie);
-//
-//        // SameSite 속성을 추가한 Set-Cookie 헤더 설정
-//        String cookieValue = key + "=" + value + "; Max-Age=" + (60 * 60 * 60) + "; Path=/; SameSite=None";
-//        response.addHeader("Set-Cookie", cookieValue);
-//    }
 }

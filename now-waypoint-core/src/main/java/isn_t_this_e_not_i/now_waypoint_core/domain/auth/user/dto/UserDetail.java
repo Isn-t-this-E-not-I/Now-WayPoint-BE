@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 public class UserDetail implements UserDetails, OAuth2User {
 
     private final User user;
+    private final boolean isFirstLogin;
 
     @Override
     public Map<String, Object> getAttributes() {
