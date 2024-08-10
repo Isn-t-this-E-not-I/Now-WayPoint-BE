@@ -26,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(6371 * acos(cos(radians(:latitude)) * cos(radians(CAST(SUBSTRING_INDEX(locate, ',', -1) AS double))) * " +
             "cos(radians(CAST(SUBSTRING_INDEX(locate, ',', 1) AS double)) - radians(:longitude)) + " +
             "sin(radians(:latitude)) * sin(radians(CAST(SUBSTRING_INDEX(locate, ',', -1) AS double))))) AS distance " +
-            "FROM User u " +
+            "FROM users u " +
             "HAVING distance < 100 " +
             "ORDER BY distance", nativeQuery = true)
     List<User> findUsersWithinDistance(@Param("latitude") double latitude, @Param("longitude") double longitude);
