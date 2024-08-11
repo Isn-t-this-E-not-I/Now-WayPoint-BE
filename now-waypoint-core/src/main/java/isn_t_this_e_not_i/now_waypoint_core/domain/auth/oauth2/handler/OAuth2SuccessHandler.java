@@ -46,9 +46,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         if(userDetail.isFirstLogin()){
-            response.sendRedirect("https://goorm.now-waypoint.store/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname + "&isFirstLogin=true");
+            response.sendRedirect("https://now-waypoint.com/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname + "&isFirstLogin=true");
         } else {
-            response.sendRedirect("https://goorm.now-waypoint.store/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname + "&isFirstLogin=false");
+            response.sendRedirect("https://now-waypoint.com/oauth2/redirect?token=" + accessToken + "&nickname=" + nickname + "&isFirstLogin=false");
         }
 
     }
