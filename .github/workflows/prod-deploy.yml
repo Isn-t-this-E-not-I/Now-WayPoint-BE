@@ -2,7 +2,7 @@ name: Docker Core Build and Push
 
 on:
   pull_request:
-    branches: [ "prod/image" ]
+    branches: [ "ci" ]
     paths:
       - "now-waypoint-core/**"
 
