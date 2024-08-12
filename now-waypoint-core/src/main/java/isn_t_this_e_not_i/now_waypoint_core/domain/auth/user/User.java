@@ -53,6 +53,9 @@ public class User {
     @Email
     private String email;
 
+    @Setter
+    private String active;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFollower> followers = new ArrayList<>();
 

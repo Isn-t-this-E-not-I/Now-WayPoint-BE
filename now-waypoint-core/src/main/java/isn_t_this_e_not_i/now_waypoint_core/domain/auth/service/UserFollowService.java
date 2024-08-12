@@ -170,6 +170,29 @@ public class UserFollowService {
         return fromFollow(followings);
     }
 
+    @Transactional
+    public void sendLoginInfo(String loginId){
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
+        user.setActive("true");
+        UserResponse.loginUserInfo loginUserInfo = new UserResponse.loginUserInfo(user.getName(), user.getNickname(), user.getProfileImageUrl(), "true");
+
+        List<UserFollowing> followings = user.getFollowings();
+        for (UserFollowing following : followings) {
+            messagingTemplate.convertAndSend("/queue/loginInfo/" + following.getNickname(), loginUserInfo);
+        }
+    }
+
+    @Transactional
+    public void sendLogoutInfo(String loginId){
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
+        user.setActive("false");
+        UserResponse.loginUserInfo loginUserInfo = new UserResponse.loginUserInfo(user.getName(), user.getNickname(), user.getProfileImageUrl(), "false");
+        List<UserFollowing> followings = user.getFollowings();
+        for (UserFollowing following : followings) {
+            messagingTemplate.convertAndSend("/queue/loginInfo/" + following.getNickname(), loginUserInfo);
+        }
+    }
+
     private List<UserResponse.followInfo> fromFollow(List<User> follows) {
         List<UserResponse.followInfo> fromFollows = new ArrayList<>();
         for (User follower : follows) {
@@ -177,6 +200,7 @@ public class UserFollowService {
                     .name(follower.getName())
                     .nickname(follower.getNickname())
                     .profileImageUrl(follower.getProfileImageUrl())
+                    .active(follower.getActive())
                     .build();
 
             fromFollows.add(followUser);
