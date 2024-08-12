@@ -120,7 +120,7 @@ public class SecurityConfig {
         // CORS configuration
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration corsConfiguration = new CorsConfiguration();
-            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://now-waypoint.com"));
+            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://now-waypoint.com", "https://www.now-waypoint.com"));
             corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
             corsConfiguration.setAllowCredentials(true);
