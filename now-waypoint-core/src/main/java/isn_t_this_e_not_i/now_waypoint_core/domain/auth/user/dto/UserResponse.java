@@ -47,6 +47,7 @@ public class UserResponse {
         private String name;
         private String nickname;
         private String profileImageUrl;
+        private String active;
     }
 
     @Getter
@@ -78,5 +79,26 @@ public class UserResponse {
     public static class findUserInfo{
         private String id;
         private String password;
+    }
+
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class loginUserInfo {
+        private String name;
+        private String nickname;
+        private String profileImageUrl;
+        private String active;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class locateUserInfo {
+        private String name;
+        private String nickname;
+        private String profileImageUrl;
+        private String locate;
     }
 }
