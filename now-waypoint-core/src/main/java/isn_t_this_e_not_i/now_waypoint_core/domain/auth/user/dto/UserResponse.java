@@ -91,4 +91,14 @@ public class UserResponse {
         private String profileImageUrl;
         private String active;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class locateUserInfo {
+        private String name;
+        private String nickname;
+        private String profileImageUrl;
+        private String locate;
+    }
 }

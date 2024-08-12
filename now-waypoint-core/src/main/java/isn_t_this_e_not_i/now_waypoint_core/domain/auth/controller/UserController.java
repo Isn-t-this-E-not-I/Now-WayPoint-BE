@@ -74,7 +74,7 @@ public class UserController {
     }
 
     @GetMapping("/locate")
-    public ResponseEntity<List<UserResponse.followInfo>> getUserByLocate(Authentication auth){
+    public ResponseEntity<List<UserResponse.locateUserInfo>> getUserByLocate(Authentication auth){
         return ResponseEntity.ok().body(userService.getUserByLocate(auth.getName()));
     }
 

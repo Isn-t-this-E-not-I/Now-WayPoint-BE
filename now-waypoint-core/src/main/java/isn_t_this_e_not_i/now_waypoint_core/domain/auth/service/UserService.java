@@ -283,7 +283,7 @@ public class UserService {
 
     //회원 위치 정보 업데이트
     @Transactional
-    public List<UserResponse.followInfo> getUserByLocate(String loginId) {
+    public List<UserResponse.locateUserInfo> getUserByLocate(String loginId) {
         User findUser = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
 
         String locate = findUser.getLocate();
@@ -291,7 +291,7 @@ public class UserService {
         double latitude = Double.parseDouble(locate.split(",")[1]);
 
         List<User> usersWithinDistance = userRepository.findUsersWithinDistance(latitude, longitude);
-        return toAllUserInfo(usersWithinDistance);
+        return toLocateUserInfo(usersWithinDistance);
     }
 
     public UserResponse fromUser(User user) {
@@ -329,6 +329,23 @@ public class UserService {
                     .name(user.getName())
                     .nickname(user.getNickname())
                     .profileImageUrl(user.getProfileImageUrl())
+                    .build();
+
+            allUserInfo.add(userInfo);
+        }
+
+        return allUserInfo;
+    }
+
+    public List<UserResponse.locateUserInfo> toLocateUserInfo(List<User> users) {
+        List<UserResponse.locateUserInfo> allUserInfo = new ArrayList<>();
+
+        for (User user : users) {
+            UserResponse.locateUserInfo userInfo = UserResponse.locateUserInfo.builder()
+                    .name(user.getName())
+                    .nickname(user.getNickname())
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .locate(user.getLocate())
                     .build();
 
             allUserInfo.add(userInfo);
