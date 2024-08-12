@@ -353,6 +353,11 @@ public class UserChatRoomService {
                     .newNickname(newNickname)
                     .build();
             messagingTemplate.convertAndSend("/topic/chatroom/" + chatRoom.getId(), response);
+
+            List<UserChatRoom> usersInChatRoom = userChatRoomRepository.findByChatRoomId(chatRoom.getId());
+            for (UserChatRoom userInChatRoom : usersInChatRoom) {
+                messagingTemplate.convertAndSend("/queue/chatroom/" + userInChatRoom.getUser().getNickname(), response);
+            }
         }
     }
 
