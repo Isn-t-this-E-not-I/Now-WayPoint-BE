@@ -98,6 +98,7 @@ public class UserService {
                     .followings(followings)
                     .createDate(LocalDateTime.now())
                     .loginDate(LocalDateTime.now())
+                    .active("true")
                     .build();
 
             userRepository.save(user);
