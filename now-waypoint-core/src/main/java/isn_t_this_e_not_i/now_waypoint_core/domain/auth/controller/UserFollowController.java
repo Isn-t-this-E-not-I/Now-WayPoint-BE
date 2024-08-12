@@ -57,4 +57,15 @@ public class UserFollowController {
         return ResponseEntity.ok().body(postService.getFollowerPost(auth.getName()));
     }
 
+    @PostMapping("/loginInfo")
+    public ResponseEntity<String> sendToLoginInfo(@RequestBody @Valid UserRequest.updatePasswordRequest updatePasswordRequest){
+        userFollowService.sendLoginInfo(updatePasswordRequest.getLoginId());
+        return ResponseEntity.ok().body("로그인 되었습니다.");
+    }
+
+    @PostMapping("/logoutInfo")
+    public ResponseEntity<String> sendToLogoutInfo(Authentication auth) {
+        userFollowService.sendLogoutInfo(auth.getName());
+        return ResponseEntity.ok().body("로그아웃 되었습니다.");
+    }
 }
