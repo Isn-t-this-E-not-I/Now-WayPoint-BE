@@ -91,7 +91,7 @@ public class SecurityConfig {
         JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(authenticationConfiguration)
                 , jwtUtil, objectMapper, tokenService,userRepository);
         jwtLoginFilter.setFilterProcessesUrl("/api/user/login");
-        JwtFilter jwtFilter = new JwtFilter(jwtUtil, userDetailService, tokenService);
+        JwtFilter jwtFilter = new JwtFilter(jwtUtil, userDetailService, tokenService, userRepository);
 
         // Security configuration
         http

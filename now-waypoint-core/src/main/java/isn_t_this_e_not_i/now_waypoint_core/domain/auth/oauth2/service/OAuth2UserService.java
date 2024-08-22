@@ -28,7 +28,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
         String name = oAuth2User.getName();
 
-        OAuth2UserResponse oAuth2UserResponse = new OAuth2UserResponse(name, oAuth2User.getAttributes());
+        OAuth2UserResponse oAuth2UserResponse = new OAuth2UserResponse(oAuth2User.getAttributes());
 
         String loginId = oAuth2UserResponse.getLoginId();
 
@@ -38,7 +38,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             UserRequest.registerRequest registerRequest = UserRequest.registerRequest.builder()
                     .loginId(loginId)
                     .password(name)
-                    //나중에 실제로 카카오 email을 받을 수 있으면 넣어야함
                     .email(loginId)
                     .nickname(oAuth2UserResponse.getNickname())
                     .profileImageUrl(oAuth2UserResponse.getProfileImage())
@@ -47,11 +46,13 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             userService.register(registerRequest);
 
             User findUser = userService.findUserByLoginId(loginId);
+            findUser.setActive("true");
 
             log.info("카카오 첫 로그인");
             return new UserDetail(findUser, true);
         }else{
             log.info("카카오 로그인");
+            existUser.setActive("true");
             return new UserDetail(existUser, false);
         }
     }
