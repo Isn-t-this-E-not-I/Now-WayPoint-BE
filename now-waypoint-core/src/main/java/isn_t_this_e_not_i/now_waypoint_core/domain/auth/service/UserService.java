@@ -287,6 +287,11 @@ public class UserService {
         return toLocateUserInfo(usersWithinDistance);
     }
 
+    @Transactional
+    public void updateUser(User user){
+        userRepository.save(user);
+    }
+
     public UserResponse fromUser(User user) {
         return UserResponse.builder()
                 .loginId(user.getLoginId())
