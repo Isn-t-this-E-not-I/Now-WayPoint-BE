@@ -21,6 +21,7 @@ public class PostRedis {
     @Setter
     private String nickname;
 
+    @Setter
     private PostResponseDTO post;
 
     @Indexed

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PostRedisRepository extends CrudRepository<PostRedis, Long> {
+public interface PostRedisRepository extends CrudRepository<PostRedis, String> {
     List<PostRedis> findPostRedisByNickname(String nickname);
 
     Optional<PostRedis> findById(String id);
