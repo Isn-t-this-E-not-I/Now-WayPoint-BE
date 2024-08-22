@@ -1,6 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserDetailService;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -27,6 +29,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailService userDetailService;
     private final TokenService tokenService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -57,14 +60,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 if (getToken.isPresent()) {
                     String refreshToken = getToken.get().getRefreshToken();
-
+                    String loginId = getToken.get().getLoginId();
                     if (jwtUtil.isExpired(refreshToken)) {
                         log.info("refreshToken이 만료되었습니다");
+                        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
+                        user.setActive("false");
                         filterChain.doFilter(request, response);
                         return;
                     }
 
-                    String loginId = getToken.get().getLoginId();
                     UserDetail userDetail = (UserDetail) userDetailService.loadUserByUsername(loginId);
                     String newAccessToken = jwtUtil.getAccessToken(userDetail);
                     log.info("AccessToken이 재발급되었습니다.");

@@ -4,11 +4,9 @@ import java.util.Map;
 
 public class OAuth2UserResponse {
 
-    private final String loginId;
     private final Map<String,Object> attribute;
 
-    public OAuth2UserResponse(String loginId, Map<String, Object> attribute) {
-        this.loginId = loginId + "@kakao.com";
+    public OAuth2UserResponse(Map<String, Object> attribute) {
         this.attribute = (Map<String, Object>) attribute.get("properties");
     }
 
@@ -21,6 +19,6 @@ public class OAuth2UserResponse {
     }
 
     public String getLoginId() {
-        return this.loginId;
+        return attribute.get("account_email").toString();
     }
 }
