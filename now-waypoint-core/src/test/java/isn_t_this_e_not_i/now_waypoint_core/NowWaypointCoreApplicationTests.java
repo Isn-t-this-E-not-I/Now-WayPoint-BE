@@ -11,15 +11,19 @@ class NowWaypointCoreApplicationTests {
 	static void setup() {
 		String accessKeyId = System.getenv("CLOUD_AWS_CREDENTIALS_ACCESS_KEY");
 		String secretAccessKey = System.getenv("CLOUD_AWS_CREDENTIALS_SECRET_KEY");
+		String googleClientId = System.getenv("GOOGLE_CLIENT_ID");
+		String googleClientSecret = System.getenv("GOOGLE_CLIENT_SECRET");
 		String fileStoragePath = System.getenv("FILE_STORAGE_PATH");
 
-		if (accessKeyId == null || secretAccessKey == null || fileStoragePath == null) {
+		if (accessKeyId == null || secretAccessKey == null || fileStoragePath == null || googleClientId == null || googleClientSecret == null) {
 			throw new IllegalArgumentException("Required environment variables are not set");
 		}
 
 		System.setProperty("cloud.aws.credentials.access-key", accessKeyId);
 		System.setProperty("cloud.aws.credentials.secret-key", secretAccessKey);
 		System.setProperty("file.storage.path", fileStoragePath);
+		System.setProperty("google.client.id", googleClientId);
+		System.setProperty("google.client.secret", googleClientSecret);
 	}
 
 	@Test
