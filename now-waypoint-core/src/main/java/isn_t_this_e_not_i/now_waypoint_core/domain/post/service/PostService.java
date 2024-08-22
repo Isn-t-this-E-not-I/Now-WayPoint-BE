@@ -134,9 +134,7 @@ public class PostService {
         post.setMediaUrls(existingMediaUrls);
 
         Post savePost = postRepository.save(post);
-
-        PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
-        PostRedis postRedis = postRedisService.register(savePost);
+        postRedisService.register(savePost);
 
         return savePost;
     }
@@ -161,7 +159,7 @@ public class PostService {
         List<Post> UserPosts = postRepository.findByUser(user);
         for (Post userPost : UserPosts) {
             userPost.getUser().setNickname(updateNickname);
-            postRedisService.update(userPost, updateNickname);
+            postRedisService.updateByNickname(userPost, updateNickname);
             postRepository.save(userPost);
         }
     }
@@ -204,7 +202,8 @@ public class PostService {
         if (existingLike != null) {
             likeRepository.delete(existingLike);
             post.decrementLikeCount();
-            postRepository.save(post);
+            Post savePost = postRepository.save(post);
+            postRedisService.update(savePost);
             return false; // 좋아요 취소
         } else {
             Like like = Like.builder()
@@ -213,7 +212,8 @@ public class PostService {
                     .build();
             likeRepository.save(like);
             post.incrementLikeCount();
-            postRepository.save(post);
+            Post savePost = postRepository.save(post);
+            postRedisService.update(savePost);
 
             // 게시글 작성자에게 좋아요 알림 전송
           if (!post.getUser().getId().equals(user.getId())) {
