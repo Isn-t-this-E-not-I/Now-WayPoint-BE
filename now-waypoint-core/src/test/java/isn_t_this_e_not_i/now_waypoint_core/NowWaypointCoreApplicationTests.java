@@ -1,13 +1,13 @@
 package isn_t_this_e_not_i.now_waypoint_core;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertySource;
 
 @SpringBootTest
 class NowWaypointCoreApplicationTests {
 
-	@BeforeAll
+	@DynamicPropertySource
 	static void setup() {
 		String accessKeyId = System.getenv("CLOUD_AWS_CREDENTIALS_ACCESS_KEY");
 		String secretAccessKey = System.getenv("CLOUD_AWS_CREDENTIALS_SECRET_KEY");
