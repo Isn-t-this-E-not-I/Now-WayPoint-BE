@@ -49,7 +49,7 @@ public class UserController {
     public String loginWithKakao() {
         String state = UUID.randomUUID().toString();
         String kakaoLoginUrl = String.format(
-                "https://accounts.kakao.com/login?continue=https://kauth.kakao.com/oauth/authorize?scope=profile_nickname%%20profile_image&response_type=code&state=%s&redirect_uri=%s&through_account=true&client_id=%s",
+                "https://accounts.kakao.com/login?continue=https://kauth.kakao.com/oauth/authorize?scope=profile_nickname%%20profile_image%%20account_email&response_type=code&state=%s&redirect_uri=%s&through_account=true&client_id=%s",
                 state, REDIRECT_URI, CLIENT_ID
         );
         return "redirect:" + kakaoLoginUrl;
