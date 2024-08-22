@@ -4,21 +4,23 @@ import java.util.Map;
 
 public class OAuth2UserResponse {
 
-    private final Map<String,Object> attribute;
+    private final Map<String,Object> properties;
+    private final Map<String, Object> kakaoAccount;
 
     public OAuth2UserResponse(Map<String, Object> attribute) {
-        this.attribute = (Map<String, Object>) attribute.get("properties");
+        this.properties = (Map<String, Object>) attribute.get("properties");
+        this.kakaoAccount = (Map<String, Object>) attribute.get("kakao_account");
     }
 
     public String getNickname() {
-        return attribute.get("nickname").toString();
+        return properties.get("nickname").toString();
     }
 
     public String getProfileImage() {
-        return attribute.get("profile_image").toString();
+        return properties.get("profile_image").toString();
     }
 
     public String getLoginId() {
-        return attribute.get("account_email").toString();
+        return kakaoAccount.get("email").toString();
     }
 }
