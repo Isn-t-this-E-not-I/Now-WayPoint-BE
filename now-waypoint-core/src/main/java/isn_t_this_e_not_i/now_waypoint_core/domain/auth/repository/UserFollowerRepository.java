@@ -14,4 +14,6 @@ public interface UserFollowerRepository extends JpaRepository<UserFollower, Long
     List<UserFollower> getUserFollowersByUser(User user);
 
     List<UserFollower> findByNickname(String nickname);
+
+    void deleteByNickname(String nickname);
 }
