@@ -113,6 +113,7 @@ public class UserService {
     public void withdrawal(String loginId) {
         User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
         userFollowService.deleteFollowingByUser(user.getNickname());
+        postService.deletePostRedis(user.getNickname());
 
         userRepository.deleteByLoginId(loginId);
         String accessToken = tokenService.findByLoginId(loginId).get().getAccessToken();
