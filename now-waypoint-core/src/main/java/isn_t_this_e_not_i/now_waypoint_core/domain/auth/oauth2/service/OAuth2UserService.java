@@ -27,10 +27,32 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
         String name = oAuth2User.getName();
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
         OAuth2UserResponse oAuth2UserResponse = new OAuth2UserResponse(oAuth2User.getAttributes());
+        String loginId = "";
+        String nickname = "";
+        String profileImageUrl = "";
 
-        String loginId = oAuth2UserResponse.getLoginId();
+        if(registrationId.equals("google")){
+            loginId = oAuth2UserResponse.getGoogleEmail();
+            nickname = oAuth2UserResponse.getGoogleName();
+            profileImageUrl = oAuth2UserResponse.getGooglePicture();
+
+        }else if(registrationId.equals("kakao")){
+            loginId = oAuth2UserResponse.getLoginId();
+            nickname = oAuth2UserResponse.getNickname();
+            profileImageUrl = oAuth2UserResponse.getProfileImage();
+        }else {
+            //추후 네이버
+            loginId = oAuth2UserResponse.getLoginId();
+            nickname = oAuth2UserResponse.getNickname();
+            profileImageUrl = oAuth2UserResponse.getProfileImage();
+        }
+
+        log.info(loginId);
+        log.info(nickname);
+        log.info(profileImageUrl);
 
         User existUser = userService.findUserByLoginId(loginId);
 
@@ -39,8 +61,8 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     .loginId(loginId)
                     .password(name)
                     .email(loginId)
-                    .nickname(oAuth2UserResponse.getNickname())
-                    .profileImageUrl(oAuth2UserResponse.getProfileImage())
+                    .nickname(nickname)
+                    .profileImageUrl(profileImageUrl)
                     .build();
 
             userService.register(registerRequest);
@@ -48,10 +70,10 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             User findUser = userService.findUserByLoginId(loginId);
             findUser.setActive("true");
 
-            log.info("카카오 첫 로그인");
+            log.info(registrationId + " 첫 로그인");
             return new UserDetail(findUser, true);
         }else{
-            log.info("카카오 로그인");
+            log.info(registrationId + " 로그인");
             existUser.setActive("true");
             return new UserDetail(existUser, false);
         }

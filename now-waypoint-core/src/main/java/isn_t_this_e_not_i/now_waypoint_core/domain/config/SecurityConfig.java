@@ -101,7 +101,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/api/user/login","/api/user/register","/api/user/userId","/api/user/password/find","/api/mail/**", "/api/user/checkLoginId", "/api/follow/loginInfo").permitAll()
-                        .requestMatchers("/favicon.ico","/api/user/login/kakao", "/login/oauth2/code/kakao","/error","/oauth2/redirect").permitAll()
+                        .requestMatchers("/favicon.ico","/api/user/login/kakao", "/login/oauth2/code/kakao","/error","/oauth2/redirect" , "/api/user/login/google","/login/oauth2/code/google").permitAll()
                         .requestMatchers("/ws/**","/main/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger 경로 추가
                         .anyRequest().authenticated())
