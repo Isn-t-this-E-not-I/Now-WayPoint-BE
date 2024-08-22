@@ -90,6 +90,7 @@ public class UserFollowService {
     @Transactional
     public void deleteFollowingByUser(String nickname) {
         userFollowingRepository.deleteByNickname(nickname);
+        userFollowerRepository.deleteByNickname(nickname);
     }
 
     @Transactional

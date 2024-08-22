@@ -17,6 +17,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFou
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.UnauthorizedException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.HashtagRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.LikeRepository;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRedisRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -44,6 +45,7 @@ public class PostService {
     private final PostRedisService postRedisService;
     private final NotifyRepository notifyRepository;
     private final FileUploadService fileUploadService;
+    private final PostRedisRepository postRedisRepository;
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
@@ -148,6 +150,10 @@ public class PostService {
         }
         postRepository.delete(post);
         postRedisService.delete(post);
+    }
+
+    public void deletePostRedis(String nickname){
+        postRedisRepository.deletePostRedisByNickname(nickname);
     }
 
     @Transactional
