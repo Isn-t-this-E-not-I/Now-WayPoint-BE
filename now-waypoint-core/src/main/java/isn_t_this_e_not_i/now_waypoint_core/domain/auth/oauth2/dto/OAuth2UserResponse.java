@@ -6,10 +6,12 @@ public class OAuth2UserResponse {
 
     private final Map<String,Object> properties;
     private final Map<String, Object> kakaoAccount;
+    private final Map<String, Object> attribute;
 
     public OAuth2UserResponse(Map<String, Object> attribute) {
         this.properties = (Map<String, Object>) attribute.get("properties");
         this.kakaoAccount = (Map<String, Object>) attribute.get("kakao_account");
+        this.attribute = attribute;
     }
 
     public String getNickname() {
@@ -22,5 +24,17 @@ public class OAuth2UserResponse {
 
     public String getLoginId() {
         return kakaoAccount.get("email").toString();
+    }
+
+    public String getGoogleEmail(){
+        return attribute.get("email").toString();
+    }
+
+    public String getGooglePicture(){
+        return attribute.get("picture").toString();
+    }
+
+    public String getGoogleName(){
+        return attribute.get("name").toString();
     }
 }

@@ -28,10 +28,16 @@ public class UserController {
     private final EmailAuthService emailAuthService;
 
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
-    private String REDIRECT_URI;
+    private String KAKAO_REDIRECT_URI;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
-    private String CLIENT_ID;
+    private String KAKAO_CLIENT_ID;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String GOOGLE_CLIENT_ID;
+
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
+    private String GOOGLE_REDIRECT_URI;
 
 
     @PostMapping("/register")
@@ -50,9 +56,21 @@ public class UserController {
         String state = UUID.randomUUID().toString();
         String kakaoLoginUrl = String.format(
                 "https://accounts.kakao.com/login?continue=https://kauth.kakao.com/oauth/authorize?scope=profile_nickname%%20profile_image%%20account_email&response_type=code&state=%s&redirect_uri=%s&through_account=true&client_id=%s",
-                state, REDIRECT_URI, CLIENT_ID
+                state, KAKAO_REDIRECT_URI, KAKAO_CLIENT_ID
         );
         return "redirect:" + kakaoLoginUrl;
+    }
+
+    @GetMapping("/login/google")
+    public String loginWithGoogle() {
+        String state = UUID.randomUUID().toString();
+        String googleLoginUrl = String.format(
+                "https://accounts.google.com/o/oauth2/auth?" +
+                        "client_id=%s&redirect_uri=%s" +
+                        "&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&state=%s",
+                GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI, state
+        );
+        return "redirect:" + googleLoginUrl;
     }
 
     @PostMapping("/withdrawal")
