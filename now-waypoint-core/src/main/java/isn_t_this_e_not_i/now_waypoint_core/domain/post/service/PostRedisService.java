@@ -48,10 +48,14 @@ public class PostRedisService {
     }
 
     public void update(Post post){
-        PostRedis postRedis = postRedisRepository.findById(post.getId().toString()).orElseThrow(() -> new ResourceNotFoundException("레디스에 일치하는 게시글이 없습니다."));
-        PostResponseDTO postResponseDTO = new PostResponseDTO(post);
-        postRedis.setPost(postResponseDTO);
-        postRedisRepository.save(postRedis);
+        Optional<PostRedis> optPostRedis = postRedisRepository.findById(post.getId().toString());
+
+        if(optPostRedis.isPresent()) {
+            PostRedis postRedis = optPostRedis.get();
+            PostResponseDTO postResponseDTO = new PostResponseDTO(post);
+            postRedis.setPost(postResponseDTO);
+            postRedisRepository.save(postRedis);
+        }
     }
 
     public void updateByNickname(Post post,String updateNickname){
