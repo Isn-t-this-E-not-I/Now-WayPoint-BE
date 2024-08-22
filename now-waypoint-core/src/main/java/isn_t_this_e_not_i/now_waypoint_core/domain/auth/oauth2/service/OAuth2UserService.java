@@ -46,11 +46,13 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             userService.register(registerRequest);
 
             User findUser = userService.findUserByLoginId(loginId);
+            findUser.setActive("true");
 
             log.info("카카오 첫 로그인");
             return new UserDetail(findUser, true);
         }else{
             log.info("카카오 로그인");
+            existUser.setActive("true");
             return new UserDetail(existUser, false);
         }
     }
