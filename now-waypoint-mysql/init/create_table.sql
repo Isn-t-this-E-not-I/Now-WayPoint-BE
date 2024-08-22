@@ -1,5 +1,7 @@
+-- 데이터베이스의 기본 문자 집합과 대조를 설정
 ALTER DATABASE nwpdb DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-/* user table 생성 */
+
+-- users 테이블 생성
 CREATE TABLE users (
                        user_id INT(11) AUTO_INCREMENT PRIMARY KEY,
                        login_id VARCHAR(100) UNIQUE NOT NULL,
@@ -15,23 +17,24 @@ CREATE TABLE users (
                        role VARCHAR(255),
                        create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                       login_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       login_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       active VARCHAR(10) DEFAULT 'true' -- 추가된 active 컬럼
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-/* user_follower table 생성 */
+-- user_follower 테이블 생성
 CREATE TABLE user_follower(
-                      follower_id INT(11) AUTO_INCREMENT PRIMARY KEY,
-                      user_id INT(11) NOT NULL,
-                      nickname VARCHAR(30) NOT NULL,
-                      FOREIGN KEY (user_id) REFERENCES users(user_id)
+                              follower_id INT(11) AUTO_INCREMENT PRIMARY KEY,
+                              user_id INT(11) NOT NULL,
+                              nickname VARCHAR(30) NOT NULL,
+                              FOREIGN KEY (user_id) REFERENCES users(user_id)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-/* user_following table 생성 */
+-- user_following 테이블 생성
 CREATE TABLE user_following(
-                       following_id INT(11) AUTO_INCREMENT PRIMARY KEY,
-                       user_id INT(11) NOT NULL,
-                       nickname VARCHAR(30) NOT NULL,
-                       FOREIGN KEY (user_id) REFERENCES users(user_id)
+                               following_id INT(11) AUTO_INCREMENT PRIMARY KEY,
+                               user_id INT(11) NOT NULL,
+                               nickname VARCHAR(30) NOT NULL,
+                               FOREIGN KEY (user_id) REFERENCES users(user_id)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 -- post 테이블 생성
@@ -73,6 +76,7 @@ CREATE TABLE hashtag (
 CREATE TABLE post_hashtags (
                                post_id BIGINT NOT NULL,
                                hashtag_id BIGINT NOT NULL,
+                               order_index INT, -- 추가된 order_index 컬럼
                                PRIMARY KEY (post_id, hashtag_id),
                                FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE,
                                FOREIGN KEY (hashtag_id) REFERENCES hashtag(hashtag_id) ON DELETE CASCADE
@@ -85,7 +89,10 @@ CREATE TABLE notify (
                         receiver_nickname VARCHAR(30) NOT NULL,
                         profile_image_url VARCHAR(255),
                         message TEXT NOT NULL,
-                        create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        comment VARCHAR(255), -- 추가된 comment 컬럼
+                        media_url VARCHAR(255), -- 추가된 media_url 컬럼
+                        post_id BIGINT -- 추가된 post_id 컬럼
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 -- chat_room 테이블 생성
@@ -107,7 +114,7 @@ CREATE TABLE user_chat_room (
                                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
--- comment 테이블 생성-
+-- comment 테이블 생성
 CREATE TABLE comment (
                          comment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                          content TEXT NOT NULL,

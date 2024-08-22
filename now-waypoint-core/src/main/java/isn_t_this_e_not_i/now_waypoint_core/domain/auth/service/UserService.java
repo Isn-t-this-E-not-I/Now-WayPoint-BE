@@ -104,14 +104,6 @@ public class UserService {
         return message;
     }
 
-    //소셜로그인 업데이트
-    @Transactional
-    public void updateUserOAuthUser(User user, UserRequest.updateRequest updateRequest) {
-        user.setNickname(updateRequest.getNickname());
-        user.setProfileImageUrl(updateRequest.getProfileImageUrl());
-        userRepository.save(user);
-    }
-
     //회원 탈퇴
     @Transactional
     public void withdrawal(String loginId) {
