@@ -15,7 +15,7 @@ class NowWaypointCoreApplicationTests {
 		String googleClientSecret = System.getenv("GOOGLE_CLIENT_SECRET");
 		String fileStoragePath = System.getenv("FILE_STORAGE_PATH");
 
-		if (accessKeyId == null || secretAccessKey == null || fileStoragePath == null) {
+		if (accessKeyId == null || secretAccessKey == null || fileStoragePath == null || googleClientId == null || googleClientSecret == null) {
 			throw new IllegalArgumentException("Required environment variables are not set");
 		}
 
