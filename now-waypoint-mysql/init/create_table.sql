@@ -8,7 +8,7 @@ CREATE TABLE users (
                        password VARCHAR(100) NOT NULL,
                        name VARCHAR(10),
                        nickname VARCHAR(30),
-                       profile_image_url VARCHAR(255),
+                       profile_image_url VARCHAR(500),
                        description VARCHAR(255),
                        locate VARCHAR(255),
                        email VARCHAR(50),
@@ -87,7 +87,7 @@ CREATE TABLE notify (
                         notify_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         sender_nickname VARCHAR(30) NOT NULL,
                         receiver_nickname VARCHAR(30) NOT NULL,
-                        profile_image_url VARCHAR(255),
+                        profile_image_url VARCHAR(500),
                         message TEXT NOT NULL,
                         create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         comment VARCHAR(255), -- 추가된 comment 컬럼
