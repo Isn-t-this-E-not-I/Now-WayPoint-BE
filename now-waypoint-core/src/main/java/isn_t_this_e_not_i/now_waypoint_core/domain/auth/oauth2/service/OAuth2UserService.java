@@ -51,10 +51,8 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             log.info("카카오 첫 로그인");
             return new UserDetail(findUser, true);
         }else{
-            User findUser = userService.findUserByLoginId(loginId);
-
             log.info("카카오 로그인");
-            return new UserDetail(findUser, false);
+            return new UserDetail(existUser, false);
         }
     }
 }
