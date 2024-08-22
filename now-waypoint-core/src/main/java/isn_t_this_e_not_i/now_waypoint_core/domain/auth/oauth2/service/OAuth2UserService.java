@@ -69,12 +69,15 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
             User findUser = userService.findUserByLoginId(loginId);
             findUser.setActive("true");
+            userService.updateUser(findUser);
 
             log.info(registrationId + " 첫 로그인");
             return new UserDetail(findUser, true);
         }else{
             log.info(registrationId + " 로그인");
             existUser.setActive("true");
+
+            userService.updateUser(existUser);
             return new UserDetail(existUser, false);
         }
     }
