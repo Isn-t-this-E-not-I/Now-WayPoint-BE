@@ -45,14 +45,10 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             profileImageUrl = oAuth2UserResponse.getProfileImage();
         }else {
             //추후 네이버
-            loginId = oAuth2UserResponse.getLoginId();
-            nickname = oAuth2UserResponse.getNickname();
-            profileImageUrl = oAuth2UserResponse.getProfileImage();
+            loginId = oAuth2UserResponse.getNaverEmail();
+            nickname = oAuth2UserResponse.getNaverName();
+            profileImageUrl = oAuth2UserResponse.getNaverProfileImage();
         }
-
-        log.info(loginId);
-        log.info(nickname);
-        log.info(profileImageUrl);
 
         User existUser = userService.findUserByLoginId(loginId);
 
