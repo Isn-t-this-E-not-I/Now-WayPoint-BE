@@ -40,7 +40,7 @@ public class OAuth2UserResponse {
         return attribute.get("name").toString();
     }
 
-    public String getNaverName(){
+    public String getNaverNickname(){
         return response.get("nickname").toString();
     }
 
@@ -50,5 +50,9 @@ public class OAuth2UserResponse {
 
     public String getNaverEmail(){
         return response.get("email").toString();
+    }
+
+    public String getNaverName(){
+        return response.get("name").toString();
     }
 }

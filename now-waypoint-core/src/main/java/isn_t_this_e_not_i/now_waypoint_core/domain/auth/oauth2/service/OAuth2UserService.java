@@ -33,21 +33,24 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         String loginId = "";
         String nickname = "";
         String profileImageUrl = "";
+        String username = "";
 
         if(registrationId.equals("google")){
             loginId = oAuth2UserResponse.getGoogleEmail();
             nickname = oAuth2UserResponse.getGoogleName();
             profileImageUrl = oAuth2UserResponse.getGooglePicture();
+            username = nickname;
 
         }else if(registrationId.equals("kakao")){
             loginId = oAuth2UserResponse.getLoginId();
             nickname = oAuth2UserResponse.getNickname();
             profileImageUrl = oAuth2UserResponse.getProfileImage();
+            username = nickname;
         }else {
-            //추후 네이버
             loginId = oAuth2UserResponse.getNaverEmail();
-            nickname = oAuth2UserResponse.getNaverName();
+            nickname = oAuth2UserResponse.getNaverNickname();
             profileImageUrl = oAuth2UserResponse.getNaverProfileImage();
+            username = oAuth2UserResponse.getNaverName();
         }
 
         User existUser = userService.findUserByLoginId(loginId);
@@ -58,6 +61,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     .password(name)
                     .email(loginId)
                     .nickname(nickname)
+                    .name(username)
                     .profileImageUrl(profileImageUrl)
                     .build();
 
