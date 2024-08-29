@@ -1,11 +1,11 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.auth.controller;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.mail.service.EmailAuthService;
-import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.ApiResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -137,6 +137,18 @@ public class UserController {
     public ResponseEntity<String> checkLoginId(@RequestBody UserRequest.updatePasswordRequest updatePasswordRequest){
         userService.checkLoginId(updatePasswordRequest.getLoginId());
         return ResponseEntity.ok().body("가능한 아이디입니다.");
+    }
+
+    @GetMapping("/auth")
+    public ResponseEntity<String> checkAuth(HttpServletResponse response){
+        String authHeader = response.getHeader("Authorization");
+        String token = authHeader.substring(7);
+
+        if (token != null) {
+            return ResponseEntity.ok().body(token);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     @GetMapping("/test")
