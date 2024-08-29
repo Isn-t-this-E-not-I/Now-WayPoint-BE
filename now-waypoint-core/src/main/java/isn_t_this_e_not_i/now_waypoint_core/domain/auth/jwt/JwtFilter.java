@@ -65,6 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         log.info("refreshToken이 만료되었습니다");
                         User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
                         user.setActive("false");
+                        response.setHeader("Authorization", null);
                         filterChain.doFilter(request, response);
                         return;
                     }
