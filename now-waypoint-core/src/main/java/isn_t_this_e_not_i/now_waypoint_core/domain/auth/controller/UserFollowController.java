@@ -64,8 +64,8 @@ public class UserFollowController {
     }
 
     @PostMapping("/logoutInfo")
-    public ResponseEntity<String> sendToLogoutInfo(Authentication auth) {
-        userFollowService.sendLogoutInfo(auth.getName());
+    public ResponseEntity<String> sendToLogoutInfo(@RequestBody @Valid UserRequest.followUserInfo followUserInfo) {
+        userFollowService.sendLogoutInfo(followUserInfo.getNickname());
         return ResponseEntity.ok().body("로그아웃 되었습니다.");
     }
 }
