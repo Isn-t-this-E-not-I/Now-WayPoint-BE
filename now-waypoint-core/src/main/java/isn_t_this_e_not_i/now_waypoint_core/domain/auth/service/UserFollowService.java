@@ -185,7 +185,7 @@ public class UserFollowService {
 
     @Transactional
     public void sendLogoutInfo(String loginId){
-        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
+        User user = userRepository.findByNickname(loginId).orElseThrow(() -> new UsernameNotFoundException("일치하는 유저가 없습니다."));
         user.setActive("false");
         UserResponse.loginUserInfo loginUserInfo = new UserResponse.loginUserInfo(user.getName(), user.getNickname(), user.getProfileImageUrl(), "false");
         List<UserFollowing> followings = user.getFollowings();
