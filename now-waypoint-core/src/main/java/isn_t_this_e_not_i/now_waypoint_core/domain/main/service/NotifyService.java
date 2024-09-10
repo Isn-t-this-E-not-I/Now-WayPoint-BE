@@ -38,6 +38,24 @@ public class NotifyService {
         notifyRepository.deleteAllByReceiverNickname(nickname);
     }
 
+    @Transactional
+    public Integer getReadFalseNotifyCountByUser(String loginId) {
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new IllegalArgumentException("일치하는 유저가 없습니다."));
+        List<Notify> aFalse = notifyRepository.findByReceiverNicknameAndRead(user.getNickname(), "false");
+
+        return aFalse.size();
+    }
+
+    @Transactional
+    public void changeReadStatusByUser(String loginId) {
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new IllegalArgumentException("일치하는 유저가 없습니다."));
+        List<Notify> aFalse = notifyRepository.findByReceiverNicknameAndRead(user.getNickname(), "false");
+
+        for (Notify notify : aFalse) {
+            notify.setRead("true");
+        }
+    }
+
     private List<NotifyDTO> getNotifyDTO(List<Notify> userNotifyList){
         List<NotifyDTO> NotifyDTOList = new ArrayList<>();
         for (Notify notify : userNotifyList) {
