@@ -34,5 +34,5 @@ public class Notify {
     private String comment;
 
     @Setter
-    private String read;
+    private String isRead;
 }
