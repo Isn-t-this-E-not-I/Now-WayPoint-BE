@@ -9,7 +9,7 @@ public interface NotifyRepository extends JpaRepository<Notify, Long> {
 
     List<Notify> findByReceiverNickname(String receiverNickname);
 
-    List<Notify> findByReceiverNicknameAndRead(String receiverNickname, String read);
+    List<Notify> findByReceiverNicknameAndIsRead(String receiverNickname, String read);
 
     void deleteAllByReceiverNickname(String receiverNickname);
 }

@@ -85,7 +85,7 @@ public class PostService {
         for (UserFollower follower : followers) {
             if (!follower.getNickname().equals(user.getNickname())) {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).postId(postResponseDTO.getId()).
-                        mediaUrl(postResponseDTO.getMediaUrls().get(0)).read("false").
+                        mediaUrl(postResponseDTO.getMediaUrls().get(0)).isRead("false").
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul"))).build();
                 Notify save = notifyRepository.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save, user.getNickname()));
@@ -227,7 +227,7 @@ public class PostService {
                     .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                     .postId(post.getId())
                     .mediaUrl(post.getMediaUrls().get(0))
-                    .read("false")
+                    .isRead("false")
                     .build();
             Notify save = notifyRepository.save(notify);
 

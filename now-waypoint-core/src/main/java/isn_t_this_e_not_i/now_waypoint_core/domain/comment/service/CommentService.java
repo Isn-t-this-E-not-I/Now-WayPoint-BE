@@ -86,7 +86,7 @@ public class CommentService {
                     .postId(post.getId())
                     .mediaUrl(post.getMediaUrls().get(0))
                     .comment(comment.getContent())
-                    .read("false")
+                    .isRead("false")
                     .build();
 
             Notify save = notifyRepository.save(notify);
@@ -119,7 +119,7 @@ public class CommentService {
                         .receiverNickname(nickname)
                         .postId(post.getId())
                         .mediaUrl(post.getMediaUrls().get(0))
-                        .read("false")
+                        .isRead("false")
                         .build();
 
                 Notify save = notifyRepository.save(notify);
@@ -250,7 +250,7 @@ public class CommentService {
                     .receiverNickname(comment.getUser().getNickname())
                     .postId(postId)
                     .comment(comment.getContent())
-                    .read("false")
+                    .isRead("false")
                     .build();
 
             Notify save = notifyRepository.save(notify);
