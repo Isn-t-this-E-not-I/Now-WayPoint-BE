@@ -22,6 +22,17 @@ public class NotifyController {
         return ResponseEntity.ok().body(notifyService.getUserNotify(principal.getName()));
     }
 
+    @GetMapping("/read")
+    public ResponseEntity<Integer> getReadFalseNotifyCount(Principal principal){
+        return ResponseEntity.ok().body(notifyService.getReadFalseNotifyCountByUser(principal.getName()));
+    }
+
+    @GetMapping("/changeRead")
+    public ResponseEntity<String> changeReadStatus(Principal principal) {
+        notifyService.changeReadStatusByUser(principal.getName());
+        return ResponseEntity.ok("읽음 상태가 변경되었습니다.");
+    }
+
     @DeleteMapping
     public void deleteNotify(@RequestBody Map<String, Long> request){
         Long id = request.get("id");
