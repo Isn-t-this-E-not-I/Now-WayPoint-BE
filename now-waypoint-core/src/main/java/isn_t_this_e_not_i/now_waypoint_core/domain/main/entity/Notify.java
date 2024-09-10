@@ -1,10 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.main.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.ZonedDateTime;
 
@@ -35,4 +32,7 @@ public class Notify {
     private String mediaUrl;
 
     private String comment;
+
+    @Setter
+    private String read;
 }
