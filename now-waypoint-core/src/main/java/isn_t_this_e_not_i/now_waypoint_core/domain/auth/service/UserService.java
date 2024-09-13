@@ -15,6 +15,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.chat.service.UserChatRoomServ
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.FileUploadService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.LikeService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ public class UserService {
     private final UserFollowService userFollowService;
     private final ChatMessageService chatMessageService;
     private final UserChatRoomService userChatRoomService;
+    private final LikeService likeService;
 
     //회원 등록
     @Transactional
@@ -99,6 +101,7 @@ public class UserService {
                     .createDate(LocalDateTime.now())
                     .loginDate(LocalDateTime.now())
                     .active("true")
+                    .locate("11.111111,11.1111")
                     .build();
 
             userRepository.save(user);
@@ -115,6 +118,7 @@ public class UserService {
         userFollowService.deleteFollowingByUser(user.getNickname());
         postService.deletePostRedis(user.getNickname());
 
+        likeService.decreaseLikeCount(user);
         userRepository.deleteByLoginId(loginId);
         String accessToken = tokenService.findByLoginId(loginId).get().getAccessToken();
         tokenService.deleteToken(accessToken);
