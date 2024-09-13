@@ -67,7 +67,7 @@ jobs:
         run: echo ${{ github.sha }} > core_sha.txt
 
       - name: Upload Core SHA file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: core_sha
           path: core_sha.txt
