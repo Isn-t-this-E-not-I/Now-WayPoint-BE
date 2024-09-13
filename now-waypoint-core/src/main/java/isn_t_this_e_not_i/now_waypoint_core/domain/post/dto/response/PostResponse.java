@@ -26,6 +26,7 @@ public class PostResponse {
     private ZonedDateTime createdAt;
     private int likeCount;
     private boolean likedByUser;
+    private int viewCount;
 
     public PostResponse(Post post, boolean likedByUser) {
         this.id = post.getId();
@@ -39,5 +40,6 @@ public class PostResponse {
         this.createdAt = post.getCreatedAt();
         this.likeCount = post.getLikeCount();
         this.likedByUser = likedByUser;
+        this.viewCount = post.getViewCount();
     }
 }

@@ -20,6 +20,9 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.LikeRepositor
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRedisRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
@@ -31,8 +34,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -46,6 +51,11 @@ public class PostService {
     private final NotifyRepository notifyRepository;
     private final FileUploadService fileUploadService;
     private final PostRedisRepository postRedisRepository;
+    private final RedisTemplate<String, String> redisPostTemplate;
+
+    private static final String VIEW_KEY_PREFIX = "view";
+    private static final int VIEW_LIMIT_MINUTES = 30; // 조회수 30분 제한
+
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
@@ -184,12 +194,27 @@ public class PostService {
         return likeRepository.findByPostAndUser(post, user).isPresent();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PostResponse getPost(Long postId, Authentication auth) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
+
+        String redisKey = VIEW_KEY_PREFIX + auth.getName() + ":" + postId;
+        ValueOperations<String, String> valueOperations = redisPostTemplate.opsForValue();
+
+        if (!redisPostTemplate.hasKey(redisKey)) {
+            incrementViewCount(post);
+            valueOperations.set(redisKey, "viewed", VIEW_LIMIT_MINUTES, TimeUnit.MINUTES);
+        }
+
         boolean likedByUser = isLikedByUser(post, auth.getName());
         return new PostResponse(post, likedByUser);
+    }
+
+    @Transactional
+    public void incrementViewCount(Post post) {
+        post.incrementViewCount();
+        postRepository.save(post);
     }
 
     @Transactional

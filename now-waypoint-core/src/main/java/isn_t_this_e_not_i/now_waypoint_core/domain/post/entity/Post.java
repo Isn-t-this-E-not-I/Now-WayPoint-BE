@@ -54,11 +54,14 @@ public class Post {
 
     private int likeCount;
 
+    private int viewCount;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
         this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
         this.likeCount = 0;
+        this.viewCount = 0;
     }
 
     @PreUpdate
@@ -72,5 +75,9 @@ public class Post {
 
     public void decrementLikeCount() {
         this.likeCount--;
+    }
+
+    public void incrementViewCount(){
+        this.viewCount++;
     }
 }
