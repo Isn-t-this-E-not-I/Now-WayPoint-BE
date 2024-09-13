@@ -5,6 +5,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
+import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.HashtagSet;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.PostService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.service.HashtagService;
@@ -84,5 +85,10 @@ public class PostController {
             return new PostResponse(post, likedByUser);
         }).collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/hashtagSet")
+    public ResponseEntity<List<HashtagSet>> getHashtagSet() {
+        return ResponseEntity.ok().body(hashtagService.getHashtagSet());
     }
 }
