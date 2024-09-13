@@ -216,6 +216,7 @@ public class UserFollowService {
                 .profileImageUrl(findUser.get().getProfileImageUrl())
                 .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .receiverNickname(followUserNickname)
+                .isRead("false")
                 .build();
 
         Notify save = notifyRepository.save(notify);
