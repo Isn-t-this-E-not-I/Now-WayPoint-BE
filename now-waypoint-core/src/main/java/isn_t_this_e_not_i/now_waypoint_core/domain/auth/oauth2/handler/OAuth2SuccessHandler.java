@@ -2,6 +2,7 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.auth.oauth2.handler;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.jwt.JwtUtil;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.TokenService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserFollowService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserDetail;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.dto.UserResponse;
 import jakarta.servlet.ServletException;
@@ -25,6 +26,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
+    private final UserFollowService userFollowService;
 
     @Value("${cookie.server.domain}")
     private String domain;
@@ -40,6 +42,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtUtil.getAccessToken(userDetail);
         String refreshToken = jwtUtil.getRefreshToken(userDetail);
         tokenService.saveToken(refreshToken,accessToken,loginId);
+        userFollowService.sendLoginInfo(loginId);
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
