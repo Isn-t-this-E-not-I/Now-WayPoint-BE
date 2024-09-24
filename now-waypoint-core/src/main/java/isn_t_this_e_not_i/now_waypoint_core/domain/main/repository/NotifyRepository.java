@@ -12,4 +12,6 @@ public interface NotifyRepository extends JpaRepository<Notify, Long> {
     List<Notify> findByReceiverNicknameAndIsRead(String receiverNickname, String read);
 
     void deleteAllByReceiverNickname(String receiverNickname);
+
+    void deleteByPostId(Long postId);
 }

@@ -45,7 +45,7 @@ jobs:
         run: echo ${{ github.sha }} > mysql_sha.txt
 
       - name: Upload MySQL SHA file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mysql_sha
           path: mysql_sha.txt
