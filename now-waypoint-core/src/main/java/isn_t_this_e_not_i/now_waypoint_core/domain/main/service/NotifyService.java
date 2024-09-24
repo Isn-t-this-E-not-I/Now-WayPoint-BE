@@ -22,6 +22,11 @@ public class NotifyService {
     private final UserRepository userRepository;
 
     @Transactional
+    public Notify save(Notify notify) {
+        return notifyRepository.save(notify);
+    }
+
+    @Transactional
     public List<NotifyDTO> getUserNotify(String loginId){
         User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new IllegalArgumentException("일치하는 유저가 없습니다."));
         List<Notify> userNotifyList = notifyRepository.findByReceiverNickname(user.getNickname());
@@ -36,6 +41,11 @@ public class NotifyService {
     @Transactional
     public void deleteAll(String nickname){
         notifyRepository.deleteAllByReceiverNickname(nickname);
+    }
+
+    @Transactional
+    public void deleteNotifyByPostId(Long postId){
+        notifyRepository.deleteByPostId(postId);
     }
 
     @Transactional

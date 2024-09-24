@@ -6,7 +6,7 @@ import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollower;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.UserFollowing;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.dto.NotifyDTO;
 import isn_t_this_e_not_i.now_waypoint_core.domain.main.entity.Notify;
-import isn_t_this_e_not_i.now_waypoint_core.domain.main.repository.NotifyRepository;
+import isn_t_this_e_not_i.now_waypoint_core.domain.main.service.NotifyService;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.request.PostRequest;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.LikeUserResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
@@ -48,9 +48,9 @@ public class PostService {
     private final SimpMessagingTemplate messagingTemplate;
     private final LikeRepository likeRepository;
     private final PostRedisService postRedisService;
-    private final NotifyRepository notifyRepository;
     private final FileUploadService fileUploadService;
     private final PostRedisRepository postRedisRepository;
+    private final NotifyService notifyService;
     private final RedisTemplate<String, String> redisPostTemplate;
 
     private static final String VIEW_KEY_PREFIX = "view";
@@ -97,7 +97,7 @@ public class PostService {
                 Notify notify = Notify.builder().senderNickname(user.getNickname()).receiverNickname(follower.getNickname()).postId(postResponseDTO.getId()).
                         mediaUrl(postResponseDTO.getMediaUrls().get(0)).isRead("false").
                         message(postResponseDTO.getContent()).profileImageUrl(user.getProfileImageUrl()).createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul"))).build();
-                Notify save = notifyRepository.save(notify);
+                Notify save = notifyService.save(notify);
                 messagingTemplate.convertAndSend("/queue/notify/" + follower.getNickname(), getNotifyDTO(save, user.getNickname()));
                 messagingTemplate.convertAndSend("/queue/posts/" + follower.getNickname(), postRedis.getPost());
             }
@@ -159,6 +159,7 @@ public class PostService {
         }
         postRepository.delete(post);
         postRedisService.delete(post);
+        notifyService.deleteNotifyByPostId(postId);
     }
 
     public void deletePostRedis(String nickname){
@@ -254,7 +255,7 @@ public class PostService {
                     .mediaUrl(post.getMediaUrls().get(0))
                     .isRead("false")
                     .build();
-            Notify save = notifyRepository.save(notify);
+            Notify save = notifyService.save(notify);
 
             NotifyDTO notifyDTO = NotifyDTO.builder()
                     .id(save.getId())

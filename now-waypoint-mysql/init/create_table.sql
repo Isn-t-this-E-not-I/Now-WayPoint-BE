@@ -92,7 +92,8 @@ CREATE TABLE notify (
                         create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         comment VARCHAR(255), -- 추가된 comment 컬럼
                         media_url VARCHAR(255), -- 추가된 media_url 컬럼
-                        post_id BIGINT -- 추가된 post_id 컬럼
+                        post_id BIGINT, -- 추가된 post_id 컬럼
+                        is_read VARCHAR(50)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 -- chat_room 테이블 생성
@@ -134,4 +135,13 @@ CREATE TABLE comment_like (
                               user_id INT(11) NOT NULL,
                               FOREIGN KEY (comment_id) REFERENCES comment(comment_id) ON DELETE CASCADE,
                               FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE bookmark (
+                          bookmark_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                          user_id INT(11) NOT NULL,
+                          post_id BIGINT NOT NULL,
+                          created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                          FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
