@@ -92,7 +92,8 @@ CREATE TABLE notify (
                         create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         comment VARCHAR(255), -- 추가된 comment 컬럼
                         media_url VARCHAR(255), -- 추가된 media_url 컬럼
-                        post_id BIGINT -- 추가된 post_id 컬럼
+                        post_id BIGINT, -- 추가된 post_id 컬럼
+                        is_read VARCHAR(50)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 -- chat_room 테이블 생성
