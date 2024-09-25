@@ -35,6 +35,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -55,7 +56,7 @@ public class PostService {
 
     private static final String VIEW_KEY_PREFIX = "view";
     private static final int VIEW_LIMIT_MINUTES = 30; // 조회수 30분 제한
-
+    private static final Pattern VALID_HASHTAG_PATTERN = Pattern.compile("^#[\\w가-힣]{1,30}$");
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
@@ -336,13 +337,42 @@ public class PostService {
 
     @Transactional
     public List<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
-        if (hashtagNames == null) {
+        if (hashtagNames == null || hashtagNames.isEmpty()) {
             return new ArrayList<>();
         }
-        return hashtagNames.stream().map(name -> {
-            Hashtag hashtag = hashtagRepository.findByName(name).orElse(new Hashtag(name));
-            return hashtagRepository.save(hashtag);
-        }).collect(Collectors.toList());
+
+        List<String> allHashtags = new ArrayList<>();
+        for (String hashtag : hashtagNames) {
+            List<String> splitHashtags = splitHashtagsBySharp(hashtag);
+            allHashtags.addAll(splitHashtags);
+        }
+
+        if (allHashtags.size() > 30) {
+            throw new InvalidPostContentException("해시태그는 최대 30개까지만 허용됩니다.");
+        }
+
+        List<Hashtag> validHashtags = new ArrayList<>();
+        for (String hashtag : allHashtags) {
+            validateHashtag(hashtag);
+            Hashtag savedHashtag = hashtagRepository.findByName(hashtag)
+                    .orElse(new Hashtag(hashtag));
+            validHashtags.add(hashtagRepository.save(savedHashtag));
+        }
+
+        return validHashtags;
+    }
+
+    private List<String> splitHashtagsBySharp(String hashtag) {
+        return Arrays.stream(hashtag.split("#"))
+                .filter(part -> !part.isEmpty())
+                .map(part -> "#" + part)
+                .collect(Collectors.toList());
+    }
+
+    private void validateHashtag(String hashtag) {
+        if (!VALID_HASHTAG_PATTERN.matcher(hashtag).matches()) {
+            throw new InvalidPostContentException("잘못된 해시태그 형식입니다: " + hashtag);
+        }
     }
 
     private static NotifyDTO getNotifyDTO(Notify notify) {
