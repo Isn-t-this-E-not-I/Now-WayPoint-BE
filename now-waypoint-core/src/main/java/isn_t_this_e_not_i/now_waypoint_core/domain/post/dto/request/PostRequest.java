@@ -19,7 +19,7 @@ public class PostRequest {
     @NotNull
     private String content;
 
-    @Size(max = 5)
+    @Size(max = 30, message = "최대 30개의 해시태그만 가능합니다.")
     private List<String> hashtags;
 
     private String locationTag;
