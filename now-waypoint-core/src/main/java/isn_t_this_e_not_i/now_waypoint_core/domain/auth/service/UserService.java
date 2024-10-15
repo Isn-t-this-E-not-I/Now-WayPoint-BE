@@ -156,7 +156,8 @@ public class UserService {
 
         for (Post post : posts) {
             boolean likedByUser = postService.isLikedByUser(post, findUser.get().getLoginId());
-            PostResponse postResponse = new PostResponse(post, likedByUser);
+            double popularityScore = postService.calculatePopularity(post);
+            PostResponse postResponse = new PostResponse(post, likedByUser, popularityScore);
             response.add(postResponse);
         }
         User user = findUser.get();
@@ -174,7 +175,8 @@ public class UserService {
 
         for (Post post : posts) {
             boolean likedByUser = postService.isLikedByUser(post, findUser.get().getLoginId());
-            PostResponse postResponse = new PostResponse(post, likedByUser);
+            double popularityScore = postService.calculatePopularity(post);
+            PostResponse postResponse = new PostResponse(post, likedByUser, popularityScore);
             response.add(postResponse);
         }
 
