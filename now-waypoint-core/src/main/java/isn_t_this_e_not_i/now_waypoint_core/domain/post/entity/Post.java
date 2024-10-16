@@ -1,6 +1,7 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.post.entity;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
+import isn_t_this_e_not_i.now_waypoint_core.domain.comment.entity.Comment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -56,6 +57,9 @@ public class Post {
 
     private int viewCount;
 
+    @OneToMany(mappedBy = "post")
+    private List<Comment> comments;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
@@ -79,5 +83,9 @@ public class Post {
 
     public void incrementViewCount(){
         this.viewCount++;
+    }
+
+    public int getCommentCount() {
+        return this.comments != null ? this.comments.size() : 0;
     }
 }

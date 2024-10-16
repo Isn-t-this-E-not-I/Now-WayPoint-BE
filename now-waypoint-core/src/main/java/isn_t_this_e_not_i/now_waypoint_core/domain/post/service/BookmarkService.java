@@ -26,6 +26,7 @@ public class BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final PostService postService;
 
     @Transactional
     public boolean toggleBookmark(Long postId, String loginId) {
@@ -57,7 +58,11 @@ public class BookmarkService {
 
         List<Bookmark> bookmarks = bookmarkRepository.findByUser(user);
         return bookmarks.stream()
-                .map(bookmark -> new PostResponse(bookmark.getPost(), false))
+                .map(bookmark -> {
+                    Post post = bookmark.getPost();
+                    double popularityScore = postService.calculatePopularity(post);
+                    return new PostResponse(post, false, popularityScore);
+                })
                 .collect(Collectors.toList());
     }
 
