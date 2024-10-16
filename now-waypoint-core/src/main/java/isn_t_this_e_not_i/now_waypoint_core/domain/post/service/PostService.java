@@ -31,12 +31,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.google.common.graph.ElementOrder.sorted;
 
 @Slf4j
 @Service
@@ -210,7 +213,8 @@ public class PostService {
         }
 
         boolean likedByUser = isLikedByUser(post, auth.getName());
-        return new PostResponse(post, likedByUser);
+        double popularityScore = calculatePopularity(post);
+        return new PostResponse(post, likedByUser,popularityScore);
     }
 
     @Transactional
@@ -274,6 +278,31 @@ public class PostService {
 
             return true; // 좋아요 추가
         }
+    }
+
+    public List<PostResponse> getPopularPost() {
+        List<Post> posts = postRepository.findAll();
+
+        return posts.stream()
+                .map(post ->{
+                    double popularityScore = calculatePopularity(post);
+                    boolean likedByUser = isLikedByUser(post, post.getUser().getLoginId());
+                    return new PostResponse(post, likedByUser, popularityScore);
+                })
+                .sorted(Comparator.comparingDouble(PostResponse::getPopularityScore).reversed())
+                .limit(20) // 인기도 점수로 상위 20개 내림차순
+                .collect(Collectors.toList());
+    }
+
+    public double calculatePopularity(Post post) {
+        long likeCount = post.getLikeCount();
+        long viewCount = post.getViewCount();
+        int commentCount = post.getCommentCount();
+
+        Duration duration = Duration.between(post.getCreatedAt(), ZonedDateTime.now());
+        double hourElapsed = (double) duration.toHours();
+
+        return ((likeCount * 3) + (viewCount * 1) + (commentCount * 2))/ Math.pow(hourElapsed + 1, 1.5);
     }
 
     @Transactional(readOnly = true)

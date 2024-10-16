@@ -36,7 +36,8 @@ public class PostController {
                                                    @RequestPart("files") List<MultipartFile> files, Authentication auth) {
         Post post = postService.createPost(auth, postRequest, files);
         boolean likedByUser = postService.isLikedByUser(post, auth.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post, likedByUser));
+        double popularityScore = postService.calculatePopularity(post);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(post, likedByUser, popularityScore));
     }
 
     @PutMapping("/{postId}")
@@ -46,7 +47,8 @@ public class PostController {
                                                    Authentication auth) {
         Post post = postService.updatePost(postId, postRequest, files, auth);
         boolean likedByUser = postService.isLikedByUser(post, auth.getName());
-        return ResponseEntity.ok(new PostResponse(post, likedByUser));
+        double popularityScore = postService.calculatePopularity(post);
+        return ResponseEntity.ok(new PostResponse(post, likedByUser, popularityScore));
     }
 
     @DeleteMapping("/{postId}")
@@ -82,7 +84,8 @@ public class PostController {
         List<Post> posts = hashtagService.getPostsByHashtag(name);
         List<PostResponse> response = posts.stream().map(post -> {
             boolean likedByUser = postService.isLikedByUser(post, auth.getName());
-            return new PostResponse(post, likedByUser);
+            double popularityScore = postService.calculatePopularity(post);
+            return new PostResponse(post, likedByUser, popularityScore);
         }).collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
@@ -90,5 +93,11 @@ public class PostController {
     @GetMapping("/hashtagSet")
     public ResponseEntity<List<HashtagSet>> getHashtagSet() {
         return ResponseEntity.ok().body(hashtagService.getHashtagSet());
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<List<PostResponse>> getPopularPosts() {
+        List<PostResponse> popularPosts = postService.getPopularPost();
+        return ResponseEntity.ok(popularPosts);
     }
 }

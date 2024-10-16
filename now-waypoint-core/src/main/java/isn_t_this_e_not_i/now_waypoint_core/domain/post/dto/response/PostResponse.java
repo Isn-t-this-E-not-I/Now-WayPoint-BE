@@ -27,8 +27,9 @@ public class PostResponse {
     private int likeCount;
     private boolean likedByUser;
     private int viewCount;
+    private double popularityScore;
 
-    public PostResponse(Post post, boolean likedByUser) {
+    public PostResponse(Post post, boolean likedByUser, double popularityScore) {
         this.id = post.getId();
         this.content = post.getContent();
         this.hashtags = post.getHashtags().stream().map(hashtag -> hashtag.getName()).collect(Collectors.toList());
@@ -41,5 +42,6 @@ public class PostResponse {
         this.likeCount = post.getLikeCount();
         this.likedByUser = likedByUser;
         this.viewCount = post.getViewCount();
+        this.popularityScore = popularityScore;
     }
 }
