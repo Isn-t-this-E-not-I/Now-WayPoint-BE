@@ -20,25 +20,40 @@ public class MeetingService {
 
     // 모임 생성
     @Transactional
-    public Meeting createMeeting(MeetingRequestDto meetingRequestDto, Authentication auth) {
+    public Meeting createMeeting(MeetingRequestDto meetingRequestDto, Authentication auth, String latitude, String longitude) {
         Meeting meeting = new Meeting(
                 meetingRequestDto.getTitle(),
                 meetingRequestDto.getDescription(),
                 meetingRequestDto.getMeetingTime(),
-                meetingRequestDto.getLocation()
+                meetingRequestDto.getLocation(),
+                meetingRequestDto.getMaxParticipants(),
+                meetingRequestDto.getDeadline()
         );
+
+        // 위도와 경도를 설정합니다.
+        meeting.setLatitude(latitude);
+        meeting.setLongitude(longitude);
+
         return meetingRepository.save(meeting);
     }
 
     // 모임 업데이트
     @Transactional
-    public Meeting updateMeeting(Long meetingId, MeetingRequestDto meetingRequestDto, Authentication auth) {
+    public Meeting updateMeeting(Long meetingId, MeetingRequestDto meetingRequestDto, Authentication auth, String latitude, String longitude) {
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 모임이 없습니다. id: " + meetingId));
+
         meeting.setTitle(meetingRequestDto.getTitle());
         meeting.setDescription(meetingRequestDto.getDescription());
         meeting.setMeetingTime(meetingRequestDto.getMeetingTime());
         meeting.setLocation(meetingRequestDto.getLocation());
+        meeting.setMaxParticipants(meetingRequestDto.getMaxParticipants());
+        meeting.setDeadline(meetingRequestDto.getDeadline());
+
+        // 위도와 경도를 업데이트합니다.
+        meeting.setLatitude(latitude);
+        meeting.setLongitude(longitude);
+
         return meetingRepository.save(meeting);
     }
 
