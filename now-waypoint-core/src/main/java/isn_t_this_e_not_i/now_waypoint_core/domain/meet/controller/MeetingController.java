@@ -1,12 +1,13 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.meet.controller;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.meet.dto.MeetingRequestDto;
+import isn_t_this_e_not_i.now_waypoint_core.domain.meet.dto.UserMeetingResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.meet.entity.Meeting;
 import isn_t_this_e_not_i.now_waypoint_core.domain.meet.service.MeetingService;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate; // 카카오 API 요청에 사용
 
@@ -136,5 +137,11 @@ public class MeetingController {
         List<Meeting> meetings = meetingService.getAllMeetings();
         logger.info("모든 모임 조회 결과: {}", meetings);
         return ResponseEntity.ok(meetings);
+    }
+
+    //유저의 미팅목록조회
+    @GetMapping("/list")
+    public ResponseEntity<List<UserMeetingResponse>> getMeetingsByUSer(Authentication auth){
+        return ResponseEntity.ok().body(meetingService.findMeetingByUser(auth.getName()));
     }
 }

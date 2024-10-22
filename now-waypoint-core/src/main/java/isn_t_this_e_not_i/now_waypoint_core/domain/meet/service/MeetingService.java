@@ -1,21 +1,31 @@
 package isn_t_this_e_not_i.now_waypoint_core.domain.meet.service;
 
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.service.UserService;
+import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
 import isn_t_this_e_not_i.now_waypoint_core.domain.meet.dto.MeetingRequestDto;
+import isn_t_this_e_not_i.now_waypoint_core.domain.meet.dto.UserMeetingResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.meet.entity.Meeting;
+import isn_t_this_e_not_i.now_waypoint_core.domain.meet.entity.UserMeeting;
 import isn_t_this_e_not_i.now_waypoint_core.domain.meet.repository.MeetingRepository;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import isn_t_this_e_not_i.now_waypoint_core.domain.meet.repository.UserMeetingRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class MeetingService {
 
     private final MeetingRepository meetingRepository;
+    private final UserService userService;
+    private final UserMeetingRepository userMeetingRepository;
 
-    public MeetingService(MeetingRepository meetingRepository) {
+    public MeetingService(MeetingRepository meetingRepository, UserService userService, UserMeetingRepository userMeetingRepository) {
         this.meetingRepository = meetingRepository;
+        this.userService = userService;
+        this.userMeetingRepository = userMeetingRepository;
     }
 
     // 모임 생성
@@ -30,11 +40,17 @@ public class MeetingService {
                 meetingRequestDto.getDeadline()
         );
 
+        User user = userService.findUserByLoginId(auth.getName());
+        UserMeeting userMeeting = UserMeeting.builder().user(user).meeting(meeting).build();
+
         // 위도와 경도를 설정합니다.
         meeting.setLatitude(latitude);
         meeting.setLongitude(longitude);
 
-        return meetingRepository.save(meeting);
+        Meeting saveMeeting = meetingRepository.save(meeting);
+
+        userMeetingRepository.save(userMeeting);
+        return saveMeeting;
     }
 
     // 모임 업데이트
@@ -74,5 +90,39 @@ public class MeetingService {
     // 모든 모임 조회
     public List<Meeting> getAllMeetings() {
         return meetingRepository.findAll();
+    }
+
+    @Transactional
+    public List<UserMeetingResponse> findMeetingByUser(String loginId){
+        User user = userService.findUserByLoginId(loginId);
+        List<UserMeeting> userMeetings = userMeetingRepository.findByUser(user);
+        return toUserMeetingResponse(userMeetings);
+    }
+
+    @Transactional
+    public List<UserMeetingResponse> toUserMeetingResponse(List<UserMeeting> userMeetings){
+        ArrayList<UserMeetingResponse> meetings = new ArrayList<>();
+        for (UserMeeting userMeeting : userMeetings) {
+            Meeting meeting = userMeeting.getMeeting();
+            ArrayList<User> user = new ArrayList<>();
+            List<UserMeeting> byMeeting = userMeetingRepository.findByMeeting(meeting);
+            for (UserMeeting userMeeting1 : byMeeting) {
+                user.add(userMeeting1.getUser());
+            }
+
+            UserMeetingResponse userMeetingResponse = UserMeetingResponse.builder()
+                    .meetingTime(meeting.getMeetingTime())
+                    .title(meeting.getTitle())
+                    .description(meeting.getDescription())
+                    .maxParticipants(meeting.getMaxParticipants())
+                    .deadline(meeting.getDeadline())
+                    .location(meeting.getLocation())
+                    .users(user)
+                    .build();
+
+            meetings.add(userMeetingResponse);
+        }
+
+        return meetings;
     }
 }
