@@ -58,8 +58,12 @@ public class PostService {
     private final RedisTemplate<String, String> redisPostTemplate;
 
     private static final String VIEW_KEY_PREFIX = "view";
-    private static final int VIEW_LIMIT_MINUTES = 30; // 조회수 30분 제한
+    private static final int VIEW_LIMIT_MINUTES = 30;
     private static final Pattern VALID_HASHTAG_PATTERN = Pattern.compile("^#[\\w가-힣]{1,30}$");
+    private static final int LIKE_WEIGHT = 3;
+    private static final int VIEW_WEIGHT = 1;
+    private static final int COMMENT_WEIGHT = 2;
+    private static final double TIME_DECAY_FACTOR = 1.5;
 
     @Transactional
     public Post createPost(Authentication auth, PostRequest postRequest, List<MultipartFile> files) {
@@ -67,9 +71,11 @@ public class PostService {
 
         User user = userRepository.findByLoginId(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
+
+        Set<Hashtag> hashtags = extractAndSaveHashtags(new HashSet<>(postRequest.getHashtags()));
+
         List<String> fileUrls = files.stream()
-                .map(file -> fileUploadService.fileUpload(file))
+                .map(fileUploadService::fileUpload)
                 .collect(Collectors.toList());
 
         Post post = Post.builder()
@@ -77,20 +83,13 @@ public class PostService {
                 .hashtags(hashtags)
                 .locationTag(user.getLocate())
                 .category(postRequest.getCategory())
+                .comments(new ArrayList<>())
                 .mediaUrls(fileUrls)
                 .user(user)
                 .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
 
-        Post savePost = postRepository.save(post);
-
-        PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
-        PostRedis postRedis = postRedisService.register(post);
-        notifyFollowers(postRedis, user, postResponseDTO);
-
-        messagingTemplate.convertAndSend("/topic/category" , postRedis.getPost());
-
-        return savePost;
+        return postRepository.save(post);
     }
 
     @Async
@@ -112,40 +111,41 @@ public class PostService {
     public Post updatePost(Long postId, PostRequest postRequest, List<MultipartFile> files, Authentication auth) {
         validatePostContent(postRequest.getContent());
 
-        User user = userRepository.findByLoginId(auth.getName()).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
+        User user = userRepository.findByLoginId(auth.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
+
         if (!post.getUser().getId().equals(user.getId())) {
             throw new UnauthorizedException("사용자에게 이 게시물을 수정할 권한이 없습니다");
         }
-        List<Hashtag> hashtags = extractAndSaveHashtags(postRequest.getHashtags());
+
+        Set<Hashtag> hashtags = extractAndSaveHashtags(new HashSet<>(postRequest.getHashtags()));
+
         post.setContent(postRequest.getContent());
         post.setHashtags(hashtags);
         post.setLocationTag(user.getLocate());
         post.setCategory(postRequest.getCategory());
 
-        // 기존 미디어 URL을 가져옵니다.
         List<String> existingMediaUrls = new ArrayList<>(post.getMediaUrls());
 
-        // 삭제할 미디어 URL을 제거하고 파일 저장소에서 삭제합니다.
         if (postRequest.getRemoveMedia() != null && !postRequest.getRemoveMedia().isEmpty()) {
-            for (String url : postRequest.getRemoveMedia()) {
+            postRequest.getRemoveMedia().forEach(url -> {
                 if (existingMediaUrls.contains(url)) {
                     existingMediaUrls.remove(url);
-                    // 파일 저장소에서 파일 삭제 로직
                     fileUploadService.deleteFile(url);
                 }
-            }
+            });
         }
 
-        // 새로 업로드된 파일의 URL을 추가합니다.
         if (files != null && !files.isEmpty()) {
             List<String> newMediaUrls = files.stream()
-                    .map(file -> fileUploadService.fileUpload(file))
+                    .map(fileUploadService::fileUpload)
                     .collect(Collectors.toList());
             existingMediaUrls.addAll(newMediaUrls);
         }
 
-        // 합쳐진 미디어 URL 리스트를 게시글에 설정합니다.
         post.setMediaUrls(existingMediaUrls);
 
         Post savePost = postRepository.save(post);
@@ -166,12 +166,12 @@ public class PostService {
         notifyService.deleteNotifyByPostId(postId);
     }
 
-    public void deletePostRedis(String nickname){
+    public void deletePostRedis(String nickname) {
         postRedisRepository.deletePostRedisByNickname(nickname);
     }
 
     @Transactional
-    public void updatePostByNickname(User user, String updateNickname){
+    public void updatePostByNickname(User user, String updateNickname) {
         List<Post> UserPosts = postRepository.findByUser(user);
         for (Post userPost : UserPosts) {
             userPost.getUser().setNickname(updateNickname);
@@ -182,20 +182,20 @@ public class PostService {
 
     @Transactional
     public List<Post> getPostsByUser(String loginId) {
-        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         return postRepository.findByUser(user);
     }
 
     @Transactional
     public List<Post> getPostsByOtherUser(String nickname) {
-        User user = userRepository.findByNickname(nickname).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByNickname(nickname).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         return postRepository.findByUser(user);
     }
 
     @Transactional(readOnly = true)
     public boolean isLikedByUser(Post post, String loginId) {
         User user = userRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         return likeRepository.findByPostAndUser(post, user).isPresent();
     }
 
@@ -214,7 +214,7 @@ public class PostService {
 
         boolean likedByUser = isLikedByUser(post, auth.getName());
         double popularityScore = calculatePopularity(post);
-        return new PostResponse(post, likedByUser,popularityScore);
+        return new PostResponse(post, likedByUser, popularityScore);
     }
 
     @Transactional
@@ -226,7 +226,7 @@ public class PostService {
     @Transactional
     public boolean toggleLikePost(Long postId, Authentication auth) {
         User user = userRepository.findByLoginId(auth.getName())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
 
@@ -236,7 +236,7 @@ public class PostService {
             post.decrementLikeCount();
             Post savePost = postRepository.save(post);
             postRedisService.update(savePost);
-            return false; // 좋아요 취소
+            return false;
         } else {
             Like like = Like.builder()
                     .post(post)
@@ -247,36 +247,35 @@ public class PostService {
             Post savePost = postRepository.save(post);
             postRedisService.update(savePost);
 
-            // 게시글 작성자에게 좋아요 알림 전송
-          if (!post.getUser().getId().equals(user.getId())) {
-            String notificationMessage = user.getNickname() + "님이 회원님의 게시글을 좋아합니다.";
-            Notify notify = Notify.builder()
-                    .senderNickname(user.getNickname())
-                    .receiverNickname(post.getUser().getNickname())
-                    .message(notificationMessage)
-                    .profileImageUrl(user.getProfileImageUrl())
-                    .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
-                    .postId(post.getId())
-                    .mediaUrl(post.getMediaUrls().get(0))
-                    .isRead("false")
-                    .build();
-            Notify save = notifyService.save(notify);
+            if (!post.getUser().getId().equals(user.getId())) {
+                String notificationMessage = user.getNickname() + "님이 회원님의 게시글을 좋아합니다.";
+                Notify notify = Notify.builder()
+                        .senderNickname(user.getNickname())
+                        .receiverNickname(post.getUser().getNickname())
+                        .message(notificationMessage)
+                        .profileImageUrl(user.getProfileImageUrl())
+                        .createDate(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
+                        .postId(post.getId())
+                        .mediaUrl(post.getMediaUrls().get(0))
+                        .isRead("false")
+                        .build();
+                Notify save = notifyService.save(notify);
 
-            NotifyDTO notifyDTO = NotifyDTO.builder()
-                    .id(save.getId())
-                    .nickname(save.getSenderNickname())
-                    .message(save.getMessage())
-                    .profileImageUrl(save.getProfileImageUrl())
-                    .createDate(save.getCreateDate())
-                    .postId(save.getPostId())
-                    .mediaUrl(save.getMediaUrl())
-                    .build();
+                NotifyDTO notifyDTO = NotifyDTO.builder()
+                        .id(save.getId())
+                        .nickname(save.getSenderNickname())
+                        .message(save.getMessage())
+                        .profileImageUrl(save.getProfileImageUrl())
+                        .createDate(save.getCreateDate())
+                        .postId(save.getPostId())
+                        .mediaUrl(save.getMediaUrl())
+                        .build();
 
 
                 messagingTemplate.convertAndSend("/queue/notify/" + post.getUser().getNickname(), notifyDTO);
             }
 
-            return true; // 좋아요 추가
+            return true;
         }
     }
 
@@ -284,13 +283,13 @@ public class PostService {
         List<Post> posts = postRepository.findAll();
 
         return posts.stream()
-                .map(post ->{
+                .map(post -> {
                     double popularityScore = calculatePopularity(post);
                     boolean likedByUser = isLikedByUser(post, post.getUser().getLoginId());
                     return new PostResponse(post, likedByUser, popularityScore);
                 })
                 .sorted(Comparator.comparingDouble(PostResponse::getPopularityScore).reversed())
-                .limit(20) // 인기도 점수로 상위 20개 내림차순
+                .limit(20)
                 .collect(Collectors.toList());
     }
 
@@ -302,7 +301,8 @@ public class PostService {
         Duration duration = Duration.between(post.getCreatedAt(), ZonedDateTime.now());
         double hourElapsed = (double) duration.toHours();
 
-        return ((likeCount * 3) + (viewCount * 1) + (commentCount * 2))/ Math.pow(hourElapsed + 1, 1.5);
+        return ((likeCount * LIKE_WEIGHT) + (viewCount * VIEW_WEIGHT) + (commentCount * COMMENT_WEIGHT))
+                / Math.pow(hourElapsed, TIME_DECAY_FACTOR);
     }
 
     @Transactional(readOnly = true)
@@ -320,8 +320,8 @@ public class PostService {
         User user = userRepository.findByLoginId(loginId).get();
         String nickname = user.getNickname();
         String locate = user.getLocate();
-        double latitude =Double.parseDouble(locate.split(",")[1]);
-        double longitude =Double.parseDouble(locate.split(",")[0]);
+        double latitude = Double.parseDouble(locate.split(",")[1]);
+        double longitude = Double.parseDouble(locate.split(",")[0]);
         double radius = distance;
 
         List<PostResponseDTO> responsePostRedis = null;
@@ -335,7 +335,7 @@ public class PostService {
         } else {
             responsePostRedis = postRedisService.findPostRedisByCategoryAndUserLocate(PostCategory.ALL, longitude, latitude, radius);
         }
-        
+
         messagingTemplate.convertAndSend("/queue/category/" + nickname, responsePostRedis);
     }
 
@@ -365,30 +365,20 @@ public class PostService {
     }
 
     @Transactional
-    public List<Hashtag> extractAndSaveHashtags(List<String> hashtagNames) {
+    public Set<Hashtag> extractAndSaveHashtags(Set<String> hashtagNames) {
         if (hashtagNames == null || hashtagNames.isEmpty()) {
-            return new ArrayList<>();
+            return new HashSet<>();
         }
 
-        List<String> allHashtags = new ArrayList<>();
-        for (String hashtag : hashtagNames) {
-            List<String> splitHashtags = splitHashtagsBySharp(hashtag);
-            allHashtags.addAll(splitHashtags);
-        }
+        return hashtagNames.stream()
+                .map(this::findOrCreateHashtag)
+                .collect(Collectors.toSet());
+    }
 
-        if (allHashtags.size() > 30) {
-            throw new InvalidPostContentException("해시태그는 최대 30개까지만 허용됩니다.");
-        }
-
-        List<Hashtag> validHashtags = new ArrayList<>();
-        for (String hashtag : allHashtags) {
-            validateHashtag(hashtag);
-            Hashtag savedHashtag = hashtagRepository.findByName(hashtag)
-                    .orElse(new Hashtag(hashtag));
-            validHashtags.add(hashtagRepository.save(savedHashtag));
-        }
-
-        return validHashtags;
+    private Hashtag findOrCreateHashtag(String name) {
+        validateHashtag(name);
+        return hashtagRepository.findByName(name)
+                .orElseGet(() -> hashtagRepository.save(new Hashtag(name)));
     }
 
     private List<String> splitHashtagsBySharp(String hashtag) {
@@ -416,7 +406,7 @@ public class PostService {
                 .build();
     }
 
-    private List<PostResponseDTO> toResponseDTO(List<Post> posts){
+    private List<PostResponseDTO> toResponseDTO(List<Post> posts) {
         List<PostResponseDTO> postResponseDTOS = new ArrayList<>();
 
         for (Post post : posts) {
@@ -425,5 +415,11 @@ public class PostService {
         }
 
         return postResponseDTOS;
+    }
+
+    public PostResponse generatePostResponse(Post post, String loginId) {
+        boolean likedByUser = isLikedByUser(post, loginId);
+        double popularityScore = calculatePopularity(post);
+        return new PostResponse(post, likedByUser, popularityScore);
     }
 }

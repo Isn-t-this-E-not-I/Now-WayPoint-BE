@@ -9,7 +9,9 @@ import lombok.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -33,8 +35,7 @@ public class Post {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
-    @OrderColumn(name = "order_index")
-    private List<Hashtag> hashtags = new ArrayList<>();
+    private Set<Hashtag> hashtags = new HashSet<>();
 
     private String locationTag;
 
@@ -44,7 +45,7 @@ public class Post {
     @ElementCollection
     @CollectionTable(name = "post_media_urls", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "media_url")
-    private List<String> mediaUrls;
+    private List<String> mediaUrls = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -54,11 +55,10 @@ public class Post {
     private ZonedDateTime updatedAt;
 
     private int likeCount;
-
     private int viewCount;
 
-    @OneToMany(mappedBy = "post")
-    private List<Comment> comments;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
@@ -81,11 +81,11 @@ public class Post {
         this.likeCount--;
     }
 
-    public void incrementViewCount(){
+    public void incrementViewCount() {
         this.viewCount++;
     }
 
     public int getCommentCount() {
-        return this.comments != null ? this.comments.size() : 0;
+        return comments.size();
     }
 }
