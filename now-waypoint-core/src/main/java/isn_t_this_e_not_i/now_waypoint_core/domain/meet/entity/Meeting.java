@@ -18,20 +18,26 @@ public class Meeting {
     private String description;
     private LocalDateTime meetingTime;
     private String location;
+    private String latitude;  // 위도 추가
+    private String longitude; // 경도 추가
+    private int maxParticipants; // 모임 최대 인원
+    private LocalDateTime deadline; // 모임 신청 마감 시간
 
     // 기본 생성자
     public Meeting() {
     }
 
     // 생성자
-    public Meeting(String title, String description, LocalDateTime meetingTime, String location) {
+    public Meeting(String title, String description, LocalDateTime meetingTime, String location, int maxParticipants, LocalDateTime deadline) {
         this.title = title;
         this.description = description;
         this.meetingTime = meetingTime;
         this.location = location;
+        this.maxParticipants = maxParticipants;
+        this.deadline = deadline;
     }
 
-    // Getter, Setter
+    // Getter 및 Setter
     public Long getId() {
         return id;
     }
@@ -70,5 +76,37 @@ public class Meeting {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
+    }
+
+    public int getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    public void setMaxParticipants(int maxParticipants) {
+        this.maxParticipants = maxParticipants;
+    }
+
+    public LocalDateTime getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(LocalDateTime deadline) {
+        this.deadline = deadline;
     }
 }
