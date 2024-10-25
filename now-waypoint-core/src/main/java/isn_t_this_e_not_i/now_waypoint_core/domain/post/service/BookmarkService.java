@@ -2,21 +2,18 @@ package isn_t_this_e_not_i.now_waypoint_core.domain.post.service;
 
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.repository.UserRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.auth.user.User;
-import isn_t_this_e_not_i.now_waypoint_core.domain.main.repository.NotifyRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.dto.response.PostResponse;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Bookmark;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.entity.Post;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.exception.ResourceNotFoundException;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.BookmarkRepository;
 import isn_t_this_e_not_i.now_waypoint_core.domain.post.repository.PostRepository;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,20 +32,13 @@ public class BookmarkService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("게시글을 찾을 수 없습니다."));
 
-        Optional<Bookmark> existingBookmark = bookmarkRepository.findByUserAndPost(user, post);
+        bookmarkRepository.findByUserAndPost(user, post)
+                .ifPresentOrElse(
+                        bookmark -> bookmarkRepository.delete(bookmark),
+                        () -> bookmarkRepository.save(new Bookmark(null, user, post, null))
+                );
 
-        if (existingBookmark.isPresent()) {
-            bookmarkRepository.delete(existingBookmark.get());
-            return false;
-        } else {
-            Bookmark bookmark = Bookmark.builder()
-                    .user(user)
-                    .post(post)
-                    .build();
-            bookmarkRepository.save(bookmark);
-
-            return true;
-        }
+        return bookmarkRepository.findByUserAndPost(user, post).isPresent();
     }
 
     @Transactional(readOnly = true)

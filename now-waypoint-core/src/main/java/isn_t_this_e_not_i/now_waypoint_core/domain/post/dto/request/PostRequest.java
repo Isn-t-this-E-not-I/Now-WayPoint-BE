@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -20,7 +21,7 @@ public class PostRequest {
     private String content;
 
     @Size(max = 30, message = "최대 30개의 해시태그만 가능합니다.")
-    private List<String> hashtags;
+    private Set<String> hashtags;
 
     private String locationTag;
 

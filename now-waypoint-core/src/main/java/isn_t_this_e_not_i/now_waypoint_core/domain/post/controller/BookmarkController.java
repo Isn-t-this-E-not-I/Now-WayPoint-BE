@@ -16,7 +16,7 @@ public class BookmarkController {
     private final BookmarkService bookmarkService;
 
     @PostMapping("/{postId}/toggle")
-    public ResponseEntity<String> toggleBookmark(@PathVariable Long postId, Authentication auth) {
+    public ResponseEntity<String> toggleBookmark(@PathVariable("postId") Long postId, Authentication auth) {
         boolean bookmarked = bookmarkService.toggleBookmark(postId, auth.getName());
         String message = bookmarked ? "게시글이 북마크에 추가되었습니다." : "게시글이 북마크에서 제거되었습니다.";
         return ResponseEntity.ok(message);
@@ -29,7 +29,7 @@ public class BookmarkController {
     }
 
     @GetMapping("/{postId}/status")
-    public ResponseEntity<Boolean> isBookmarked(@PathVariable Long postId, Authentication auth) {
+    public ResponseEntity<Boolean> isBookmarked(@PathVariable("postId") Long postId, Authentication auth) {
         boolean isBookmarked = bookmarkService.isBookmarked(postId, auth.getName());
         return ResponseEntity.ok(isBookmarked);
     }

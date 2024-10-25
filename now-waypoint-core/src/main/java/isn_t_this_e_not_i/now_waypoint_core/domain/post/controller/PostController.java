@@ -79,9 +79,10 @@ public class PostController {
         return ResponseEntity.ok(likes);
     }
 
-    @GetMapping("/hashtags/{name}")
-    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable("name") String name, Authentication auth) {
-        List<Post> posts = hashtagService.getPostsByHashtag(name);
+    @GetMapping("/hashtags")
+    public ResponseEntity<List<PostResponse>> getPostsByHashtag(
+            @RequestParam("tag") String tag, Authentication auth) {
+        List<Post> posts = hashtagService.getPostsByHashtag(tag);
         List<PostResponse> response = posts.stream().map(post -> {
             boolean likedByUser = postService.isLikedByUser(post, auth.getName());
             double popularityScore = postService.calculatePopularity(post);
