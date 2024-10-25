@@ -22,4 +22,5 @@ public class UserMeetingResponse {
     private int maxParticipants;
     private LocalDateTime deadline;
     private ArrayList<User> users;
+    private boolean isFix;
 }

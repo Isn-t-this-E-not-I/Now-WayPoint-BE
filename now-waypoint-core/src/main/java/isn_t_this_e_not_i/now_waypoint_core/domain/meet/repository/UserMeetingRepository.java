@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserMeetingRepository extends JpaRepository<UserMeeting, Long> {
@@ -14,4 +15,6 @@ public interface UserMeetingRepository extends JpaRepository<UserMeeting, Long> 
     List<UserMeeting> findByUser(User user);
 
     List<UserMeeting> findByMeeting(Meeting meeting);
+
+    Optional<UserMeeting> findByMeetingAndUser(Meeting meeting,User user);
 }
