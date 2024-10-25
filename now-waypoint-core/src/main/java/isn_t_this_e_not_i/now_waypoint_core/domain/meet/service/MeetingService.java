@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MeetingService {
@@ -41,7 +42,7 @@ public class MeetingService {
         );
 
         User user = userService.findUserByLoginId(auth.getName());
-        UserMeeting userMeeting = UserMeeting.builder().user(user).meeting(meeting).build();
+        UserMeeting userMeeting = UserMeeting.builder().user(user).meeting(meeting).isFix(false).build();
 
         // 위도와 경도를 설정합니다.
         meeting.setLatitude(latitude);
@@ -100,6 +101,29 @@ public class MeetingService {
     }
 
     @Transactional
+    public String toggleMeeting(Long meetingId, String loginId){
+        User userByLoginId = userService.findUserByLoginId(loginId);
+        Meeting meeting = meetingRepository.findById(meetingId).orElseThrow(() -> new IllegalArgumentException("해당 모임이 없습니다. id: " + meetingId));
+        UserMeeting userMeeting = userMeetingRepository.findByMeetingAndUser(meeting, userByLoginId).get();
+        if(!userMeeting.isFix()) {
+            userMeeting.setFix(true);
+            return "모임 체크";
+        }else{
+            userMeeting.setFix(false);
+            return "모임 체크 해제";
+        }
+    }
+
+    @Transactional
+    public List<UserMeetingResponse> findFixMeetingByUser(String loginId){
+        User userByLoginId = userService.findUserByLoginId(loginId);
+        List<UserMeeting> byUser = userMeetingRepository.findByUser(userByLoginId);
+        List<UserMeeting> fixMeeting = byUser.stream().filter(UserMeeting::isFix).collect(Collectors.toList());
+
+        return toUserMeetingResponse(fixMeeting);
+    }
+
+    @Transactional
     public List<UserMeetingResponse> toUserMeetingResponse(List<UserMeeting> userMeetings){
         ArrayList<UserMeetingResponse> meetings = new ArrayList<>();
         for (UserMeeting userMeeting : userMeetings) {
@@ -118,6 +142,7 @@ public class MeetingService {
                     .deadline(meeting.getDeadline())
                     .location(meeting.getLocation())
                     .users(user)
+                    .isFix(userMeeting.isFix())
                     .build();
 
             meetings.add(userMeetingResponse);

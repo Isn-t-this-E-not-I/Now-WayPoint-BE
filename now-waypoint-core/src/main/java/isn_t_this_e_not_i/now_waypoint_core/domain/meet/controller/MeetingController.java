@@ -144,4 +144,14 @@ public class MeetingController {
     public ResponseEntity<List<UserMeetingResponse>> getMeetingsByUSer(Authentication auth){
         return ResponseEntity.ok().body(meetingService.findMeetingByUser(auth.getName()));
     }
+
+    @PutMapping("/toggle/fix")
+    public ResponseEntity<String> toggleMeeting(@RequestParam Long meetingId, Authentication auth){
+        return ResponseEntity.ok(meetingService.toggleMeeting(meetingId, auth.getName()));
+    }
+
+    @GetMapping("/fix/list")
+    public ResponseEntity<List<UserMeetingResponse>> getFixMeetingByUser(Authentication auth){
+        return ResponseEntity.ok().body(meetingService.findFixMeetingByUser(auth.getName()));
+    }
 }
