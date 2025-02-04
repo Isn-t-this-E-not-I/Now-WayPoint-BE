@@ -89,6 +89,14 @@ public class PostService {
                 .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
 
+        Post savePost = postRepository.save(post);
+
+        PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
+        PostRedis postRedis = postRedisService.register(post);
+        notifyFollowers(postRedis, user, postResponseDTO);
+
+        messagingTemplate.convertAndSend("/topic/category" , postRedis.getPost());
+
         return postRepository.save(post);
     }
 
