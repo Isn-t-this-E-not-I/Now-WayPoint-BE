@@ -90,6 +90,7 @@ public class PostService {
                 .build();
 
         Post savePost = postRepository.save(post);
+        log.info("redis savePost");
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(savePost);
         PostRedis postRedis = postRedisService.register(post);
